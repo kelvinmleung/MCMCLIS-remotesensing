@@ -35,7 +35,6 @@ class Regression:
         # scale the data
         self.scalerX = StandardScaler().fit(X_train)
         self.scalerY = StandardScaler().fit(Y_train)
-
         self.X_train = self.scalerX.transform(X_train)
         self.Y_train = self.scalerY.transform(Y_train)
         self.X_test = self.scalerX.transform(X_test)
@@ -44,44 +43,15 @@ class Regression:
         # get mean and variance for future transformations
         self.meanX = self.scalerX.mean_
         self.varX = self.scalerX.var_
-
         self.meanY = self.scalerY.mean_
         self.varY = self.scalerY.var_
 
+        # scale truth as well
         N = self.X_train.shape[0]
         ny = self.reflectance.size
-    
         self.reflectance_scaled = (self.reflectance - self.meanX[:ny]) / np.sqrt(self.varX[:ny])
         self.truth_scaled = (self.truth - self.meanX) / np.sqrt(self.varX)
         
-        
-    def scaleDownX(self, X):
-        if X.ndim == 1:
-            return (X - self.meanX) / np.sqrt(self.varX)
-        else:
-            return self.scalerX.transform(X)
-
-    def scaleDownY(self, Y):
-        if Y.ndim == 1:
-            return (Y - self.meanY) / np.sqrt(self.varY)
-        else:
-            return self.scalerY.transform(Y)
-    '''
-    def reglasso(self, param, yElem):
-
-        linreg = Lasso(alpha=param, max_iter=5000) 
-        linreg.fit(self.X_train, self.Y_train[:,yElem])
-        phi = linreg.coef_
-        pred = linreg.predict(self.X_train)
-        trainError = mean_squared_error(self.Y_train[:,yElem], pred)
-
-        N = self.X_test.shape[0]
-        genError = 0
-        for i in range(N):
-            genError = genError + 1/N * np.linalg.norm(self.Y_test[i,yElem] - phi.dot(self.X_test[i,:]))
-            
-        return phi, trainError, genError
-    '''
     def reglasso(self, param, yElem):
 
         # train with the reduced X_train
@@ -106,8 +76,6 @@ class Regression:
         for i in range(N):
             genError = genError + 1/N * np.linalg.norm(self.Y_test[i,yElem] - phi.dot(self.X_test[i,:]))
         return phi, trainError, genError
-
-    
 
     def fullLasso(self, params):
         # perform lasso for all wavelengths
@@ -199,7 +167,7 @@ class Regression:
 
         indMin = np.argmin(genError)
         return trainError, genError, params[indMin]
-        
+
     def plotRegSample(self, fig, yElem, phi):
 
         # plot the training + test data, plus the line

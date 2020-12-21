@@ -20,11 +20,11 @@ g = GenerateSamples(setup)
 
 ## REGRESSION ##
 r = Regression(setup, g)
-r.fullLasso([1e-2] * 425)
-r.plotFullLasso
+#r.fullLasso([1e-2] * 425)
+#r.plotFullLasso()
 
 ## ANALYSIS ##
-#a = Analysis(setup, r)
+a = Analysis(setup, r)
 
 # ## MCMC ##
 # m = MCMC(setup, a)

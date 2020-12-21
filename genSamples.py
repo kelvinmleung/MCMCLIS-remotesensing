@@ -6,7 +6,7 @@ class GenerateSamples:
     from isofit.
     '''
     def __init__(self, setup):
-        
+        ### ADD INDPRIOR AS INPUT AND TRANSFER TO ANALYSIS>PY
         self.sampleDir = '../results/Regression/samples/'
 
         self.setup = setup
@@ -30,9 +30,7 @@ class GenerateSamples:
             while x_samp[i,425] <= 0 or x_samp[i,425] > 1 or x_samp[i,426] < 1 or x_samp[i,426] > 4:
                 z = np.random.normal(0,1,size=nx)
                 x_samp[i,:] = mu_x + cholGammaX @ z
-                # x_samp[i,:] = np.random.multivariate_normal(mu_x, gamma_x)
             meas = fm.calc_meas(x_samp[i,:], geom)
-            #gamma_ygx = fm.instrument.Sy(meas, geom)
             gamma_ygx = fm.Seps(x_samp[i,:], meas, geom)
 
             eps_samp = np.random.multivariate_normal(mu_ygx, gamma_ygx)
@@ -49,7 +47,6 @@ class GenerateSamples:
         fm = self.fm
         geom = self.geom
 
-        #idx_pr = 2 #for vegetation
         mu_x, gamma_x = self.setup.getPrior(idx_pr)
 
         nx = gamma_x.shape[0]
@@ -64,10 +61,8 @@ class GenerateSamples:
             while x_samp[i,425] <= 0 or x_samp[i,425] > 1 or x_samp[i,426] < 1 or x_samp[i,426] > 4:
                 z = np.random.normal(0,1,size=nx)
                 x_samp[i,:] = mu_x + cholGammaX @ z
-                # x_samp[i,:] = np.random.multivariate_normal(mu_x, gamma_x)
 
             meas = fm.calc_meas(x_samp[i,:], geom)
-            #gamma_ygx = fm.instrument.Sy(meas, geom)
             gamma_ygx = fm.Seps(x_samp[i,:], meas, geom)
 
             eps_samp = np.random.multivariate_normal(mu_ygx, gamma_ygx)

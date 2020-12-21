@@ -12,6 +12,10 @@ class Analysis:
         
         print('Initializing analysis...')
 
+        # configure directories
+        self.analysisDir = '../results/Analysis/'
+        self.regDir = regression.regDir
+
         # setup parameters
         self.plotbands = setup.plotbands
         self.wl = setup.wavelengths
@@ -31,21 +35,16 @@ class Analysis:
         self.scaleY = regression.Y_train
 
         # load data sets
-        X_train = np.load('results/samples/X_train.npy')
-        Y_train = np.load('results/samples/Y_train.npy')
+        X_train = np.load(self.regDir + 'samples/X_train.npy')
+        Y_train = np.load(self.regDir + 'samples/Y_train.npy')
         self.X = X_train
         self.Y = Y_train
 
-        self.phi_tilde = np.load('results/Regression/phi.npy')
+        self.phi_tilde = np.load(self.regDir + 'phi.npy')
         self.nx = self.X.shape[1]
         self.ny = self.Y.shape[1]
         Nsamp = self.X.shape[0]
 
-        # self.X = regression.X_train
-        # self.Y = regression.Y_train
-
-        # self.scaleX = regression.scaleDownX(self.X)
-        # self.scaleY = regression.scaleDownY(self.Y)
         self.varX = regression.varX
         self.varY = regression.varY
 
@@ -312,10 +311,10 @@ class Analysis:
             gamma_errorPCA[i] = np.sqrt(gamma_errorPCA[i])
             gamma_errorLIS[i] = np.sqrt(gamma_errorLIS[i])
         
-        np.save('results/Analysis/gamma_errorPCA.npy',gamma_errorPCA)
-        np.save('results/Analysis/gamma_errorLIS.npy',gamma_errorLIS)
-        np.save('results/Analysis/mu_errorPCA.npy', mu_errorPCA)
-        np.save('results/Analysis/mu_errorLIS.npy', mu_errorLIS)
+        np.save(self.analysisDir + 'gamma_errorPCA.npy',gamma_errorPCA)
+        np.save(self.analysisDir + 'gamma_errorLIS.npy',gamma_errorLIS)
+        np.save(self.analysisDir + 'mu_errorPCA.npy', mu_errorPCA)
+        np.save(self.analysisDir + 'mu_errorLIS.npy', mu_errorLIS)
 
 
     def posterior_alldim(self, eigvecPCA, eigvecLIS, gamma_xgy, maxdim):
@@ -389,10 +388,10 @@ class Analysis:
         plt.legend()
         plt.grid()
         
-        np.save('results/Analysis/gamma_errorPCA.npy',gamma_errorPCA)
-        np.save('results/Analysis/gamma_errorLIS.npy',gamma_errorLIS)
-        np.save('results/Analysis/mu_errorPCA.npy', mu_errorPCA)
-        np.save('results/Analysis/mu_errorLIS.npy', mu_errorLIS)
+        np.save(self.analysisDir + 'gamma_errorPCA.npy',gamma_errorPCA)
+        np.save(self.analysisDir + 'gamma_errorLIS.npy',gamma_errorLIS)
+        np.save(self.analysisDir + 'mu_errorPCA.npy', mu_errorPCA)
+        np.save(self.analysisDir + 'mu_errorLIS.npy', mu_errorLIS)
         
     def plotbands(self, wl, y, linestyle='-', label='', linewidth=1):
         plt.plot(wl[1:185], y[1:185], linestyle, linewidth=linewidth, label=label)
