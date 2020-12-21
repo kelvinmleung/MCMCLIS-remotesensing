@@ -15,13 +15,13 @@ setup = Setup(atm)
 ## GENERATE SAMPLES ##
 indPr = 6
 g = GenerateSamples(setup)
-# g.genTrainingSamples(10000, indPr)
-# g.genTestSamples(2000, indPr)
+g.genTrainingSamples(10000, indPr)
+g.genTestSamples(2000, indPr)
 
 ## REGRESSION ##
 r = Regression(setup, g)
-#r.fullLasso([1e-2] * 425)
-#r.plotFullLasso()
+r.fullLasso([1e-2] * 425)
+r.plotFullLasso()
 
 ## ANALYSIS ##
 a = Analysis(setup, r)
