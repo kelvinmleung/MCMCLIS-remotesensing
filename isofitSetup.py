@@ -21,6 +21,7 @@ class Setup:
     # also deleted the first genTestSamples function
     def __init__(self, atm):
         # atm is the atmospheric parameters
+
         self.wavelengths, self.reflectance = np.loadtxt('setup/data/petunia/petunia_reflectance.txt').T
 
         self.fm, self.geom = self.fwdModel()

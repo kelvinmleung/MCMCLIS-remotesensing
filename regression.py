@@ -11,8 +11,11 @@ class Regression:
     create a linear approximation of the Isofit forward model.
     '''
 
-    def __init__(self, setup):
+    def __init__(self, setup, g):
         
+        # directory to store regression results
+        self.regDir = '../results/Regression/'
+
         # setup parameters
         self.plotbands = setup.plotbands
         self.wavelengths = setup.wavelengths
@@ -23,10 +26,11 @@ class Regression:
         self.bandsX = setup.bandsX
 
         # load data sets
-        X_train = np.load('results/samples/X_train.npy')
-        Y_train = np.load('results/samples/Y_train.npy')
-        X_test = np.load('results/samples/X_test.npy')
-        Y_test = np.load('results/samples/Y_test.npy')
+        self.sampleDir = g.sampleDir
+        X_train = np.load(self.sampleDir + 'X_train.npy')
+        Y_train = np.load(self.sampleDir + 'Y_train.npy')
+        X_test = np.load(self.sampleDir + 'X_test.npy')
+        Y_test = np.load(self.sampleDir + 'Y_test.npy')
 
         # scale the data
         self.scalerX = StandardScaler().fit(X_train)
@@ -45,11 +49,9 @@ class Regression:
         self.varY = self.scalerY.var_
 
         N = self.X_train.shape[0]
-        
-        
-        nx = self.reflectance.size
+        ny = self.reflectance.size
     
-        self.reflectance_scaled = (self.reflectance - self.meanX[:nx]) / np.sqrt(self.varX[:nx])
+        self.reflectance_scaled = (self.reflectance - self.meanX[:ny]) / np.sqrt(self.varX[:ny])
         self.truth_scaled = (self.truth - self.meanX) / np.sqrt(self.varX)
         
         
@@ -81,16 +83,12 @@ class Regression:
         return phi, trainError, genError
     '''
     def reglasso(self, param, yElem):
-        # channel removal
-        #X_train = self.X_train[:,self.bandsX]
-        # don't remove channels
-        X_train = self.X_train
 
         # train with the reduced X_train
         linreg = Lasso(alpha=param, max_iter=5000) 
-        linreg.fit(X_train, self.Y_train[:,yElem])
+        linreg.fit(self.X_train, self.Y_train[:,yElem])
         phiReduce = linreg.coef_
-        pred = linreg.predict(X_train)
+        pred = linreg.predict(self.X_train)
         trainError = mean_squared_error(self.Y_train[:,yElem], pred)
 
         # make phi back into 427
@@ -108,6 +106,71 @@ class Regression:
         for i in range(N):
             genError = genError + 1/N * np.linalg.norm(self.Y_test[i,yElem] - phi.dot(self.X_test[i,:]))
         return phi, trainError, genError
+
+    
+
+    def fullLasso(self, params):
+        # perform lasso for all wavelengths
+
+        nx = self.X_train.shape[1]
+        ny = self.Y_train.shape[1]
+
+        y_lasso = np.zeros(ny)
+        GE = np.zeros(ny)
+        TE = np.zeros(ny)
+        phi = np.zeros([ny,nx])
+        
+        for i in range(ny):
+            print('Regression: Element', i+1, str(self.wavelengths[i]) + 'nm')
+            phi[i,:], te, ge = self.reglasso(params[i], i)
+            scaled = phi[i,:].dot(self.truth_scaled) 
+            y_lasso[i] = scaled * np.sqrt(self.varY[i]) + self.meanY[i]
+            TE[i] = te
+            GE[i] = ge
+        
+        np.save(self.regDir + 'y_lasso.npy', y_lasso)
+        np.save(self.regDir + 'lassoTE.npy', TE)
+        np.save(self.regDir + 'lassoGE.npy', GE)
+        np.save(self.regDir + 'phi.npy',phi)      
+
+    def plotFullLasso(self):
+
+        y_lasso = np.load(self.regDir + 'y_lasso.npy')
+        TE = np.load(self.regDir + 'lassoTE.npy')
+        GE = np.load(self.regDir + 'lassoGE.npy')
+        phi = np.load(self.regDir + 'phi.npy')
+
+        plt.figure(31)
+        plt.plot(self.wavelengths, self.radiance, 'navy',linewidth=2, label='Isofit Forward Model')
+        plt.plot(self.wavelengths, y_lasso, 'orange',linewidth=1, label='Linear Model')
+        plt.xlabel('Wavelength')
+        plt.ylabel('Radiance')
+        plt.title('Lasso Regression - Radiance')
+        plt.grid()
+        plt.legend()
+
+        plt.figure(34)
+        self.plotbands(GE, 'navy', linewidth=1, label='Generalization Error', axis='semilogy')
+        self.plotbands(TE, 'orange', linewidth=1, label='Training Error', axis='semilogy')
+        plt.xlabel('Wavelength')
+        plt.ylabel('Error')
+        plt.title('Lasso Regression - Error')
+        plt.grid()
+        plt.legend()
+
+        relerror = abs(self.radiance - y_lasso) / abs(self.radiance)
+        plt.figure(35)
+        self.plotbands(relerror, 'navy',linewidth=1, label='Lasso,p=1e-3',axis='semilogy')
+        plt.xlabel('Wavelength')
+        plt.ylabel('Error')
+        plt.title('Lasso Regression - Relative Error')
+        plt.grid()
+        plt.legend()
+
+        plt.figure(36)
+        plt.spy(phi, precision=1e-15,markersize=2)
+        plt.title(r'Sparsity Plot - $\Phi$')
+
 
     def plotlog(self, plotx, ploty, fig, title='', xLabel='', yLabel=''):
         plt.figure(fig)
@@ -136,84 +199,7 @@ class Regression:
 
         indMin = np.argmin(genError)
         return trainError, genError, params[indMin]
-
-    def fullLasso(self, params):
-        # perform lasso for all wavelengths
-        # change phi to ny by nx
-        nx = self.X_train.shape[1]
-        ny = self.Y_train.shape[1]
-
-        y_lasso = np.zeros(ny)
-        GE = np.zeros(ny)
-        TE = np.zeros(ny)
-        phi = np.zeros([ny,nx])
-        '''
-        for i in range(ny):
-            print('Regression: Element', i+1, str(self.wavelengths[i]) + 'nm')
-            phi[:,i], te, ge = self.reglasso(params[i], i)
-            scaled = phi[:,i].dot(self.truth_scaled) #self.reflectance_scaled
-            y_lasso[i] = scaled * np.sqrt(self.varY[i]) + self.meanY[i]
-            TE[i] = te
-            GE[i] = ge
-        '''
-        for i in self.bands:
-            print('Regression: Element', i+1, str(self.wavelengths[i]) + 'nm')
-            phi[i,:], te, ge = self.reglasso(params[i], i)
-            scaled = phi[i,:].dot(self.truth_scaled) 
-            y_lasso[i] = scaled * np.sqrt(self.varY[i]) + self.meanY[i]
-            TE[i] = te
-            GE[i] = ge
-
-        np.save('results/Regression/y_lasso.npy', y_lasso)
-        np.save('results/Regression/lassoTE.npy', TE)
-        np.save('results/Regression/lassoGE.npy', GE)
-        np.save('results/Regression/phi.npy',phi)      
-
-    def plotFullLasso(self):
-
-        y_lasso = np.load('results/Regression/y_lasso.npy')
-        TE = np.load('results/Regression/lassoTE.npy')
-        GE = np.load('results/Regression/lassoGE.npy')
-        phi = np.load('results/Regression/phi.npy')
-
-        plt.figure(31)
-        plt.plot(self.wavelengths, self.radiance, 'navy',linewidth=2, label='Isofit Forward Model')
-        plt.plot(self.wavelengths, y_lasso, 'orange',linewidth=1, label='Linear Model')
-        #self.plotbands(self.radiance,'navy',linewidth=2, label='Isofit Forward Model')
-        #self.plotbands(y_lasso, 'orange', linewidth=1, label='Linear Model')
-        #plt.ylim([-2,20])
-        plt.xlabel('Wavelength')
-        plt.ylabel('Radiance')
-        plt.title('Lasso Regression - Radiance')
-        plt.grid()
-        plt.legend()
-
-        plt.figure(34)
-        self.plotbands(GE, 'navy', linewidth=1, label='Generalization Error', axis='semilogy')
-        self.plotbands(TE, 'orange', linewidth=1, label='Training Error', axis='semilogy')
-        #plt.semilogy(self.wavelengths, GE, linewidth=1, label='Generalization Error')
-        #plt.semilogy(self.wavelengths, TE, linewidth=1, label='Training Error')
-        plt.xlabel('Wavelength')
-        plt.ylabel('Error')
-        plt.title('Lasso Regression - Error')
-        plt.grid()
-        plt.legend()
-
-        relerror = abs(self.radiance - y_lasso) / abs(self.radiance)
-        plt.figure(35)
-        self.plotbands(relerror, 'navy',linewidth=1, label='Lasso,p=1e-3',axis='semilogy')
-        #plt.semilogy(self.wavelengths, relerror, linewidth=1, label='Lasso,p=1e-3')
-        plt.xlabel('Wavelength')
-        plt.ylabel('Error')
-        plt.title('Lasso Regression - Relative Error')
-        plt.grid()
-        plt.legend()
-
-        plt.figure(36)
-        plt.spy(phi, precision=1e-15,markersize=2)
-        plt.title(r'Sparsity Plot - $\Phi$')
-
-
+        
     def plotRegSample(self, fig, yElem, phi):
 
         # plot the training + test data, plus the line
