@@ -24,8 +24,16 @@ class Setup:
 
         self.wavelengths, self.reflectance = np.loadtxt('setup/data/petunia/petunia_reflectance.txt').T
 
+        # choose prior from Isofit
         self.indPr = 6
 
+        # specify storage directories 
+        self.sampleDir = '../results/Regression/samples/'
+        self.regDir = '../results/Regression/'
+        self.analysisDir = '../results/Analysis/'
+        self.mcmcDir = '../results/MCMC/'
+
+        # load Isofit
         self.fm, self.geom = self.fwdModel()
         self.truth = np.concatenate((self.reflectance, atm)) 
 

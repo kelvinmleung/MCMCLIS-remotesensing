@@ -6,8 +6,7 @@ class GenerateSamples:
     from isofit.
     '''
     def __init__(self, setup):
-        ### ADD INDPRIOR AS INPUT AND TRANSFER TO ANALYSIS>PY
-        self.sampleDir = '../results/Regression/samples/'
+        self.sampleDir = setup.sampleDir
 
         self.setup = setup
         self.fm = self.setup.fm

@@ -13,7 +13,7 @@ class Analysis:
         print('Initializing analysis...')
 
         # configure directories
-        self.analysisDir = '../results/Analysis/'
+        self.analysisDir = setup.analysisDir
         self.regDir = regression.regDir
 
         # setup parameters

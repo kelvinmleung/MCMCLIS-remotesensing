@@ -14,7 +14,7 @@ class Regression:
     def __init__(self, setup, g):
         
         # directory to store regression results
-        self.regDir = '../results/Regression/'
+        self.regDir = setup.regDir
 
         # setup parameters
         self.plotbands = setup.plotbands
