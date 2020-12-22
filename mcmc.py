@@ -252,7 +252,7 @@ class MCMC:
         x_vals = np.load(self.mcmcDir + 'MCMC_x.npy')
         x_elem = x_vals[ind,:]
 
-        Nsamp = 10000
+        Nsamp = min(self.Nsamp, 10000)
         meanX = np.mean(x_elem)
         varX = np.var(x_elem)
         ac = np.zeros(Nsamp-1)
@@ -277,7 +277,7 @@ class MCMC:
         plt.legend()
         plt.grid()
         
-    def plotMCMCmean(self, mean, fig, mcmcType='pos'):
+    def plotMCMCmean(self, mean, fig):
         plt.figure(fig)
 
         self.setup.plotbands(mean[:425], 'g', label='MCMC Mean')
@@ -297,7 +297,7 @@ class MCMC:
         plt.title('Log Posterior Plot')
         plt.grid()
 
-    def diagnostics(self, indSet=[10,20,50,100,150,160,250,260,425,426]):
+    def diagnostics(self, indSet=[10,20,50,100,150,160,250,260,425,426], calcAC=False):
         # assume there are 10 elements in indSet
         # default: indSet = [10,20,50,100,150,160,250,260,425,426]
         x_vals = np.load(self.mcmcDir + 'MCMC_x.npy')
@@ -310,24 +310,22 @@ class MCMC:
 
         xPlot = [0,0,1,1,2,2,3,3,4,4]
         yPlot = [0,1,0,1,0,1,0,1,0,1]
-        samp = range(self.Nsamp)
-        sampAC = range(1,10000)
-        plt.figure(18)
         fig1, axs1 = plt.subplots(5, 2)
-        plt.figure(19)
-        fig2, axs2 = plt.subplots(5, 2)
+        if calcAC == True:
+            fig2, axs2 = plt.subplots(5, 2)
         for i in range(len(indSet)):
             print('Diagnostics:',indSet[i])
             x_elem = x_vals[i,:]
             xp = xPlot[i]
             yp = yPlot[i]
 
-            axs1[xp,yp].plot(samp, x_elem)
+            axs1[xp,yp].plot(range(self.Nsamp), x_elem)
             axs1[xp,yp].set_title('Trace - Index ' + str(indSet[i]))
 
-            ac = self.autocorr(indSet[i])
-            axs2[xp,yp].plot(sampAC, ac)
-            axs2[xp,yp].set_title('Autocorrelation - Index ' + str(indSet[i]))
+            if calcAC == True:
+                ac = self.autocorr(indSet[i])
+                axs2[xp,yp].plot(range(1,len(ac)+1), ac)
+                axs2[xp,yp].set_title('Autocorrelation - Index ' + str(indSet[i]))
         
 
     def maxLogPos(self, N):

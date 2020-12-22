@@ -28,13 +28,13 @@ a = Analysis(setup, r)
 ## MCMC ##
 m = MCMC(setup, a)
 x0 = setup.truth
-rank = 150
+rank = 200
 sd = 2.4 ** 2 / min(rank,350)
 
-m.initValue(x0=x0, yobs=setup.radiance, sd=sd, Nsamp=5000, burn=500, project=True, nr=rank)
+m.initValue(x0=x0, yobs=setup.radiance, sd=sd, Nsamp=1000000, burn=10000, project=False, nr=rank)
 m.runMCMC(alg='adaptive')
 MCMCmean, MCMCcov = m.calcMeanCov()
-m.plotMCMCmean(MCMCmean, fig=1, mcmcType='pos')
+m.plotMCMCmean(MCMCmean, fig=1)
 
 # compare posterior mean
 mu_x, gamma_x = setup.getPrior()

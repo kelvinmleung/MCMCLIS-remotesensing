@@ -39,6 +39,7 @@ class Setup:
 
         rad = self.fm.calc_rdn(self.truth, self.geom)
         self.noisecov = self.fm.Seps(self.truth, rad, self.geom)
+        #self.noisecov = np.clip(self.fm.Seps(self.truth, rad, self.geom), a_min=1e-6, a_max=None)
         eps = np.random.multivariate_normal(np.zeros(len(rad)), self.noisecov)
         self.radiance = rad
         self.radNoisy = rad + eps
@@ -137,7 +138,7 @@ class Setup:
         plt.colorbar()
 
     def plotPosMean(self, isofitMuPos, mu_xgyLin,  mu_xgyLinNoise, MCMCmean):
-        mu_x, gamma_x = self.getPrior(6)
+        mu_x, gamma_x = self.getPrior()
 
         plt.figure(64)
         self.plotbands(self.truth[:425], 'b.',label='True Reflectance')
