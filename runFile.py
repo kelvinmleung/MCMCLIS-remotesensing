@@ -13,10 +13,9 @@ atm = [0.3,2]
 setup = Setup(atm)
 
 ## GENERATE SAMPLES ##
-indPr = 6
 g = GenerateSamples(setup)
-g.genTrainingSamples(10000, indPr)
-g.genTestSamples(2000, indPr)
+g.genTrainingSamples(10000)
+g.genTestSamples(2000)
 
 ## REGRESSION ##
 r = Regression(setup, g)

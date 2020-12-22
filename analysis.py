@@ -26,7 +26,7 @@ class Analysis:
         self.bands = setup.bands
         self.bandsX = setup.bandsX
 
-        self.mu_x, self.gamma_x = setup.getPrior(6)
+        self.mu_x, self.gamma_x = setup.getPrior()
         self.fm = setup.fm
         self.geom = setup.geom        
 

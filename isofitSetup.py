@@ -24,6 +24,8 @@ class Setup:
 
         self.wavelengths, self.reflectance = np.loadtxt('setup/data/petunia/petunia_reflectance.txt').T
 
+        self.indPr = 6
+
         self.fm, self.geom = self.fwdModel()
         self.truth = np.concatenate((self.reflectance, atm)) 
 
@@ -43,7 +45,7 @@ class Setup:
         self.bands = bands
         self.bandsX = bands + [425,426]
     
-    def getPrior(self, idx_pr=0):
+    def getPrior(self):
         fm = self.fm
         # Get prior mean and covariance
         
@@ -54,12 +56,12 @@ class Setup:
         idx_ref = np.array(idx_ref)
         refnorm = np.linalg.norm(self.reflectance[idx_ref])
 
-        mu_priorsurf = fm.surface.components[idx_pr][0] * refnorm
+        mu_priorsurf = fm.surface.components[self.indPr][0] * refnorm
         mu_priorRT = fm.RT.xa()
         mu_priorinst = fm.instrument.xa()
         mu_x = np.concatenate((mu_priorsurf, mu_priorRT, mu_priorinst), axis=0)
         
-        gamma_priorsurf = fm.surface.components[idx_pr][1] * (refnorm ** 2)
+        gamma_priorsurf = fm.surface.components[self.indPr][1] * (refnorm ** 2)
         gamma_priorRT = fm.RT.Sa()[:, :]
         gamma_priorinst = fm.instrument.Sa()[:, :]
         gamma_x = s.linalg.block_diag(gamma_priorsurf, gamma_priorRT, gamma_priorinst)

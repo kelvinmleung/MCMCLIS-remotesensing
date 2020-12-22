@@ -13,10 +13,10 @@ class GenerateSamples:
         self.fm = self.setup.fm
         self.geom = self.setup.geom 
         
-    def genTrainingSamples(self, Nsamp, idx_pr=6):
+    def genTrainingSamples(self, Nsamp):
         fm = self.fm
         geom = self.geom
-        mu_x, gamma_x = self.setup.getPrior(idx_pr)
+        mu_x, gamma_x = self.setup.getPrior()
 
         nx = gamma_x.shape[0]
         ny = nx - 2
@@ -42,12 +42,12 @@ class GenerateSamples:
         np.save(self.sampleDir + 'X_train.npy', x_samp)
         np.save(self.sampleDir + 'Y_train.npy', y_samp)
         
-    def genTestSamples(self, N, idx_pr=6):
+    def genTestSamples(self, N):
 
         fm = self.fm
         geom = self.geom
 
-        mu_x, gamma_x = self.setup.getPrior(idx_pr)
+        mu_x, gamma_x = self.setup.getPrior()
 
         nx = gamma_x.shape[0]
         ny = nx - 2
