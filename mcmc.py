@@ -105,27 +105,20 @@ class MCMC:
         
         if self.project == True:
             xr = x
-
             x = self.phi @ xr  + self.mu_x
             gammax = np.identity(np.size(xr)) 
             tPrior = xr #- self.theta.T @ self.mu_x
             logprior = -1/2 * tPrior.dot(np.linalg.solve(gammax, tPrior))
             
-            meas = self.fm.calc_rdn(x, self.geom)
-            tLH = self.yobs[self.bands] - meas[self.bands]
-            gammaygx = self.noisecov[self.bands,:][:,self.bands]
-            loglikelihood = -1/2 * tLH.dot(np.linalg.solve(gammaygx, tLH))
-            
         else:
             x = x + self.mu_x
-
             tPrior = x - self.mu_x 
             logprior = -1/2 * tPrior.dot(np.linalg.solve(self.gamma_x, tPrior))
 
-            meas = self.fm.calc_rdn(x, self.geom)
-            tLH = self.yobs[self.bands] - meas[self.bands]
-            gammaygx = self.noisecov[self.bands,:][:,self.bands]
-            loglikelihood = -1/2 * tLH.dot(np.linalg.solve(gammaygx, tLH))
+        meas = self.fm.calc_rdn(x, self.geom)
+        tLH = self.yobs - meas #tLH = self.yobs[self.bands] - meas[self.bands]
+        gammaygx = self.noisecov #[self.bands,:][:,self.bands]
+        loglikelihood = -1/2 * tLH.dot(np.linalg.solve(gammaygx, tLH))
 
         if x[425] <= 0 or x[426] <= 1:
                 print('ATM parameter is negative')
@@ -148,6 +141,7 @@ class MCMC:
         
         x_vals = np.zeros([self.x0.size, self.Nsamp])
         logpos = np.zeros(self.Nsamp)
+        diagnostic = np.zeros([self.ny, self.Nsamp])
         x = self.x0
 
         for i in range(self.Nsamp):
@@ -168,6 +162,11 @@ class MCMC:
                 x = z 
             x_vals[:,i] = x
             logpos[i] = self.logpos(x)
+
+            # calculate diagnostic
+            # meas = self.fm.calc_rdn(self.phi @ x  + self.mu_x, self.geom)
+            meas = self.fm.calc_rdn(x  + self.mu_x, self.geom)
+            diagnostic[:,i] = abs(self.yobs - meas) / np.diag(np.sqrt(self.noisecov))
 
             # print progress
             if (i+1) % 100 == 0: 
@@ -201,6 +200,7 @@ class MCMC:
 
         np.save(self.mcmcDir + 'MCMC_x.npy', x_vals_full)
         np.save(self.mcmcDir + 'logpos.npy', logpos)
+        np.save(self.mcmcDir + 'diagnostic.npy', diagnostic)
         return x_vals   
         
     def twoDimVisual(self, indX, indY, t0):
