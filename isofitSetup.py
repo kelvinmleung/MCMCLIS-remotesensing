@@ -31,15 +31,17 @@ class Setup:
         self.sampleDir = '../results/Regression/samples/'
         self.regDir = '../results/Regression/'
         self.analysisDir = '../results/Analysis/'
-        self.mcmcDir = '../results/MCMC/NoClip'
+        self.mcmcDir = '../results/MCMC/ClipNoise'
 
         # load Isofit
         self.fm, self.geom = self.fwdModel()
         self.truth = np.concatenate((self.reflectance, atm)) 
 
         rad = self.fm.calc_rdn(self.truth, self.geom)
-        self.noisecov = self.fm.Seps(self.truth, rad, self.geom)
-        #self.noisecov = np.clip(self.fm.Seps(self.truth, rad, self.geom), a_min=1e-6, a_max=None)
+        noisecov = self.fm.Seps(self.truth, rad, self.geom)
+        # self.noisecov = noisecov
+        self.noisecov = noisecov - np.diag(np.diag(noisecov)) + np.diag(np.clip(np.diag(noisecov), a_min=1e-7, a_max=None))
+
         eps = np.random.multivariate_normal(np.zeros(len(rad)), self.noisecov)
         self.radiance = rad
         self.radNoisy = rad + eps
