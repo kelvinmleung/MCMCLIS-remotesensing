@@ -31,7 +31,7 @@ class Setup:
         self.sampleDir = '../results/Regression/samples/'
         self.regDir = '../results/Regression/'
         self.analysisDir = '../results/Analysis/'
-        self.mcmcDir = '../results/MCMC/NoLIS_NoClipNoise/'
+        self.mcmcDir = '../results/MCMC/'
 
         # load Isofit
         self.fm, self.geom = self.fwdModel()
@@ -92,10 +92,7 @@ class Setup:
         return fm, geom
 
     def invModel(self, radiance):
-
-        fm = self.fm
-        geom = self.geom
-                
+        
         print('Running Inverse Model...')
 
         inversion_settings = {"implementation": {
@@ -104,17 +101,14 @@ class Setup:
         "windows": [[380.0, 1300.0], [1450, 1780.0], [1950.0, 2450.0]]}}}
 
         inverse_config = Config(inversion_settings)
-        iv = Inversion(inverse_config, fm)
-
-        state_trajectory = iv.invert(radiance, geom)
+        iv = Inversion(inverse_config, self.fm)
+        state_trajectory = iv.invert(radiance, self.geom)
         state_est = state_trajectory[-1]
-
-        rfl_est, rdn_est, path_est, S_hat, K, G = iv.forward_uncertainty(state_est, radiance, geom)
-        #A = s.matmul(G,K)
+        rfl_est, rdn_est, path_est, S_hat, K, G = iv.forward_uncertainty(state_est, radiance, self.geom)
 
         print('Inversion finished.')
 
-        return state_est, S_hat#, rdn_est, path_est
+        return state_est, S_hat
 
         
 

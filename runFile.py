@@ -28,10 +28,10 @@ a = Analysis(setup, r)
 ## MCMC ##
 m = MCMC(setup, a)
 x0 = setup.truth
-rank = 427
+rank = 170
 sd = 2.4 ** 2 / min(rank,427)
 
-m.initValue(x0=x0, yobs=setup.radiance, sd=sd, Nsamp=1000000, burn=10000, project=False, nr=rank)
+m.initValue(x0=x0, yobs=setup.radiance, sd=sd, Nsamp=100000, burn=10000, project=True, nr=rank)
 m.runMCMC(alg='adaptive')
 MCMCmean, MCMCcov = m.calcMeanCov()
 m.plotMCMCmean(MCMCmean, fig=1)

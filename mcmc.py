@@ -165,8 +165,8 @@ class MCMC:
 
             # calculate diagnostic
             # meas = self.fm.calc_rdn(self.phi @ x  + self.mu_x, self.geom)
-            meas = self.fm.calc_rdn(x  + self.mu_x, self.geom)
-            diagnostic[:,i] = abs(self.yobs - meas) / np.diag(np.sqrt(self.noisecov))
+            # meas = self.fm.calc_rdn(x  + self.mu_x, self.geom)
+            # diagnostic[:,i] = abs(self.yobs - meas) / np.diag(np.sqrt(self.noisecov))
 
             # print progress
             if (i+1) % 100 == 0: 
@@ -200,7 +200,7 @@ class MCMC:
 
         np.save(self.mcmcDir + 'MCMC_x.npy', x_vals_full)
         np.save(self.mcmcDir + 'logpos.npy', logpos)
-        np.save(self.mcmcDir + 'diagnostic.npy', diagnostic)
+        # np.save(self.mcmcDir + 'diagnostic.npy', diagnostic)
         return x_vals   
         
     def twoDimVisual(self, indX, indY, t0):
