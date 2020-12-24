@@ -31,7 +31,7 @@ class Setup:
         self.sampleDir = '../results/Regression/samples/'
         self.regDir = '../results/Regression/'
         self.analysisDir = '../results/Analysis/'
-        self.mcmcDir = '../results/MCMC/ClipNoise'
+        self.mcmcDir = '../results/MCMC/NoLIS_NoClipNoise/'
 
         # load Isofit
         self.fm, self.geom = self.fwdModel()
