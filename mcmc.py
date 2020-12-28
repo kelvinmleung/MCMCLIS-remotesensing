@@ -4,8 +4,6 @@ from scipy.stats import multivariate_normal
 from matplotlib.patches import Ellipse
 import matplotlib.transforms as transforms
 
-
-
 class MCMC:
     '''
     Contains functions to perform MCMC sampling
@@ -120,9 +118,9 @@ class MCMC:
         gammaygx = self.noisecov #[self.bands,:][:,self.bands]
         loglikelihood = -1/2 * tLH.dot(np.linalg.solve(gammaygx, tLH))
 
-        if x[425] <= 0 or x[426] <= 1:
-                print('ATM parameter is negative')
-                loglikelihood = -np.Inf
+        if x[425] < 0 or x[426] > 1:
+            print('ATM parameter is negative')
+            loglikelihood = -np.Inf
         
         return logprior + loglikelihood 
 
@@ -141,7 +139,7 @@ class MCMC:
         
         x_vals = np.zeros([self.x0.size, self.Nsamp])
         logpos = np.zeros(self.Nsamp)
-        diagnostic = np.zeros([self.ny, self.Nsamp])
+        # diagnostic = np.zeros([self.ny, self.Nsamp])
         x = self.x0
 
         for i in range(self.Nsamp):
