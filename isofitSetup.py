@@ -19,13 +19,16 @@ class Setup:
     '''
     # deleted the fixed_atm in this version, and changed getPrior outputs from 4 to 2
     # also deleted the first genTestSamples function
-    def __init__(self, atm):
+    def __init__(self, atm, truthref=0, wv=0):
         # atm is the atmospheric parameters
-
-        self.wavelengths, self.reflectance = np.loadtxt('setup/data/petunia/petunia_reflectance.txt').T
+        if truthref.all == 0:
+            self.wavelengths, self.reflectance = np.loadtxt('setup/data/petunia/petunia_reflectance.txt').T
+        else:
+            self.wavelengths = wv
+            self.reflectance = truthref
 
         # choose prior from Isofit
-        self.indPr = 6
+        self.indPr = 5
 
         # specify storage directories 
         self.sampleDir = '../results/Regression/samples/'

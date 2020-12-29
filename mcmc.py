@@ -19,14 +19,15 @@ class MCMC:
         self.yobs = 0
         self.burn = 0
 
-        # isofit parameters and functions
+        # initialize problem parameters
         self.wavelengths = setup.wavelengths
-        self.reflectance = setup.reflectance
-        self.truth = setup.truth
-        self.radiance = setup.radiance
-        self.bands = setup.bands
-        self.bandsX = setup.bandsX
+        self.reflectance = setup.reflectance # true reflectance
+        self.truth = setup.truth # true state (ref + atm)
+        self.radiance = setup.radiance # true radiance
+        self.bands = setup.bands # reflectance indices excluding deep water spectra
+        self.bandsX = setup.bandsX # same indices including atm parameters
 
+        # isofit parameters and functions
         self.setup = setup
         self.fm = setup.fm
         self.geom = setup.geom
@@ -35,49 +36,58 @@ class MCMC:
         self.gammapos_isofit = setup.isofitGammaPos
         self.noisecov = setup.noisecov
         
-        self.gamma_ygx = analysis.gamma_ygx 
-        self.G = analysis.phi
+        self.gamma_ygx = analysis.gamma_ygx # error covariance from linear model
+        self.G = analysis.phi # linear operator
 
-        self.nx = self.gamma_x.shape[0]
-        self.ny = self.noisecov.shape[0]
+        self.nx = self.gamma_x.shape[0] # parameter dimension
+        self.ny = self.noisecov.shape[0] # data dimension
 
     def initValue(self, x0, yobs, sd, Nsamp, burn, project=False, nr=427):
-        self.startX = x0
+        ''' Load MCMC parameters '''
 
-        self.x0 = x0 - self.mu_x # subtract the mean
-        
-        self.yobs = yobs
+        self.yobs = yobs # radiance observation
+        self.Nsamp = Nsamp # number of MCMC samples
+        self.burn = burn # number of burn-in samples
+        self.project = project # True if LIS, False if no LIS
+
+        # initial value for MCMC
+        self.startX = x0 
+        self.x0 = x0 - self.mu_x 
+
+        # proposal covariance factor
         self.sd = sd
-        self.Nsamp = Nsamp
-        self.burn = burn
-        self.project = project
-        self.propcov = self.gammapos_isofit * sd
-
+        self.propcov = self.gammapos_isofit * sd 
+        
         if project == True:
-            self.phi, self.theta, self.proj, self.phiComp, self.thetaComp, self.projComp = self.LISproject(nr)
+            # compute projection matrices
+            self.phi, self.theta, self.proj, self.phiComp, self.thetaComp, self.projComp = self.LISproject(nr) 
+
+             # project x0 and proposal covariance to LIS subspace
             self.x0 = self.theta.T @ self.x0
             self.propcov = self.theta.T @ self.propcov @ self.theta
 
-            self.nr = nr
+            self.nr = nr # LIS rank
             
         
     def estHessian(self):
-        cholPr = np.linalg.cholesky(self.gamma_x)
-        H = self.G.T @ np.linalg.inv(self.noisecov) @ self.G
-        Hn = cholPr.T @ H @ cholPr
+        ''' Compute Hessian for eigenvalue problem '''
+        cholPr = np.linalg.cholesky(self.gamma_x) # cholesky decomp of prior covariance
+        H = self.G.T @ np.linalg.inv(self.noisecov) @ self.G # Hessian
+        Hn = cholPr.T @ H @ cholPr 
         return Hn
     
     def LISproject(self, nr):
-        # solve eigenvalue problem using Hn
+        ''' Compute LIS projection matrices '''
+
         print('Solving generalized eigenvalue problem...')
         Hn = self.estHessian()
+        cholPr = np.linalg.cholesky(self.gamma_x) # cholesky decomp of prior covariance
         
-        Lpr = np.linalg.cholesky(self.gamma_x)
-
+        # solve eigenvalue problem, sort
         eigvec, eigval, p = np.linalg.svd(Hn)
         idx = eigval.argsort()[::-1]
-        eigval = np.real(eigval[idx])
-        V = np.real(eigvec[:,idx])
+        eigval = eigval[idx]
+        V = eigvec[:,idx]
 
         # plt.semilogy(eigval)
         # plt.title('LIS Eigenvalue Decay')
@@ -86,37 +96,35 @@ class MCMC:
 
         # complementary subspace
         VComp = V[:,nr:]
-        phiComp = Lpr @ VComp
-        thetaComp = np.linalg.inv(Lpr.T) @ VComp
+        phiComp = cholPr @ VComp
+        thetaComp = np.linalg.inv(cholPr.T) @ VComp
         projComp = phiComp @ thetaComp.T
 
         # LIS subspace
         V = V[:,:nr] 
-        phi = Lpr @ V
-        theta = np.linalg.inv(Lpr.T) @ V
+        phi = cholPr @ V
+        theta = np.linalg.inv(cholPr.T) @ V
         proj = phi @ theta.T
         print('Eigenvalue problem solved.')
 
         return phi, theta, proj, phiComp, thetaComp, projComp
         
     def logpos(self, x):
-        
+        ''' Calculate log posterior '''
         if self.project == True:
-            xr = x
-            x = self.phi @ xr  + self.mu_x
-            gammax = np.identity(np.size(xr)) 
-            tPrior = xr #- self.theta.T @ self.mu_x
-            logprior = -1/2 * tPrior.dot(np.linalg.solve(gammax, tPrior))
+            xr = x 
+            x = self.phi @ xr  + self.mu_x # project back to original (physical) space
+            gammax = np.identity(np.size(xr)) # prior of normalized LIS space
+            logprior = -1/2 * xr.dot(np.linalg.solve(gammax, xr))
             
         else:
-            x = x + self.mu_x
+            x = x + self.mu_x 
             tPrior = x - self.mu_x 
             logprior = -1/2 * tPrior.dot(np.linalg.solve(self.gamma_x, tPrior))
 
-        meas = self.fm.calc_rdn(x, self.geom)
-        tLH = self.yobs - meas #tLH = self.yobs[self.bands] - meas[self.bands]
-        gammaygx = self.noisecov #[self.bands,:][:,self.bands]
-        loglikelihood = -1/2 * tLH.dot(np.linalg.solve(gammaygx, tLH))
+        meas = self.fm.calc_rdn(x, self.geom) # apply forward model
+        tLH = self.yobs - meas
+        loglikelihood = -1/2 * tLH.dot(np.linalg.solve(self.noisecov, tLH))
 
         if x[425] < 0 or x[426] > 1:
             print('ATM parameter is negative')
@@ -125,25 +133,28 @@ class MCMC:
         return logprior + loglikelihood 
 
     def proposal_chol(self, mean, covCholesky):
+        ''' Sample proposal from a normal distribution '''
         n = mean.size
         zx = np.random.normal(0,1,size=n)
         z = mean + covCholesky @ zx
         return z
 
     def alpha(self, x, z):
+        ''' Calculate acceptance ratio '''
         ratio = self.logpos(z) - self.logpos(x)
         return np.minimum(1, np.exp(ratio))
 
     def runMCMC(self, alg):
-        gammapropChol = np.linalg.cholesky(self.propcov)
-        
-        x_vals = np.zeros([self.x0.size, self.Nsamp])
-        logpos = np.zeros(self.Nsamp)
+        ''' Run MCMC algorithm '''
+
+        propChol = np.linalg.cholesky(self.propcov) # cholesky decomp of proposal cov
+        x_vals = np.zeros([self.x0.size, self.Nsamp]) # store all samples
+        logpos = np.zeros(self.Nsamp) # store the log posterior values
         # diagnostic = np.zeros([self.ny, self.Nsamp])
         x = self.x0
 
         for i in range(self.Nsamp):
-            z = self.proposal_chol(x, gammapropChol)
+            z = self.proposal_chol(x, propChol)
             # fix the atm parameters to a constant
             # z[425:] = self.truth[425:] - self.mu_x[425:]
             
@@ -178,9 +189,9 @@ class MCMC:
                     print('- New Proposal Covariance -')
                     covX = np.cov(x_vals[:,i-1000:i])
                     self.propcov = self.sd * covX + eps * np.identity(len(x))
-                    gammapropChol = np.linalg.cholesky(self.propcov)
+                    propChol = np.linalg.cholesky(self.propcov)
                     # if np.all(np.linalg.eigvals(self.propcov) > 0):
-                    #     gammapropChol = np.linalg.cholesky(self.propcov)
+                    #     propChol = np.linalg.cholesky(self.propcov)
                     # else:
                     #     print('Proposal covariance not SPD')
         
@@ -188,7 +199,7 @@ class MCMC:
         x_vals_full = np.zeros([self.nx, self.Nsamp])
         if self.project == True:
             # add samples of xComp to chain, project back to full subspace
-            nComp = np.shape(self.phiComp)[1]
+            nComp = np.shape(self.phiComp)[1] # size of complementary subspace
             for i in range(self.Nsamp):
                 xComp = self.proposal_chol(np.zeros(nComp), np.identity(nComp))
                 x_vals_full[:,i] = self.phi @ x_vals[:,i] + self.phiComp @ xComp + self.mu_x
