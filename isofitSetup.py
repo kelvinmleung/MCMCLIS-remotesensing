@@ -11,46 +11,47 @@ from isofit.core.forward import ForwardModel
 from isofit.core.geometry import Geometry
 from isofit.inversion.inverse import Inversion
 from isofit.configs.configs import Config  
+from isofit.surface.surface_multicomp import MultiComponentSurface
     
 class Setup:
     '''
     Contains functions to generate training and test samples
     from isofit.
     '''
-    # deleted the fixed_atm in this version, and changed getPrior outputs from 4 to 2
-    # also deleted the first genTestSamples function
-    def __init__(self, atm, truthref=0, wv=0):
-        # atm is the atmospheric parameters
-        if truthref.all == 0:
-            self.wavelengths, self.reflectance = np.loadtxt('setup/data/petunia/petunia_reflectance.txt').T
-        else:
-            self.wavelengths = wv
-            self.reflectance = truthref
+    def __init__(self, wv, ref, atm):
 
-        # choose prior from Isofit
-        self.indPr = 5
+        print('Setup in progress...')
+        self.wavelengths = wv
+        self.reflectance = ref
+        self.truth = np.concatenate((ref, atm))
 
         # specify storage directories 
-        self.sampleDir = '../results/Regression/samples/'
-        self.regDir = '../results/Regression/'
+        self.sampleDir = '../results/Regression/samples/MOG/'
+        self.regDir = '../results/Regression/MOG/'
         self.analysisDir = '../results/Analysis/'
         self.mcmcDir = '../results/MCMC/'
 
         # load Isofit
-        self.fm, self.geom = self.fwdModel()
-        self.truth = np.concatenate((self.reflectance, atm)) 
+        with open('setup/config/config_inversion.json', 'r') as f:
+            config = json.load(f)
+        fullconfig = Config(config)
+        self.fm = ForwardModel(fullconfig)
+        self.geom = Geometry()
+        self.mu_x, self.gamma_x = self.getPrior(fullconfig)
 
+        # get Isofit noise model and simulate radiance
         rad = self.fm.calc_rdn(self.truth, self.geom)
         noisecov = self.fm.Seps(self.truth, rad, self.geom)
-        # self.noisecov = noisecov
-        self.noisecov = noisecov - np.diag(np.diag(noisecov)) + np.diag(np.clip(np.diag(noisecov), a_min=1e-7, a_max=None))
-
+        self.noisecov = noisecov
+        #self.noisecov = noisecov - np.diag(np.diag(noisecov)) + np.diag(np.clip(np.diag(noisecov), a_min=1e-7, a_max=None))
         eps = np.random.multivariate_normal(np.zeros(len(rad)), self.noisecov)
         self.radiance = rad
         self.radNoisy = rad + eps
         
-        self.isofitMuPos, self.isofitGammaPos = self.invModel(self.radiance)
+        # inversion using simulated radiance
+        self.isofitMuPos, self.isofitGammaPos = self.invModel(self.radNoisy)
 
+        # get indices that are in the window (i.e. take out deep water spectra)
         wl = self.wavelengths
         bands = []
         for i in range(wl.size):
@@ -58,11 +59,15 @@ class Setup:
                 bands = bands + [i]
         self.bands = bands
         self.bandsX = bands + [425,426]
+
+        print('Setup finished.')
     
-    def getPrior(self):
-        fm = self.fm
+    def getPrior(self, fullconfig):
+        # get index of prior used in inversion
+        mcs = MultiComponentSurface(fullconfig)
+        indPr = mcs.component(self.truth, self.geom)
+        print('Prior Index:', indPr)
         # Get prior mean and covariance
-        
         surfmat = loadmat('setup/data/surface.mat')
         wl = surfmat['wl'][0]
         refwl = np.squeeze(surfmat['refwl'])
@@ -70,50 +75,31 @@ class Setup:
         idx_ref = np.array(idx_ref)
         refnorm = np.linalg.norm(self.reflectance[idx_ref])
 
-        mu_priorsurf = fm.surface.components[self.indPr][0] * refnorm
-        mu_priorRT = fm.RT.xa()
-        mu_priorinst = fm.instrument.xa()
+        mu_priorsurf = self.fm.surface.components[indPr][0] * refnorm
+        mu_priorRT = self.fm.RT.xa()
+        mu_priorinst = self.fm.instrument.xa()
         mu_x = np.concatenate((mu_priorsurf, mu_priorRT, mu_priorinst), axis=0)
         
-        gamma_priorsurf = fm.surface.components[self.indPr][1] * (refnorm ** 2)
-        gamma_priorRT = fm.RT.Sa()[:, :]
-        gamma_priorinst = fm.instrument.Sa()[:, :]
+        gamma_priorsurf = self.fm.surface.components[indPr][1] * (refnorm ** 2)
+        gamma_priorRT = self.fm.RT.Sa()[:, :]
+        gamma_priorinst = self.fm.instrument.Sa()[:, :]
         gamma_x = s.linalg.block_diag(gamma_priorsurf, gamma_priorRT, gamma_priorinst)
 
         return mu_x, gamma_x
 
-    def fwdModel(self):
-
-        print('Forward Model Setup...')
-        with open('setup/config/config_inversion.json', 'r') as f:
-            config = json.load(f)
-        geom = Geometry()
-        fm_config = Config(config)
-        fm = ForwardModel(fm_config)
-        print('Setup Finished.')
-
-        return fm, geom
-
     def invModel(self, radiance):
-        
-        print('Running Inverse Model...')
 
         inversion_settings = {"implementation": {
         "mode": "inversion",
         "inversion": {
         "windows": [[380.0, 1300.0], [1450, 1780.0], [1950.0, 2450.0]]}}}
-
         inverse_config = Config(inversion_settings)
         iv = Inversion(inverse_config, self.fm)
         state_trajectory = iv.invert(radiance, self.geom)
         state_est = state_trajectory[-1]
         rfl_est, rdn_est, path_est, S_hat, K, G = iv.forward_uncertainty(state_est, radiance, self.geom)
 
-        print('Inversion finished.')
-
         return state_est, S_hat
-
-        
 
     def plotbands(self, y, linestyle, linewidth=1, label='', axis='normal'):
         wl = self.wavelengths
@@ -131,18 +117,18 @@ class Setup:
         X_plot = np.arange(1,426,1)
         Y_plot = np.arange(1,426,1)
         X_plot, Y_plot = np.meshgrid(X_plot, Y_plot)
-        plt.contourf(X_plot,Y_plot,gamma)
+        plt.contourf(X_plot, Y_plot, gamma)
         plt.title('Covariance')
         plt.axis('equal')
         plt.colorbar()
 
-    def plotPosMean(self, isofitMuPos, mu_xgyLin,  mu_xgyLinNoise, MCMCmean):
+    def plotPosMean(self, mu_xgyLin,  mu_xgyLinNoise, MCMCmean):
         mu_x, gamma_x = self.getPrior()
 
         plt.figure(64)
         self.plotbands(self.truth[:425], 'b.',label='True Reflectance')
         #self.plotbands(mu_x[:425], 'r.',label='Prior')
-        self.plotbands(isofitMuPos[:425],'k.', label='Isofit Posterior')
+        self.plotbands(self.isofitMuPos[:425],'k.', label='Isofit Posterior')
         self.plotbands(mu_xgyLin[:425], 'm.',label='Linear Posterior')
         #self.plotbands(mu_xgyLinNoise[:425], 'g.',label='Linear - Noise Covariance')
         self.plotbands(MCMCmean[:425], 'c.',label='MCMC Posterior')
@@ -151,10 +137,10 @@ class Setup:
         plt.grid()
         plt.legend()
 
-        isofitError = abs(isofitMuPos[:425] - self.truth[:425]) / abs(self.truth[:425])
+        isofitError = abs(self.isofitMuPos[:425] - self.truth[:425]) / abs(self.truth[:425])
         linError = abs(mu_xgyLin[:425] - self.truth[:425]) / abs(self.truth[:425])
         mcmcError = abs(MCMCmean[:425] - self.truth[:425]) / abs(self.truth[:425])
-        isofitMCMC =abs(isofitMuPos[:425] - MCMCmean[:425]) / abs(self.truth[:425])
+        isofitMCMC =abs(self.isofitMuPos[:425] - MCMCmean[:425]) / abs(self.truth[:425])
         plt.figure(65)
         self.plotbands(isofitError,'k.', label='Isofit Posterior',axis='semilogy')
         self.plotbands(linError, 'm.',label='Linear Posterior',axis='semilogy')
@@ -168,7 +154,7 @@ class Setup:
         plt.figure(66)
         plt.plot(self.truth[425], self.truth[426], 'bo',label='True Reflectance')
         plt.plot(mu_x[425], mu_x[426], 'r.',label='Prior')
-        plt.plot(isofitMuPos[425],isofitMuPos[426],'k.', label='Isofit Posterior')
+        plt.plot(self.isofitMuPos[425],self.isofitMuPos[426],'k.', label='Isofit Posterior')
         #plt.plot(mu_xgyLin[425], mu_xgyLin[426],'mx',label='Linear Posterior')
         #plt.plot(mu_xgyLinNoise[425],mu_xgyLinNoise[426], 'gx',label='Linear - Noise Covariance')
         plt.plot(MCMCmean[425], MCMCmean[426], 'cx',label='MCMC Posterior')

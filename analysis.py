@@ -13,8 +13,9 @@ class Analysis:
         print('Initializing analysis...')
 
         # configure directories
+        self.sampleDir = setup.sampleDir
+        self.regDir = setup.regDir
         self.analysisDir = setup.analysisDir
-        self.regDir = regression.regDir
 
         # setup parameters
         self.plotbands = setup.plotbands
@@ -26,7 +27,8 @@ class Analysis:
         self.bands = setup.bands
         self.bandsX = setup.bandsX
 
-        self.mu_x, self.gamma_x = setup.getPrior()
+        self.mu_x = setup.mu_x
+        self.gamma_x = setup.gamma_x
         self.fm = setup.fm
         self.geom = setup.geom        
 
@@ -35,8 +37,8 @@ class Analysis:
         self.scaleY = regression.Y_train
 
         # load data sets
-        X_train = np.load(self.regDir + 'samples/X_train.npy')
-        Y_train = np.load(self.regDir + 'samples/Y_train.npy')
+        X_train = np.load(self.sampleDir + 'X_train.npy')
+        Y_train = np.load(self.sampleDir + 'Y_train.npy')
         self.X = X_train
         self.Y = Y_train
 

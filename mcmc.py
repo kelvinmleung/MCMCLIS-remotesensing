@@ -31,7 +31,8 @@ class MCMC:
         self.setup = setup
         self.fm = setup.fm
         self.geom = setup.geom
-        self.mu_x, self.gamma_x = setup.getPrior()
+        self.mu_x = setup.mu_x
+        self.gamma_x = setup.gamma_x
         self.mupos_isofit = setup.isofitMuPos
         self.gammapos_isofit = setup.isofitGammaPos
         self.noisecov = setup.noisecov
@@ -122,11 +123,14 @@ class MCMC:
             tPrior = x - self.mu_x 
             logprior = -1/2 * tPrior.dot(np.linalg.solve(self.gamma_x, tPrior))
 
+        # keep atm fixed to the truth
+        x = np.concatenate((x[:425], self.truth[425:]))
+
         meas = self.fm.calc_rdn(x, self.geom) # apply forward model
         tLH = self.yobs - meas
         loglikelihood = -1/2 * tLH.dot(np.linalg.solve(self.noisecov, tLH))
 
-        if x[425] < 0 or x[426] > 1:
+        if x[425] < 0 or x[426] < 0:
             print('ATM parameter is negative')
             loglikelihood = -np.Inf
         

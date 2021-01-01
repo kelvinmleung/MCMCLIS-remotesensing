@@ -11,7 +11,7 @@ class Regression:
     create a linear approximation of the Isofit forward model.
     '''
 
-    def __init__(self, setup, g):
+    def __init__(self, setup):
         
         # directory to store regression results
         self.regDir = setup.regDir
@@ -26,7 +26,7 @@ class Regression:
         self.bandsX = setup.bandsX
 
         # load data sets
-        self.sampleDir = g.sampleDir
+        self.sampleDir = setup.sampleDir
         X_train = np.load(self.sampleDir + 'X_train.npy')
         Y_train = np.load(self.sampleDir + 'Y_train.npy')
         X_test = np.load(self.sampleDir + 'X_test.npy')

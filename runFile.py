@@ -9,8 +9,9 @@ from mcmc import MCMC
 
 
 ## SETUP ##
-atm = [0.1,2]
-setup = Setup(atm)
+wv, ref = np.loadtxt('setup/data/petunia/petunia_reflectance.txt').T
+atm = [0.5,2.5]
+setup = Setup(wv, ref, atm)
 
 ## GENERATE SAMPLES ##
 g = GenerateSamples(setup)
@@ -18,7 +19,7 @@ g = GenerateSamples(setup)
 # g.genTestSamples(2000)
 
 ## REGRESSION ##
-r = Regression(setup, g)
+r = Regression(setup)
 # r.fullLasso([1e-2] * 425)
 # r.plotFullLasso()
 
@@ -28,7 +29,7 @@ a = Analysis(setup, r)
 ## MCMC ##
 m = MCMC(setup, a)
 x0 = setup.truth
-rank = 170
+rank = 427
 sd = 2.4 ** 2 / min(rank,427)
 
 m.initValue(x0=x0, yobs=setup.radiance, sd=sd, Nsamp=100000, burn=10000, project=True, nr=rank)
