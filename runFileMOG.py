@@ -19,21 +19,21 @@ from isofit.configs.configs import Config
 atm = [0.5,2.5]
 
 
-Xtrain = np.load('../results/Regression/samples/MOG/X_train.npy')
-Ytrain = np.load('../results/Regression/samples/MOG/Y_train.npy')
+# Xtrain = np.load('../results/Regression/samples/MOG/X_train.npy')
+# Ytrain = np.load('../results/Regression/samples/MOG/Y_train.npy')
 
 
 wv, aqua = np.loadtxt('../Dec2020/JayanthRicardo/aquatic_spectrum_resampled.txt').T
 wv, veg = np.loadtxt('../Dec2020/JayanthRicardo/vegetation_spectrum_resampled.txt').T
-phi = np.load('../results/Regression/MOG/phi.npy')
+# phi = np.load('../results/Regression/MOG/phi.npy')
 
-meanX = np.mean(Xtrain,0)
-varX = np.var(Xtrain,0)
-meanY = np.mean(Ytrain,0)
-varY = np.var(Ytrain,0)
+# meanX = np.mean(Xtrain,0)
+# varX = np.var(Xtrain,0)
+# meanY = np.mean(Ytrain,0)
+# varY = np.var(Ytrain,0)
 
-scaleX = (Xtrain - meanX) / np.sqrt(varX)
-scaleY = (Ytrain - meanY) / np.sqrt(varY)
+# scaleX = (Xtrain - meanX) / np.sqrt(varX)
+# scaleY = (Ytrain - meanY) / np.sqrt(varY)
 
 ABC = 'B'
 
@@ -54,6 +54,11 @@ g = GenerateSamples(setup)
 r = Regression(setup)
 a = Analysis(setup, r)
 
+meanX = r.meanX
+varX = r.varX
+meanY = r.meanY
+varY = r.varY
+
 
 radiance = setup.radiance
 radNoisy = setup.radNoisy
@@ -65,19 +70,12 @@ truth = np.concatenate((truthRef, np.array(atm)))
 mu_x = setup.mu_x
 gamma_x = setup.gamma_x
 
-
-# error = scaleY - scaleX @ phi.T
-# gamma_ygx_tilde = np.cov(error.T)
-# sigma_x_power = np.diag(varX ** -0.5)
-# sigma_y_power = np.diag(varY ** 0.5)
-# gamma_ygx = np.real(sigma_y_power @ gamma_ygx_tilde @ sigma_y_power)
-# phiFull = np.real(sigma_y_power @ phi @ sigma_x_power)
-
 gamma_ygx = a.gamma_ygx
+phi = a.phi_tilde
 phiFull = a.phi
 
-eps = np.random.multivariate_normal(np.zeros(len(radiance)), gamma_ygx)
-radNoisyNew = radiance + eps
+# eps = np.random.multivariate_normal(np.zeros(len(radiance)), gamma_ygx)
+# radNoisyNew = radiance + eps
 
 gamma_y = phiFull @ gamma_x @ phiFull.T + gamma_ygx
 gamma_xgy = (np.identity(a.nx) - gamma_x @ phiFull.T @ np.linalg.inv(gamma_y) @ phiFull) @ gamma_x
@@ -114,7 +112,7 @@ radLin = phi.dot((truth - meanX) / np.sqrt(varX)) * np.sqrt(varY) + meanY
 plt.figure(11)
 plt.plot(wv, radiance[:425],'b', label='Isofit')
 plt.plot(wv, radNoisy[:425],'r', label='Isofit (Plus Noise)')
-plt.plot(wv, radNoisyNew[:425],'r', label='Isofit (Plus Noise GammaYGX)')
+#plt.plot(wv, radNoisyNew[:425],'r', label='Isofit (Plus Noise GammaYGX)')
 #setup.plotbands(radLin[:425], 'm',label='Linear Model')
 plt.xlabel('Wavelength')
 plt.ylabel('Radiance')

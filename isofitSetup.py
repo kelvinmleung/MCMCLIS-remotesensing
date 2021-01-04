@@ -45,7 +45,7 @@ class Setup:
         self.noisecov = noisecov
         eps = np.random.multivariate_normal(np.zeros(len(rad)), self.noisecov)
         self.radiance = rad
-        self.radNoisy = abs(rad + eps) ################### TOOK THE ABS VALUE
+        self.radNoisy = rad + eps
         
         # inversion using simulated radiance
         self.isofitMuPos, self.isofitGammaPos = self.invModel(self.radNoisy)
