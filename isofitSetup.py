@@ -43,10 +43,9 @@ class Setup:
         rad = self.fm.calc_rdn(self.truth, self.geom)
         noisecov = self.fm.Seps(self.truth, rad, self.geom)
         self.noisecov = noisecov
-        #self.noisecov = noisecov - np.diag(np.diag(noisecov)) + np.diag(np.clip(np.diag(noisecov), a_min=1e-7, a_max=None))
         eps = np.random.multivariate_normal(np.zeros(len(rad)), self.noisecov)
         self.radiance = rad
-        self.radNoisy = rad + eps
+        self.radNoisy = abs(rad + eps) ################### TOOK THE ABS VALUE
         
         # inversion using simulated radiance
         self.isofitMuPos, self.isofitGammaPos = self.invModel(self.radNoisy)
@@ -123,11 +122,10 @@ class Setup:
         plt.colorbar()
 
     def plotPosMean(self, mu_xgyLin,  mu_xgyLinNoise, MCMCmean):
-        mu_x, gamma_x = self.getPrior()
 
         plt.figure(64)
         self.plotbands(self.truth[:425], 'b.',label='True Reflectance')
-        #self.plotbands(mu_x[:425], 'r.',label='Prior')
+        #self.plotbands(self.mu_x[:425], 'r.',label='Prior')
         self.plotbands(self.isofitMuPos[:425],'k.', label='Isofit Posterior')
         self.plotbands(mu_xgyLin[:425], 'm.',label='Linear Posterior')
         #self.plotbands(mu_xgyLinNoise[:425], 'g.',label='Linear - Noise Covariance')
@@ -153,7 +151,7 @@ class Setup:
 
         plt.figure(66)
         plt.plot(self.truth[425], self.truth[426], 'bo',label='True Reflectance')
-        plt.plot(mu_x[425], mu_x[426], 'r.',label='Prior')
+        plt.plot(self.mu_x[425], self.mu_x[426], 'r.',label='Prior')
         plt.plot(self.isofitMuPos[425],self.isofitMuPos[426],'k.', label='Isofit Posterior')
         #plt.plot(mu_xgyLin[425], mu_xgyLin[426],'mx',label='Linear Posterior')
         #plt.plot(mu_xgyLinNoise[425],mu_xgyLinNoise[426], 'gx',label='Linear - Noise Covariance')
