@@ -26,8 +26,8 @@ class Setup:
         self.truth = np.concatenate((ref, atm))
 
         # specify storage directories 
-        self.sampleDir = '../results/Regression/samples/MOG/'
-        self.regDir = '../results/Regression/MOG/'
+        self.sampleDir = '../results/Regression/samples/'
+        self.regDir = '../results/Regression/linearModel/'
         self.analysisDir = '../results/Analysis/'
         self.mcmcDir = '../results/MCMC/'
 
@@ -41,8 +41,7 @@ class Setup:
 
         # get Isofit noise model and simulate radiance
         rad = self.fm.calc_rdn(self.truth, self.geom)
-        noisecov = self.fm.Seps(self.truth, rad, self.geom)
-        self.noisecov = noisecov
+        self.noisecov = self.fm.Seps(self.truth, rad, self.geom)
         eps = np.random.multivariate_normal(np.zeros(len(rad)), self.noisecov)
         self.radiance = rad
         self.radNoisy = rad + eps
