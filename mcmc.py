@@ -123,9 +123,6 @@ class MCMC:
             tPrior = x - self.mu_x 
             logprior = -1/2 * tPrior.dot(np.linalg.solve(self.gamma_x, tPrior))
 
-        # keep atm fixed to the truth
-        # x = np.concatenate((x[:425], self.truth[425:]))
-
         meas = self.fm.calc_rdn(x, self.geom) # apply forward model
         tLH = self.yobs - meas
         loglikelihood = -1/2 * tLH.dot(np.linalg.solve(self.noisecov, tLH))
@@ -150,7 +147,6 @@ class MCMC:
 
     def runMCMC(self, alg):
         ''' Run MCMC algorithm '''
-
         propChol = np.linalg.cholesky(self.propcov) # cholesky decomp of proposal cov
         x_vals = np.zeros([self.x0.size, self.Nsamp]) # store all samples
         logpos = np.zeros(self.Nsamp) # store the log posterior values
