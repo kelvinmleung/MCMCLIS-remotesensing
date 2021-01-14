@@ -40,6 +40,9 @@ class MCMC:
         self.gamma_ygx = analysis.gamma_ygx # error covariance from linear model
         self.G = analysis.phi # linear operator
 
+        # linear posterior covariance
+        p, self.linpos = analysis.posterior(setup.radNoisy)
+
         self.nx = self.gamma_x.shape[0] # parameter dimension
         self.ny = self.noisecov.shape[0] # data dimension
 
@@ -57,7 +60,10 @@ class MCMC:
 
         # proposal covariance factor
         self.sd = sd
-        self.propcov = self.gammapos_isofit * sd 
+        # self.propcov = self.gammapos_isofit * sd 
+        self.propcov = self.linpos #* sd
+
+        
         
         if project == True:
             # compute projection matrices
@@ -115,11 +121,16 @@ class MCMC:
         if self.project == True:
             xr = x 
             x = self.phi @ xr  + self.mu_x # project back to original (physical) space
+            
+            # nComp = np.shape(self.phiComp)[1]
+            # xComp = self.proposal_chol(np.zeros(nComp), np.identity(nComp))
+            # x = self.phi @ xr  + self.phiComp @ xComp + self.mu_x
+            
             gammax = np.identity(np.size(xr)) # prior of normalized LIS space
             logprior = -1/2 * xr.dot(np.linalg.solve(gammax, xr))
             
         else:
-            x = x + self.mu_x 
+            x = x + self.mu_x
             tPrior = x - self.mu_x 
             logprior = -1/2 * tPrior.dot(np.linalg.solve(self.gamma_x, tPrior))
 
@@ -130,6 +141,7 @@ class MCMC:
         if x[425] < 0 or x[426] < 0:
             print('ATM parameter is negative')
             loglikelihood = -np.Inf
+            print(x[425:])
         
         return logprior + loglikelihood 
 
@@ -261,7 +273,7 @@ class MCMC:
         x_vals = np.load(self.mcmcDir + 'MCMC_x.npy')
         x_elem = x_vals[ind,:]
 
-        Nsamp = min(self.Nsamp, 10000)
+        Nsamp = min(self.Nsamp, 20000)
         meanX = np.mean(x_elem)
         varX = np.var(x_elem)
         ac = np.zeros(Nsamp-1)
