@@ -61,7 +61,7 @@ class MCMC:
         # proposal covariance factor
         self.sd = sd
         # self.propcov = self.gammapos_isofit * sd 
-        self.propcov = self.linpos #* sd
+        self.propcov = self.linpos * sd
 
         
         
@@ -274,6 +274,8 @@ class MCMC:
         x_elem = x_vals[ind,:]
 
         Nsamp = min(self.Nsamp, 20000)
+        if self.burn > 20000:
+            Nsamp = self.burn
         meanX = np.mean(x_elem)
         varX = np.var(x_elem)
         ac = np.zeros(Nsamp-1)
