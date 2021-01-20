@@ -120,7 +120,7 @@ class Setup:
         plt.axis('equal')
         plt.colorbar()
 
-    def plotPosMean(self, mu_xgyLin,  mu_xgyLinNoise, MCMCmean):
+    def plotPosterior(self, mu_xgyLin, gamma_xgyLin, MCMCmean, MCMCcov):
 
         plt.figure(64)
         self.plotbands(self.truth[:425], 'b.',label='True Reflectance')
@@ -129,9 +129,11 @@ class Setup:
         self.plotbands(MCMCmean[:425], 'c.',label='MCMC Posterior')
         plt.xlabel('Wavelength')
         plt.ylabel('Reflectance')
+        plt.title('Posterior Mean Comparison')
         plt.grid()
         plt.legend()
 
+        plt.figure(65)
         isofitError = abs(self.isofitMuPos[:425] - self.truth[:425]) / abs(self.truth[:425])
         linError = abs(mu_xgyLin[:425] - self.truth[:425]) / abs(self.truth[:425])
         mcmcError = abs(MCMCmean[:425] - self.truth[:425]) / abs(self.truth[:425])
@@ -140,6 +142,7 @@ class Setup:
         self.plotbands(mcmcError, 'c.',label='MCMC Posterior',axis='semilogy')
         plt.xlabel('Wavelength')
         plt.ylabel('Relative Error')
+        plt.title('Error in Posterior Mean')
         plt.grid()
         plt.legend()
 
@@ -153,3 +156,36 @@ class Setup:
         plt.ylabel('H2OSTR')
         plt.grid()
         plt.legend()
+
+        priorPlot = np.diag(self.gamma_x)
+        isofitPlot = np.diag(self.isofitGammaPos)
+        linearPlot = np.diag(gamma_xgyLin)
+        MCMCPlot = np.diag(MCMCcov)
+
+        plt.figure(67)
+        self.plotbands(priorPlot[:425], 'b.',label='Prior', axis='semilogy')
+        self.plotbands(isofitPlot[:425],'k.', label='Isofit Posterior', axis='semilogy')
+        self.plotbands(linearPlot[:425], 'm.',label='Linear Posterior', axis='semilogy')
+        self.plotbands(MCMCPlot[:425], 'c.',label='MCMC Posterior', axis='semilogy')
+        plt.xlabel('Wavelength')
+        plt.ylabel('Variance')
+        plt.title('Marginal Variance Comparison')
+        plt.grid()
+        plt.legend()
+
+        # bar graph of atm parameter variances
+        labels = ['425 - AOD550', '426 - H20STR']
+        x = np.arange(len(labels))  # the label locations
+        width = 0.175
+        fig, ax = plt.subplots()
+        rects1 = ax.bar(x - 3*width/2, priorPlot[425:], width, label='Prior')
+        rects2 = ax.bar(x - width/2, isofitPlot[425:], width, label='Isofit Posterior')
+        rects3 = ax.bar(x + width/2, linearPlot[425:], width, label='Linear Posterior')
+        rects4 = ax.bar(x + 3*width/2, MCMCPlot[425:], width, label='MCMC Posterior')
+        ax.set_yscale('log')
+        ax.set_ylabel('Variance')
+        ax.set_title('Marginal Variance of Atm')
+        ax.set_xticks(x)
+        ax.set_xticklabels(labels)
+        ax.legend()
+
