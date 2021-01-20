@@ -8,12 +8,6 @@ from analysis import Analysis
 from mcmc import MCMC
 ### Notes ###
 '''
-r = 427
-Start with x0 at prior (for both refl and atm)
-run for 5e5 samples and see if it gets close to the truth or isofit posterior
-
-using linear posterior as initial proposal covariance
-self.propcov = self.linpos * sd
 '''
 
 
@@ -40,21 +34,22 @@ a = Analysis(setup, r)
 ## MCMC ##
 m = MCMC(setup, a)
 
+mu_xgyLin, gamma_xgyLin = a.posterior(yobs=setup.radiance)
 # x0 = np.zeros(427)
-# x0[:425] = setup.isofitMuPos[:425]
+# x0[:425] = mu_xgyLin[:425]
 # x0[425:] = [5,2.5]
-# x0 = setup.truth
-x0 = setup.mu_x
+x0 = setup.truth
+
 yobs = setup.radNoisy
 rank = 427
 sd = 2.4 ** 2 / min(rank,427)
 Nsamp = 500000
-burn = 50000
+burn = 10000
 
-m.initValue(x0=x0, yobs=yobs, sd=sd, Nsamp=500000, burn=burn, project=True, nr=rank)
+m.initValue(x0=x0, yobs=yobs, sd=sd, Nsamp=Nsamp, burn=burn, project=True, nr=rank)
 m.runMCMC(alg='adaptive')
 MCMCmean, MCMCcov = m.calcMeanCov()
-m.plotMCMCmean(MCMCmean, fig=1)
+#m.plotMCMCmean(MCMCmean, fig=1)
 
 # compare posterior mean
 mu_x = setup.mu_x

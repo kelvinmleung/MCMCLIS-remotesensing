@@ -121,14 +121,8 @@ class MCMC:
         if self.project == True:
             xr = x 
             x = self.phi @ xr  + self.mu_x # project back to original (physical) space
-            
-            # nComp = np.shape(self.phiComp)[1]
-            # xComp = self.proposal_chol(np.zeros(nComp), np.identity(nComp))
-            # x = self.phi @ xr  + self.phiComp @ xComp + self.mu_x
-            
             gammax = np.identity(np.size(xr)) # prior of normalized LIS space
             logprior = -1/2 * xr.dot(np.linalg.solve(gammax, xr))
-            
         else:
             x = x + self.mu_x
             tPrior = x - self.mu_x 
@@ -154,8 +148,11 @@ class MCMC:
 
     def alpha(self, x, z):
         ''' Calculate acceptance ratio '''
-        ratio = self.logpos(z) - self.logpos(x)
-        return np.minimum(1, np.exp(ratio))
+        logposZ = self.logpos(z)
+        logposX = self.logpos(x)
+        ratio = logposZ - logposX
+        # return both acceptance ratio and logpos
+        return np.minimum(1, np.exp(ratio)), logposZ, logposX
 
     def runMCMC(self, alg):
         ''' Run MCMC algorithm '''
@@ -178,11 +175,12 @@ class MCMC:
             #     plt.pause(0.001)
             #     plt.close()
             
-            alpha = self.alpha(x, z)
+            alpha, logposZ, logposX = self.alpha(x, z)
             if np.random.random() < alpha:
                 x = z 
+                logposX = logposZ
             x_vals[:,i] = x
-            logpos[i] = self.logpos(x)
+            logpos[i] = logposX
 
             # calculate diagnostic
             # meas = self.fm.calc_rdn(self.phi @ x  + self.mu_x, self.geom)
@@ -197,15 +195,11 @@ class MCMC:
             # change proposal covariance
             if alg == 'adaptive':
                 eps = 1e-10
-                if i > 1000 and i % 500 == 0: 
+                if i > 10000 and i % 500 == 0: 
                     print('- New Proposal Covariance -')
                     covX = np.cov(x_vals[:,i-1000:i])
                     self.propcov = self.sd * covX + eps * np.identity(len(x))
                     propChol = np.linalg.cholesky(self.propcov)
-                    # if np.all(np.linalg.eigvals(self.propcov) > 0):
-                    #     propChol = np.linalg.cholesky(self.propcov)
-                    # else:
-                    #     print('Proposal covariance not SPD')
         
         # post processing, store MCMC chain
         x_vals_full = np.zeros([self.nx, self.Nsamp])
@@ -319,6 +313,7 @@ class MCMC:
         plt.ylabel('Log Posterior')
         plt.title('Log Posterior Plot')
         plt.grid()
+
 
     def diagnostics(self, indSet=[10,20,50,100,150,160,250,260,425,426], calcAC=False):
         # assume there are 10 elements in indSet
