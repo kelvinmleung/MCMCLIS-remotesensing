@@ -157,16 +157,16 @@ class Setup:
         plt.grid()
         plt.legend()
 
-        priorPlot = np.diag(self.gamma_x)
-        isofitPlot = np.diag(self.isofitGammaPos)
-        linearPlot = np.diag(gamma_xgyLin)
-        MCMCPlot = np.diag(MCMCcov)
+        priorVar = np.diag(self.gamma_x)
+        isofitVar = np.diag(self.isofitGammaPos)
+        linearVar = np.diag(gamma_xgyLin)
+        MCMCVar = np.diag(MCMCcov)
 
         plt.figure(67)
-        self.plotbands(priorPlot[:425], 'b.',label='Prior', axis='semilogy')
-        self.plotbands(isofitPlot[:425],'k.', label='Isofit Posterior', axis='semilogy')
-        self.plotbands(linearPlot[:425], 'm.',label='Linear Posterior', axis='semilogy')
-        self.plotbands(MCMCPlot[:425], 'c.',label='MCMC Posterior', axis='semilogy')
+        self.plotbands(priorVar[:425], 'b.',label='Prior', axis='semilogy')
+        self.plotbands(isofitVar[:425],'k.', label='Isofit Posterior', axis='semilogy')
+        self.plotbands(linearVar[:425], 'm.',label='Linear Posterior', axis='semilogy')
+        self.plotbands(MCMCVar[:425], 'c.',label='MCMC Posterior', axis='semilogy')
         plt.xlabel('Wavelength')
         plt.ylabel('Variance')
         plt.title('Marginal Variance Comparison')
@@ -178,14 +178,32 @@ class Setup:
         x = np.arange(len(labels))  # the label locations
         width = 0.175
         fig, ax = plt.subplots()
-        rects1 = ax.bar(x - 3*width/2, priorPlot[425:], width, label='Prior')
-        rects2 = ax.bar(x - width/2, isofitPlot[425:], width, label='Isofit Posterior')
-        rects3 = ax.bar(x + width/2, linearPlot[425:], width, label='Linear Posterior')
-        rects4 = ax.bar(x + 3*width/2, MCMCPlot[425:], width, label='MCMC Posterior')
+        rects1 = ax.bar(x - 3*width/2, priorVar[425:], width, label='Prior')
+        rects2 = ax.bar(x - width/2, isofitVar[425:], width, label='Isofit Posterior')
+        rects3 = ax.bar(x + width/2, linearVar[425:], width, label='Linear Posterior')
+        rects4 = ax.bar(x + 3*width/2, MCMCVar[425:], width, label='MCMC Posterior')
         ax.set_yscale('log')
         ax.set_ylabel('Variance')
         ax.set_title('Marginal Variance of Atm')
         ax.set_xticks(x)
         ax.set_xticklabels(labels)
         ax.legend()
+
+        # # plot: x-axis is error in posterior mean, y-axis is error in mean weighted by covariance
+        # isofitPlotX = np.linalg.norm(self.isofitMuPos - self.truth) ** 2
+        # linearPlotX = np.linalg.norm(mu_xgyLin - self.truth) ** 2
+        # MCMCPlotX = np.linalg.norm(MCMCmean - self.truth) ** 2
+
+        # isofitPlotY = np.linalg.norm((isofitVar ** (-0.5)).dot(self.isofitMuPos - self.truth)) ** 2
+        # linearPlotY
+        # MCMCPlotY
+
+        # plt.plot(isofitPlotX, isofitPlotY, 'k*', label='Isofit')
+        # plt.plot(linearPlotX, linearPlotY, 'm*', label='Linear')
+        # plt.plot(MCMCPlotX, MCMCPlotY, 'c*', label='MCMC')
+        # plt.title('Error in Posterior')
+        # plt.xlabel('| \mu_{pos} - \mu_{true} |_2^2')
+        # plt.ylabel('| diag(\Gamma_{pos}^{-1/2}) \mu_{pos} - \mu_{true} |_2^2')
+        # plt.legend()
+    
 

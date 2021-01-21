@@ -267,9 +267,9 @@ class MCMC:
         x_vals = np.load(self.mcmcDir + 'MCMC_x.npy')
         x_elem = x_vals[ind,:]
 
-        Nsamp = min(self.Nsamp, 20000)
-        if self.burn > 20000:
-            Nsamp = self.burn
+        Nsamp = min(self.Nsamp, 10000)
+        # if self.burn > 20000:
+        #     Nsamp = self.burn
         meanX = np.mean(x_elem)
         varX = np.var(x_elem)
         ac = np.zeros(Nsamp-1)

@@ -260,9 +260,6 @@ class Analysis:
         mu_xgy = gamma_xgy @ (self.phi.T @ np.linalg.inv(self.noisecov) @ yobs + np.linalg.inv(self.gamma_x) @ self.mu_x)
         return mu_xgy, gamma_xgy
     
-
-
-
     def posterior_lowrank(self, gamma_xgy, maxdim):
         eigvalPCA, eigvecPCA = self.eigPCA()
         eigvalLIS, eigvecLIS = self.eigLIS()
@@ -273,7 +270,6 @@ class Analysis:
         gamma_errorPCA = np.zeros(len(dims))
         gamma_errorLIS = np.zeros(len(dims))
 
-
         mu_PCA = np.zeros(self.nx)
         mu_LIS = np.zeros(self.nx)
 
@@ -281,13 +277,10 @@ class Analysis:
         invYGX = np.linalg.inv(self.gamma_ygx)
         invXGY = np.linalg.inv(gamma_xgy) 
             
-
-
         for i in range(len(dims)):
             print('Dimension:', dims[i])
             gamma_xgy_PCA = self.gamma_x
             gamma_xgy_LIS = self.gamma_x
-            
 
             for j in range(dims[i]):
                 gamma_xgy_PCA = gamma_xgy_PCA - eigvalPCA[j] * np.outer(eigvecPCA[:,j], eigvecPCA[:,j].T)

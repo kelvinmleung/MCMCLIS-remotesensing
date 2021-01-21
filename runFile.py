@@ -8,6 +8,8 @@ from analysis import Analysis
 from mcmc import MCMC
 ### Notes ###
 '''
+r175, 3e6 Samples, start truth refl, atm=[5, 2.5]
+
 '''
 
 
@@ -34,7 +36,7 @@ a = Analysis(setup, r)
 ## MCMC ##
 m = MCMC(setup, a)
 
-mu_xgyLin, gamma_xgyLin = a.posterior(yobs=setup.radiance)
+mu_xgyLin, gamma_xgyLin = a.posterior(yobs=setup.radNoisy)
 x0 = np.zeros(427)
 x0[:425] = setup.truth[:425]
 x0[425:] = [5,2.5]
@@ -43,8 +45,8 @@ x0[425:] = [5,2.5]
 yobs = setup.radNoisy
 rank = 175
 sd = 2.4 ** 2 / min(rank,427)
-Nsamp = 5000
-burn = 1000
+Nsamp = 3000000
+burn = 30000
 
 m.initValue(x0=x0, yobs=yobs, sd=sd, Nsamp=Nsamp, burn=burn, project=True, nr=rank)
 m.runMCMC(alg='adaptive')
@@ -52,9 +54,9 @@ MCMCmean, MCMCcov = m.calcMeanCov()
 # m.plotMCMCmean(MCMCmean, fig=1)
 
 # compare posterior mean
-mu_xgyLin, gamma_xgyLin = a.posterior(yobs=setup.radiance)
+mu_xgyLin, gamma_xgyLin = a.posterior(yobs=setup.radNoisy)
 # mu_xgyLinNoise, gamma_xgyLinNoise = a.posterior_noise(yobs=setup.radiance)
-setup.plotPosterior(mu_xgyLin,  gamma_xgyLin, MCMCmean, MCMCcov)
+setup.plotPosterior(mu_xgyLin, gamma_xgyLin, MCMCmean, MCMCcov)
 
 ## MCMC Diagnostics ##
 indSet = [10,20,50,100,150,160,250,260,425,426]
