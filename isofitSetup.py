@@ -189,21 +189,23 @@ class Setup:
         ax.set_xticklabels(labels)
         ax.legend()
 
-        # # plot: x-axis is error in posterior mean, y-axis is error in mean weighted by covariance
-        # isofitPlotX = np.linalg.norm(self.isofitMuPos - self.truth) ** 2
-        # linearPlotX = np.linalg.norm(mu_xgyLin - self.truth) ** 2
-        # MCMCPlotX = np.linalg.norm(MCMCmean - self.truth) ** 2
+        # plot: x-axis is error in posterior mean, y-axis is error in mean weighted by covariance
+        
+        isofitPlotX = np.linalg.norm(self.isofitMuPos - self.truth) ** 2
+        linearPlotX = np.linalg.norm(mu_xgyLin - self.truth) ** 2
+        MCMCPlotX = np.linalg.norm(MCMCmean - self.truth) ** 2
 
-        # isofitPlotY = np.linalg.norm((isofitVar ** (-0.5)).dot(self.isofitMuPos - self.truth)) ** 2
-        # linearPlotY
-        # MCMCPlotY
+        isofitPlotY = np.linalg.norm(np.diag(isofitVar ** (-0.5)) * (self.isofitMuPos - self.truth)) ** 2
+        linearPlotY = np.linalg.norm(np.diag(linearVar ** (-0.5)) * (mu_xgyLin - self.truth)) ** 2
+        MCMCPlotY = np.linalg.norm(np.diag(MCMCVar ** (-0.5)) * (MCMCmean - self.truth)) ** 2
 
-        # plt.plot(isofitPlotX, isofitPlotY, 'k*', label='Isofit')
-        # plt.plot(linearPlotX, linearPlotY, 'm*', label='Linear')
-        # plt.plot(MCMCPlotX, MCMCPlotY, 'c*', label='MCMC')
-        # plt.title('Error in Posterior')
-        # plt.xlabel('| \mu_{pos} - \mu_{true} |_2^2')
-        # plt.ylabel('| diag(\Gamma_{pos}^{-1/2}) \mu_{pos} - \mu_{true} |_2^2')
-        # plt.legend()
+        plt.figure(69)
+        plt.loglog(isofitPlotX, isofitPlotY, 'k*', label='Isofit')
+        plt.loglog(linearPlotX, linearPlotY, 'm*', label='Linear')
+        plt.loglog(MCMCPlotX, MCMCPlotY, 'c*', label='MCMC')
+        plt.title('Error in Posterior')
+        plt.xlabel(r'$| \mu_{pos} - \mu_{true} |_2^2$')
+        plt.ylabel(r'$| diag(\Gamma_{pos}^{-1/2}) \mu_{pos} - \mu_{true} |_2^2$')
+        plt.legend()
     
 

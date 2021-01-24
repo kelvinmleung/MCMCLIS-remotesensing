@@ -8,7 +8,7 @@ from analysis import Analysis
 from mcmc import MCMC
 ### Notes ###
 '''
-r175, 3e6 Samples, start truth refl, atm=[5, 2.5]
+r250, 3e5 Samples, start lin pos refl, atm=[1, 2.5]
 
 '''
 
@@ -36,17 +36,17 @@ a = Analysis(setup, r)
 ## MCMC ##
 m = MCMC(setup, a)
 
-mu_xgyLin, gamma_xgyLin = a.posterior(yobs=setup.radNoisy)
+# mu_xgyLin, gamma_xgyLin = a.posterior(yobs=setup.radNoisy)
 x0 = np.zeros(427)
-x0[:425] = setup.truth[:425]
-x0[425:] = [5,2.5]
-#x0 = setup.truth
+x0[:425] = setup.isofitMuPos[:425]
+x0[425:] = [1,2.5]
+# x0 = setup.truth
 
 yobs = setup.radNoisy
-rank = 175
+rank = 250
 sd = 2.4 ** 2 / min(rank,427)
-Nsamp = 3000000
-burn = 30000
+Nsamp = 3000
+burn = 300
 
 m.initValue(x0=x0, yobs=yobs, sd=sd, Nsamp=Nsamp, burn=burn, project=True, nr=rank)
 m.runMCMC(alg='adaptive')
@@ -61,5 +61,10 @@ setup.plotPosterior(mu_xgyLin, gamma_xgyLin, MCMCmean, MCMCcov)
 ## MCMC Diagnostics ##
 indSet = [10,20,50,100,150,160,250,260,425,426]
 m.diagnostics(indSet, calcAC=True)
+
+# save figures
+# figs = [plt.figure(n) for n in plt.get_fignums()]
+# for fig in figs:
+#     fig.savefig(str(fig), format='png')
 
 plt.show()
