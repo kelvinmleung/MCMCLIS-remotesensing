@@ -1,4 +1,3 @@
-
 #!/bin/bash
 #SBATCH --job-name=testJob
 #SBATCH --workdir=/master/home/kmleung
