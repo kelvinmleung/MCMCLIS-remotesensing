@@ -163,7 +163,7 @@ class Setup:
         MCMCVar = np.diag(MCMCcov)
 
         plt.figure(67)
-        self.plotbands(priorVar[:425], 'b.',label='Prior', axis='semilogy')
+        # self.plotbands(priorVar[:425], 'b.',label='Prior', axis='semilogy')
         self.plotbands(isofitVar[:425],'k.', label='Isofit Posterior', axis='semilogy')
         self.plotbands(linearVar[:425], 'm.',label='Linear Posterior', axis='semilogy')
         self.plotbands(MCMCVar[:425], 'c.',label='MCMC Posterior', axis='semilogy')

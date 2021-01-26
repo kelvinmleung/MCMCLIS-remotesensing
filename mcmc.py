@@ -267,7 +267,7 @@ class MCMC:
         x_vals = np.load(self.mcmcDir + 'MCMC_x.npy')
         x_elem = x_vals[ind,:]
 
-        Nsamp = min(self.Nsamp, 10000)
+        Nsamp = min(self.Nsamp, 50000)
         # if self.burn > 20000:
         #     Nsamp = self.burn
         meanX = np.mean(x_elem)
@@ -275,9 +275,14 @@ class MCMC:
         ac = np.zeros(Nsamp-1)
 
         for k in range(Nsamp-1):
-            for i in range(Nsamp - k):
-                ac[k] = ac[k] + 1/(Nsamp-1) * (x_elem[i] - meanX) * (x_elem[i+k] - meanX)
-        ac = ac / varX
+            cov = np.cov(x_elem[:Nsamp-k], x_elem[k:Nsamp])
+            #cov = np.cov(x_elem[:self.Nsamp - k], x_elem[k:Nsamp])
+            ac[k] = cov[1,0] / varX
+
+        # for k in range(Nsamp-1):
+        #     for i in range(Nsamp - k):
+        #         ac[k] = ac[k] + 1/(Nsamp-k) * (x_elem[i] - meanX) * (x_elem[i+k] - meanX)
+        # ac = ac / varX
 
         return ac
 
