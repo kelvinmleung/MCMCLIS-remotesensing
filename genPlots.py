@@ -48,7 +48,7 @@ setup.plotPosterior(mu_xgyLin, gamma_xgyLin, MCMCmean, MCMCcov)
 
 ## MCMC Diagnostics ##
 indSet = [10,20,50,100,150,160,250,260,425,426]
-m.diagnostics(indSet, calcAC=True)
+m.diagnostics(MCMCmean, MCMCcov, indSet, calcAC=True)
 
 
 

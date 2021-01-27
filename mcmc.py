@@ -216,40 +216,40 @@ class MCMC:
         np.save(self.mcmcDir + 'MCMC_x.npy', x_vals_full)
         np.save(self.mcmcDir + 'logpos.npy', logpos)
         # np.save(self.mcmcDir + 'diagnostic.npy', diagnostic)
-        return x_vals   
-        
-    def twoDimVisual(self, indX, indY, t0):
+        return x_vals  
 
-        rfl = self.mupos_isofit
-        x_vals = np.load(self.mcmcDir + 'MCMC_x.npy')
-        
-        x_mean = np.mean(x_vals, axis=1)
-        fig, ax = plt.subplots()
-        ax.plot(self.truth[indX], self.truth[indY], 'bo', label='True reflectance', markersize=6)
-        ax.plot(rfl[indX], rfl[indY], 'rx', label='Isofit pos. mean',markersize=12)
-        ax.plot(x_mean[indX], x_mean[indY], 'go', label='MCMC mean',markersize=10)
-        ax.scatter(x_vals[indX,t0:], x_vals[indY,t0:], s=0.5)
+    def drawEllipse(self, mean, cov, ax, colour):
+        ''' Helper function for twoDimVisual '''
 
-        covX = self.gammapos_isofit[indX, indX]
-        covY = self.gammapos_isofit[indY, indY]
-        covXY = self.gammapos_isofit[indX, indY]
-        cov = np.array([[covX, covXY], [covXY, covY]])
         pearson = cov[0, 1]/np.sqrt(cov[0, 0] * cov[1, 1])
-        # Using a special case to obtain the eigenvalues of this
-        # two-dimensionl dataset. 
         ell_radius_x = np.sqrt(1 + pearson)
         ell_radius_y = np.sqrt(1 - pearson)
-        ellipse = Ellipse((0, 0), width=ell_radius_x * 2, height=ell_radius_y * 2, facecolor='None', edgecolor='red')
-
+        ellipse = Ellipse((0, 0), width=ell_radius_x * 2, height=ell_radius_y * 2, facecolor='None', edgecolor=colour)
         scale_x = np.sqrt(cov[0, 0]) * 1
-        mean_x = rfl[indX]
         scale_y = np.sqrt(cov[1, 1]) * 1 
-        mean_y = rfl[indY]
-
-        transf = transforms.Affine2D().rotate_deg(45).scale(scale_x, scale_y).translate(mean_x, mean_y)
+        transf = transforms.Affine2D().rotate_deg(45).scale(scale_x, scale_y).translate(mean[0], mean[1])
         ellipse.set_transform(transf + ax.transData)
-        ax.add_patch(ellipse)
+        ax.add_patch(ellipse) 
         
+    def twoDimVisual(self, MCMCmean, MCMCcov, indX, indY):
+        x_vals = np.load(self.mcmcDir + 'MCMC_x.npy')
+
+        fig, ax = plt.subplots()
+        ax.plot(self.truth[indX], self.truth[indY], 'go', label='True reflectance', markersize=10)
+        ax.scatter(x_vals[indX,:], x_vals[indY,:], c='c', s=0.5)
+
+        # plot Isofit mean/cov
+        meanIsofit = np.array([self.mupos_isofit[indX], self.mupos_isofit[indY]])
+        covIsofit = self.gammapos_isofit[np.ix_([indX,indY],[indX,indY])]
+        ax.plot(meanIsofit[0], meanIsofit[1], 'rx', label='Isofit pos. mean', markersize=12)
+        self.drawEllipse(meanIsofit, covIsofit, ax, colour='red')
+        
+        # plot MCMC mean/cov
+        meanMCMC = np.array([MCMCmean[indX], MCMCmean[indY]])
+        covMCMC = MCMCcov[np.ix_([indX,indY],[indX,indY])]
+        ax.plot(meanMCMC[0], meanMCMC[1], 'bx', label='MCMC mean', markersize=12)
+        self.drawEllipse(meanMCMC, covMCMC, ax, colour='blue')
+
         ax.set_title('MCMC - Two Component Visual')
         ax.set_xlabel('Index ' + str(indX))
         ax.set_ylabel('Index ' + str(indY))
@@ -267,9 +267,7 @@ class MCMC:
         x_vals = np.load(self.mcmcDir + 'MCMC_x.npy')
         x_elem = x_vals[ind,:]
 
-        Nsamp = min(self.Nsamp, 50000)
-        # if self.burn > 20000:
-        #     Nsamp = self.burn
+        Nsamp = min(self.Nsamp, 10000)
         meanX = np.mean(x_elem)
         varX = np.var(x_elem)
         ac = np.zeros(Nsamp-1)
@@ -278,11 +276,6 @@ class MCMC:
             cov = np.cov(x_elem[:Nsamp-k], x_elem[k:Nsamp])
             #cov = np.cov(x_elem[:self.Nsamp - k], x_elem[k:Nsamp])
             ac[k] = cov[1,0] / varX
-
-        # for k in range(Nsamp-1):
-        #     for i in range(Nsamp - k):
-        #         ac[k] = ac[k] + 1/(Nsamp-k) * (x_elem[i] - meanX) * (x_elem[i+k] - meanX)
-        # ac = ac / varX
 
         return ac
 
@@ -320,16 +313,13 @@ class MCMC:
         plt.grid()
 
 
-    def diagnostics(self, indSet=[10,20,50,100,150,160,250,260,425,426], calcAC=False):
+    def diagnostics(self, MCMCmean, MCMCcov, indSet=[10,20,50,100,150,160,250,260,425,426], calcAC=False):
         # assume there are 10 elements in indSet
         # default: indSet = [10,20,50,100,150,160,250,260,425,426]
         x_vals = np.load(self.mcmcDir + 'MCMC_x.npy')
 
-        self.twoDimVisual(indX=indSet[0], indY=indSet[1], t0=0)
-        self.twoDimVisual(indX=indSet[2], indY=indSet[3], t0=0)
-        self.twoDimVisual(indX=indSet[4], indY=indSet[5], t0=0)
-        self.twoDimVisual(indX=indSet[6], indY=indSet[7], t0=0)
-        self.twoDimVisual(indX=indSet[8], indY=indSet[9], t0=0)
+        for i in range(int(len(indSet) / 2)):
+            self.twoDimVisual(MCMCmean, MCMCcov, indX=indSet[2*i], indY=indSet[2*i+1])
 
         xPlot = [0,0,1,1,2,2,3,3,4,4]
         yPlot = [0,1,0,1,0,1,0,1,0,1]
