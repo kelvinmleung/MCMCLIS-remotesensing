@@ -42,6 +42,8 @@ class Setup:
         # get Isofit noise model and simulate radiance
         rad = self.fm.calc_rdn(self.truth, self.geom)
         self.noisecov = self.fm.Seps(self.truth, rad, self.geom)
+        # self.noisecov = self.fm.Seps(self.truth, rad, self.geom) + np.identity(425)
+        # print(self.noisecov)
         eps = np.random.multivariate_normal(np.zeros(len(rad)), self.noisecov)
         self.radiance = rad
         self.radNoisy = rad + eps
@@ -132,19 +134,21 @@ class Setup:
         plt.title('Posterior Mean Comparison')
         plt.grid()
         plt.legend()
+        plt.savefig(self.mcmcDir + 'reflMean.png')
 
-        plt.figure(65)
-        isofitError = abs(self.isofitMuPos[:425] - self.truth[:425]) / abs(self.truth[:425])
-        linError = abs(mu_xgyLin[:425] - self.truth[:425]) / abs(self.truth[:425])
-        mcmcError = abs(MCMCmean[:425] - self.truth[:425]) / abs(self.truth[:425])
-        self.plotbands(isofitError,'k.', label='Isofit Posterior',axis='semilogy')
-        self.plotbands(linError, 'm.',label='Linear Posterior',axis='semilogy')
-        self.plotbands(mcmcError, 'c.',label='MCMC Posterior',axis='semilogy')
-        plt.xlabel('Wavelength')
-        plt.ylabel('Relative Error')
-        plt.title('Error in Posterior Mean')
-        plt.grid()
-        plt.legend()
+        # plt.figure(65)
+        # isofitError = abs(self.isofitMuPos[:425] - self.truth[:425]) / abs(self.truth[:425])
+        # linError = abs(mu_xgyLin[:425] - self.truth[:425]) / abs(self.truth[:425])
+        # mcmcError = abs(MCMCmean[:425] - self.truth[:425]) / abs(self.truth[:425])
+        # self.plotbands(isofitError,'k.', label='Isofit Posterior',axis='semilogy')
+        # self.plotbands(linError, 'm.',label='Linear Posterior',axis='semilogy')
+        # self.plotbands(mcmcError, 'c.',label='MCMC Posterior',axis='semilogy')
+        # plt.xlabel('Wavelength')
+        # plt.ylabel('Relative Error')
+        # plt.title('Error in Posterior Mean')
+        # plt.grid()
+        # plt.legend()
+        # plt.savefig(self.mcmcDir + 'reflError.png')
 
         plt.figure(66)
         plt.plot(self.truth[425], self.truth[426], 'bo',label='True Reflectance')
@@ -156,6 +160,7 @@ class Setup:
         plt.ylabel('H2OSTR')
         plt.grid()
         plt.legend()
+        plt.savefig(self.mcmcDir + 'atmMean.png')
 
         priorVar = np.diag(self.gamma_x)
         isofitVar = np.diag(self.isofitGammaPos)
@@ -163,7 +168,7 @@ class Setup:
         MCMCVar = np.diag(MCMCcov)
 
         plt.figure(67)
-        # self.plotbands(priorVar[:425], 'b.',label='Prior', axis='semilogy')
+        self.plotbands(priorVar[:425], 'b.',label='Prior', axis='semilogy')
         self.plotbands(isofitVar[:425],'k.', label='Isofit Posterior', axis='semilogy')
         self.plotbands(linearVar[:425], 'm.',label='Linear Posterior', axis='semilogy')
         self.plotbands(MCMCVar[:425], 'c.',label='MCMC Posterior', axis='semilogy')
@@ -172,6 +177,7 @@ class Setup:
         plt.title('Marginal Variance Comparison')
         plt.grid()
         plt.legend()
+        plt.savefig(self.mcmcDir + 'reflVar.png')
 
         # bar graph of atm parameter variances
         labels = ['425 - AOD550', '426 - H20STR']
@@ -188,6 +194,7 @@ class Setup:
         ax.set_xticks(x)
         ax.set_xticklabels(labels)
         ax.legend()
+        fig.savefig(self.mcmcDir + 'atmVar.png')
 
         # plot: x-axis is error in posterior mean, y-axis is error in mean weighted by covariance
         
@@ -207,5 +214,6 @@ class Setup:
         plt.xlabel(r'$| \mu_{pos} - \mu_{true} |_2^2$')
         plt.ylabel(r'$| diag(\Gamma_{pos}^{-1/2}) \mu_{pos} - \mu_{true} |_2^2$')
         plt.legend()
+        plt.savefig(self.mcmcDir + 'errorRelCov.png')
     
 

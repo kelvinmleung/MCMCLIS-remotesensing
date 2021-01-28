@@ -8,7 +8,8 @@ from analysis import Analysis
 from mcmc import MCMC
 ### Notes ###
 '''
-r175, 3e6 Samples, start lin pos refl, atm=[5, 2.5]
+NOISE IS HUGE IN ISOFIT SETUP
+ONLY PRIOR in logpos calculation
 '''
 
 
@@ -36,35 +37,31 @@ a = Analysis(setup, r)
 m = MCMC(setup, a)
 
 mu_xgyLin, gamma_xgyLin = a.posterior(yobs=setup.radNoisy)
-x0 = np.zeros(427)
-# x0[:425] = setup.truth[:425]
-x0[:425] = mu_xgyLin[:425]
-x0[425:] = [5,2.5]
+# x0 = np.zeros(427)
+# # x0[:425] = setup.truth[:425]
+# x0[:425] = mu_xgyLin[:425]
+# x0[425:] = [5,2.5]
 # x0 = setup.truth
+# x0 = setup.isofitMuPos
+x0 = setup.mu_x
 
 yobs = setup.radNoisy
-rank = 175
+rank = 427
 sd = 2.4 ** 2 / min(rank,427)
-Nsamp = 2000000
-burn = 20000
+Nsamp = 100000
+burn = 10000
 
-m.initValue(x0=x0, yobs=yobs, sd=sd, Nsamp=Nsamp, burn=burn, project=True, nr=rank)
+m.initValue(x0=x0, yobs=yobs, sd=sd, Nsamp=Nsamp, burn=burn, project=False, nr=rank)
 m.runMCMC(alg='adaptive')
 MCMCmean, MCMCcov = m.calcMeanCov()
-# m.plotMCMCmean(MCMCmean, fig=1)
 
 # compare posterior mean
 mu_xgyLin, gamma_xgyLin = a.posterior(yobs=setup.radNoisy)
-# mu_xgyLinNoise, gamma_xgyLinNoise = a.posterior_noise(yobs=setup.radiance)
 setup.plotPosterior(mu_xgyLin, gamma_xgyLin, MCMCmean, MCMCcov)
 
 ## MCMC Diagnostics ##
-indSet = [10,20,50,100,150,160,250,260,425,426]
-m.diagnostics(indSet, calcAC=True)
-
-# save figures
-# figs = [plt.figure(n) for n in plt.get_fignums()]
-# for fig in figs:
-#     fig.savefig(str(fig), format='png')
+#indSet = [10,20,50,100,150,160,250,260,425,426]
+indSet = [30,40,90,100,150,160,250,260,425,426]
+m.diagnostics(MCMCmean, MCMCcov, indSet)
 
 plt.show()

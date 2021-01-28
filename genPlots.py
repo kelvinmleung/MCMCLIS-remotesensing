@@ -27,19 +27,19 @@ a = Analysis(setup, r)
 m = MCMC(setup, a)
 
 mu_xgyLin, gamma_xgyLin = a.posterior(yobs=setup.radNoisy)
-x0 = np.zeros(427)
-x0[:425] = setup.truth[:425]
+# x0 = np.zeros(427)
+# # x0[:425] = setup.truth[:425]
 # x0[:425] = mu_xgyLin[:425]
-x0[425:] = [5,2.5]
-# x0 = setup.truth
+# x0[425:] = [5,2.5]
+x0 = setup.truth
 
 yobs = setup.radNoisy
-rank = 175
+rank = 427
 sd = 2.4 ** 2 / min(rank,427)
-Nsamp = 300000
-burn = 30000
+Nsamp = 1000000
+burn = 100000
 
-m.initValue(x0=x0, yobs=yobs, sd=sd, Nsamp=Nsamp, burn=burn, project=True, nr=rank)
+m.initValue(x0=x0, yobs=yobs, sd=sd, Nsamp=Nsamp, burn=burn, project=False, nr=rank)
 MCMCmean, MCMCcov = m.calcMeanCov()
 
 # compare posterior mean
@@ -47,8 +47,9 @@ mu_xgyLin, gamma_xgyLin = a.posterior(yobs=setup.radNoisy)
 setup.plotPosterior(mu_xgyLin, gamma_xgyLin, MCMCmean, MCMCcov)
 
 ## MCMC Diagnostics ##
-indSet = [10,20,50,100,150,160,250,260,425,426]
-m.diagnostics(MCMCmean, MCMCcov, indSet, calcAC=True)
+#indSet = [10,20,50,100,150,160,250,260,425,426]
+indSet = [30,40,90,100,150,160,250,260,425,426]
+m.diagnostics(MCMCmean, MCMCcov, indSet)
 
 
 
