@@ -48,11 +48,12 @@ x0 = setup.mu_x
 yobs = setup.radNoisy
 rank = 427
 sd = 2.4 ** 2 / min(rank,427)
-Nsamp = 100000
-burn = 10000
+Nsamp = 200000
+burn = 20000
 
 m.initValue(x0=x0, yobs=yobs, sd=sd, Nsamp=Nsamp, burn=burn, project=False, nr=rank)
-m.runMCMC(alg='adaptive')
+# m.runMCMC(alg='adaptive')
+m.runMCMC(alg='vanilla')
 MCMCmean, MCMCcov = m.calcMeanCov()
 
 # compare posterior mean

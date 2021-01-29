@@ -33,18 +33,20 @@ class MCMC:
         self.geom = setup.geom
         self.mu_x = setup.mu_x
         self.gamma_x = setup.gamma_x
+        
         self.mupos_isofit = setup.isofitMuPos
         self.gammapos_isofit = setup.isofitGammaPos
         self.noisecov = setup.noisecov
+        '''
         
         self.gamma_ygx = analysis.gamma_ygx # error covariance from linear model
         self.G = analysis.phi # linear operator
 
         # linear posterior covariance
         p, self.linpos = analysis.posterior(setup.radNoisy)
-
+        '''
         self.nx = self.gamma_x.shape[0] # parameter dimension
-        self.ny = self.noisecov.shape[0] # data dimension
+        # self.ny = self.noisecov.shape[0] # data dimension
 
     def initValue(self, x0, yobs, sd, Nsamp, burn, project=False, nr=427):
         ''' Load MCMC parameters '''
@@ -62,9 +64,9 @@ class MCMC:
         self.sd = sd
         # self.propcov = self.gammapos_isofit * sd 
         # self.propcov = self.linpos * sd
-        self.propcov = np.identity(self.nx) * 1e-8
+        self.propcov = np.identity(self.nx) * 6e-8
 
-        
+    '''  
         
         if project == True:
             # compute projection matrices
@@ -78,14 +80,14 @@ class MCMC:
             
         
     def estHessian(self):
-        ''' Compute Hessian for eigenvalue problem '''
+        ### Compute Hessian for eigenvalue problem ###
         cholPr = np.linalg.cholesky(self.gamma_x) # cholesky decomp of prior covariance
         H = self.G.T @ np.linalg.inv(self.noisecov) @ self.G # Hessian
         Hn = cholPr.T @ H @ cholPr 
         return Hn
     
     def LISproject(self, nr):
-        ''' Compute LIS projection matrices '''
+        ### Compute LIS projection matrices ###
 
         print('Solving generalized eigenvalue problem...')
         Hn = self.estHessian()
@@ -116,6 +118,8 @@ class MCMC:
         print('Eigenvalue problem solved.')
 
         return phi, theta, proj, phiComp, thetaComp, projComp
+
+    '''
         
     def logpos(self, x):
         ''' Calculate log posterior '''
@@ -129,10 +133,12 @@ class MCMC:
             tPrior = x - self.mu_x 
             logprior = -1/2 * tPrior.dot(np.linalg.solve(self.gamma_x, tPrior))
 
+        '''
         meas = self.fm.calc_rdn(x, self.geom) # apply forward model
         tLH = self.yobs - meas
         loglikelihood = -1/2 * tLH.dot(np.linalg.solve(self.noisecov, tLH))
 
+        '''
         # if x[425] < 0 or x[426] < 0:
         #     print('ATM parameter is negative')
         #     loglikelihood = -np.Inf
@@ -169,9 +175,6 @@ class MCMC:
             # fix the atm parameters to a constant
             # z[425:] = self.truth[425:] - self.mu_x[425:]
             
-            
-
-            
             alpha, logposZ, logposX = self.alpha(x, z)
             if np.random.random() < alpha:
                 x = z 
@@ -207,17 +210,14 @@ class MCMC:
             # change proposal covariance
             if alg == 'adaptive':
                 eps = 1e-10
-                if i == 1000:
-                    self.propcov = self.sd * np.cov(x_vals[:,600:i]) + eps * np.identity(len(x))
-                    meanXprev = np.mean(x_vals[:,:i],1)
-                elif i > 1000:
-                    meanX = (i-1) / i * meanXprev + 1 / i * x_vals[:,i]
-                    print(meanX)
+                if i == 999:
+                    self.propcov = self.sd * (np.cov(x_vals[:,:1000]) + eps * np.identity(len(x)))
+                    # meanXprev = np.mean(x_vals[:,:i],1)
+                    meanXprev = np.mean(x_vals[:,:1000],1)
+                elif i >= 1000:
+                    meanX = i / (i + 1) * meanXprev + 1 / (i + 1) * x_vals[:,i]
                     self.propcov = (i-1) / i * self.propcov + self.sd / i * (i * np.outer(meanXprev, meanXprev) - (i+1) * np.outer(meanX, meanX) + np.outer(x_vals[:,i], x_vals[:,i]) + eps * np.identity(len(x)))
                     meanXprev = meanX
-                    # if i % 100 == 0:
-                    #     propChol = np.linalg.cholesky(self.propcov)
-                    
 
         
         # post processing, store MCMC chain
