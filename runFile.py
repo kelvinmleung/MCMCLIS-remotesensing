@@ -5,64 +5,34 @@ from isofitSetup import Setup
 from genSamples import GenerateSamples
 from regression import Regression
 from analysis import Analysis
-from mcmc import MCMC
+from mcmcIsofit import MCMCIsofit
 ### Notes ###
-'''
-NOISE IS HUGE IN ISOFIT SETUP
-ONLY PRIOR in logpos calculation
-'''
-
 
 ## SETUP ##
 wv, ref = np.loadtxt('setup/data/petunia/petunia_reflectance.txt').T
 atm = [0.5,2.5]
 setup = Setup(wv, ref, atm)
-
-## GENERATE SAMPLES ##
 g = GenerateSamples(setup)
-# g.genTrainingSamples(10000)
-# g.genTestSamples(2000)
-# g.genY()
-
-## REGRESSION ##
 r = Regression(setup)
-# r.fullLasso([1e-2] * 425)
-# .plotFullLasso()
-
-
-## ANALYSIS ##
 a = Analysis(setup, r)
 
 ## MCMC ##
-m = MCMC(setup, a)
-
-mu_xgyLin, gamma_xgyLin = a.posterior(yobs=setup.radNoisy)
-# x0 = np.zeros(427)
-# # x0[:425] = setup.truth[:425]
-# x0[:425] = mu_xgyLin[:425]
-# x0[425:] = [5,2.5]
-# x0 = setup.truth
-# x0 = setup.isofitMuPos
 x0 = setup.mu_x
+Nsamp = 100000
+burn = 10000
 
-yobs = setup.radNoisy
-rank = 427
-sd = 2.4 ** 2 / min(rank,427)
-Nsamp = 200000
-burn = 20000
-
-m.initValue(x0=x0, yobs=yobs, sd=sd, Nsamp=Nsamp, burn=burn, project=False, nr=rank)
-# m.runMCMC(alg='adaptive')
-m.runMCMC(alg='vanilla')
-MCMCmean, MCMCcov = m.calcMeanCov()
+m = MCMCIsofit(setup, a, Nsamp, burn, x0)
+m.initMCMC(LIS=False, rank=10) # specify LIS parameters
+m.runAM()
 
 # compare posterior mean
-mu_xgyLin, gamma_xgyLin = a.posterior(yobs=setup.radNoisy)
-setup.plotPosterior(mu_xgyLin, gamma_xgyLin, MCMCmean, MCMCcov)
+# mu_xgyLin, gamma_xgyLin = a.posterior(yobs=setup.radNoisy)
+MCMCmean, MCMCcov = m.calcMeanCov()
+# setup.plotPosterior(mu_xgyLin, gamma_xgyLin, MCMCmean, MCMCcov)
 
 ## MCMC Diagnostics ##
-#indSet = [10,20,50,100,150,160,250,260,425,426]
 indSet = [30,40,90,100,150,160,250,260,425,426]
+indSet = [0,1,2,3,4,5,6,7,8,9]
 m.diagnostics(MCMCmean, MCMCcov, indSet)
 
 plt.show()

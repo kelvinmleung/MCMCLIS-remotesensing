@@ -61,7 +61,6 @@ class Analysis:
         self.gamma_ygx = np.real(sigma_y_power @ gamma_ygx_tilde @ sigma_y_power)
         # calculate marginal covariance
         self.gamma_y = self.phi @ self.gamma_x @ self.phi.T + self.gamma_ygx
-        print('Initialized.')
 
     def eigPCA(self):
         #eigvecPCA, eigvalPCA, s1 = np.linalg.svd(self.gamma_y)

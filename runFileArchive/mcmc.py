@@ -14,30 +14,31 @@ class MCMC:
 
         self.mcmcDir = setup.mcmcDir
         
-        self.x0 = 0
-        self.sd = 0
-        self.yobs = 0
-        self.burn = 0
+        # self.x0 = 0
+        # self.sd = 0
+        # self.yobs = 0
+        # self.burn = 0
 
         # initialize problem parameters
         self.wavelengths = setup.wavelengths
         self.reflectance = setup.reflectance # true reflectance
-        self.truth = setup.truth # true state (ref + atm)
-        self.radiance = setup.radiance # true radiance
-        self.bands = setup.bands # reflectance indices excluding deep water spectra
-        self.bandsX = setup.bandsX # same indices including atm parameters
+        # self.truth = setup.truth # true state (ref + atm)
+        # self.radiance = setup.radiance # true radiance
+        # self.bands = setup.bands # reflectance indices excluding deep water spectra
+        # self.bandsX = setup.bandsX # same indices including atm parameters
 
         # isofit parameters and functions
         self.setup = setup
-        self.fm = setup.fm
-        self.geom = setup.geom
+        # self.fm = setup.fm
+        # self.geom = setup.geom
         self.mu_x = setup.mu_x
         self.gamma_x = setup.gamma_x
         
+        '''
         self.mupos_isofit = setup.isofitMuPos
         self.gammapos_isofit = setup.isofitGammaPos
         self.noisecov = setup.noisecov
-        '''
+        
         
         self.gamma_ygx = analysis.gamma_ygx # error covariance from linear model
         self.G = analysis.phi # linear operator
@@ -64,7 +65,7 @@ class MCMC:
         self.sd = sd
         # self.propcov = self.gammapos_isofit * sd 
         # self.propcov = self.linpos * sd
-        self.propcov = np.identity(self.nx) * 6e-8
+        self.propcov = np.identity(self.nx) * 1e-8
 
     '''  
         
@@ -123,6 +124,8 @@ class MCMC:
         
     def logpos(self, x):
         ''' Calculate log posterior '''
+
+        '''
         if self.project == True:
             xr = x 
             x = self.phi @ xr  + self.mu_x # project back to original (physical) space
@@ -132,6 +135,9 @@ class MCMC:
             x = x + self.mu_x
             tPrior = x - self.mu_x 
             logprior = -1/2 * tPrior.dot(np.linalg.solve(self.gamma_x, tPrior))
+        '''
+        logprior = -1/2 * x.dot(np.linalg.solve(self.gamma_x, x))
+        # logprior = -1/2 * x.dot(x)
 
         '''
         meas = self.fm.calc_rdn(x, self.geom) # apply forward model
@@ -193,7 +199,8 @@ class MCMC:
             if (i+1) % 500 == 0: 
                 print('Sample: ', i+1)
                 print('   Accept Rate: ', np.mean(accept[i-499:i]))
-                propChol = np.linalg.cholesky(self.propcov) # update chol of propcov
+                # propChol = np.linalg.cholesky(self.propcov) # update chol of propcov
+                print(np.linalg.norm(propChol))
 
                 # plot the proposal
                 # self.plotProposal(z)
@@ -207,19 +214,26 @@ class MCMC:
             #         self.propcov = self.sd * covX + eps * np.identity(len(x))
             #         propChol = np.linalg.cholesky(self.propcov)
 
+            
             # change proposal covariance
             if alg == 'adaptive':
                 eps = 1e-10
                 if i == 999:
-                    self.propcov = self.sd * (np.cov(x_vals[:,:1000]) + eps * np.identity(len(x)))
+                    self.propcov = self.sd * (np.cov(x_vals[:,500:1000]) + eps * np.identity(len(x)))
                     # meanXprev = np.mean(x_vals[:,:i],1)
                     meanXprev = np.mean(x_vals[:,:1000],1)
                 elif i >= 1000:
                     meanX = i / (i + 1) * meanXprev + 1 / (i + 1) * x_vals[:,i]
+
+                    # print(meanXprev[:5])
+                    # print(meanX[:5])
+                    # print(x_vals[:5,i])
+                    # print('\n')
                     self.propcov = (i-1) / i * self.propcov + self.sd / i * (i * np.outer(meanXprev, meanXprev) - (i+1) * np.outer(meanX, meanX) + np.outer(x_vals[:,i], x_vals[:,i]) + eps * np.identity(len(x)))
                     meanXprev = meanX
-
-        
+                    propChol = np.linalg.cholesky(self.propcov) # update chol of propcov
+            
+        '''
         # post processing, store MCMC chain
         x_vals_full = np.zeros([self.nx, self.Nsamp])
         if self.project == True:
@@ -231,10 +245,14 @@ class MCMC:
         else:
             for i in range(self.Nsamp):
                 x_vals_full[:,i] = x_vals[:,i] + self.mu_x
+        '''
+        x_vals_full = np.zeros([self.nx, self.Nsamp])
+        for i in range(self.Nsamp):
+            x_vals_full[:,i] = x_vals[:,i] + self.mu_x
 
         np.save(self.mcmcDir + 'MCMC_x.npy', x_vals_full)
-        np.save(self.mcmcDir + 'logpos.npy', logpos)
-        np.save(self.mcmcDir + 'acceptance.npy', accept)
+        # np.save(self.mcmcDir + 'logpos.npy', logpos)
+        # np.save(self.mcmcDir + 'acceptance.npy', accept)
         # np.save(self.mcmcDir + 'diagnostic.npy', diagnostic)
         return x_vals  
     
@@ -273,21 +291,23 @@ class MCMC:
         x_vals = np.load(self.mcmcDir + 'MCMC_x.npy')
 
         fig, ax = plt.subplots()
+        '''
         ax.plot(self.truth[indX], self.truth[indY], 'go', label='True reflectance', markersize=10)
+        '''
         ax.scatter(x_vals[indX,:], x_vals[indY,:], c='c', s=0.5)
 
         # plot prior mean/cov
-        # meanPrior = np.array([self.mu_x[indX], self.mu_x[indY]])
-        # covPrior = self.gamma_x[np.ix_([indX,indY],[indX,indY])]
-        # ax.plot(meanPrior[0], meanPrior[1], 'kx', label='Prior', markersize=12)
-        # self.drawEllipse(meanPrior, covPrior, ax, colour='black')
-
+        meanPrior = np.array([self.mu_x[indX], self.mu_x[indY]])
+        covPrior = self.gamma_x[np.ix_([indX,indY],[indX,indY])]
+        ax.plot(meanPrior[0], meanPrior[1], 'kx', label='Prior', markersize=12)
+        self.drawEllipse(meanPrior, covPrior, ax, colour='black')
+        '''
         # plot Isofit mean/cov
         meanIsofit = np.array([self.mupos_isofit[indX], self.mupos_isofit[indY]])
         covIsofit = self.gammapos_isofit[np.ix_([indX,indY],[indX,indY])]
         ax.plot(meanIsofit[0], meanIsofit[1], 'rx', label='Isofit posterior', markersize=12)
         self.drawEllipse(meanIsofit, covIsofit, ax, colour='red')
-        
+        '''
         # plot MCMC mean/cov
         meanMCMC = np.array([MCMCmean[indX], MCMCmean[indY]])
         covMCMC = MCMCcov[np.ix_([indX,indY],[indX,indY])]

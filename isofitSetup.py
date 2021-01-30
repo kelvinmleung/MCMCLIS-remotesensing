@@ -60,7 +60,6 @@ class Setup:
         self.bands = bands
         self.bandsX = bands + [425,426]
 
-        print('Setup finished.')
     
     def getPrior(self, fullconfig):
         # get index of prior used in inversion
