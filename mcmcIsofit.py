@@ -32,6 +32,9 @@ class MCMCIsofit:
         self.mupos_isofit = setup.isofitMuPos
         self.gammapos_isofit = setup.isofitGammaPos
         self.noisecov = setup.noisecov
+        self.fm = setup.fm
+        self.geom = setup.geom
+
         
         # linear model
         self.gamma_ygx = analysis.gamma_ygx # error covariance from linear model
@@ -48,16 +51,18 @@ class MCMCIsofit:
 
     def initMCMC(self, LIS=False, rank=427):
         mcmcConfig = {
-            "x0": self.x0[:10],
+            "x0": self.x0, # [:10],
             "Nsamp": self.Nsamp,
             "burn": self.burn,
             "sd": 2.4 ** 2 / rank,
             "LIS": LIS,
             "rank": rank,
-            "mu_x": self.mu_x[:10],
-            "gamma_x": self.gamma_x[:10,:][:,:10],
+            "mu_x": self.mu_x, # [:10],
+            "gamma_x": self.gamma_x, # [:10,:][:,:10],
             "noisecov": self.noisecov,
             "yobs": self.yobs,
+            "fm": self.fm,
+            "geom": self.geom,
             "linop": self.linop,
             "mcmcDir": self.mcmcDir
             }
@@ -89,9 +94,9 @@ class MCMCIsofit:
         x_vals = np.load(self.mcmcDir + 'MCMC_x.npy')
 
         fig, ax = plt.subplots()
-        '''
+        
         ax.plot(self.truth[indX], self.truth[indY], 'go', label='True reflectance', markersize=10)
-        '''
+        
         ax.scatter(x_vals[indX,:], x_vals[indY,:], c='c', s=0.5)
 
         # plot prior mean/cov
@@ -99,13 +104,13 @@ class MCMCIsofit:
         covPrior = self.gamma_x[np.ix_([indX,indY],[indX,indY])]
         ax.plot(meanPrior[0], meanPrior[1], 'kx', label='Prior', markersize=12)
         self.drawEllipse(meanPrior, covPrior, ax, colour='black')
-        '''
+        
         # plot Isofit mean/cov
         meanIsofit = np.array([self.mupos_isofit[indX], self.mupos_isofit[indY]])
         covIsofit = self.gammapos_isofit[np.ix_([indX,indY],[indX,indY])]
         ax.plot(meanIsofit[0], meanIsofit[1], 'rx', label='Isofit posterior', markersize=12)
         self.drawEllipse(meanIsofit, covIsofit, ax, colour='red')
-        '''
+        
         # plot MCMC mean/cov
         meanMCMC = np.array([MCMCmean[indX], MCMCmean[indY]])
         covMCMC = MCMCcov[np.ix_([indX,indY],[indX,indY])]

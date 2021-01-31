@@ -18,7 +18,7 @@ class MCMCLIS:
 
         # initialize chain and proposal covariance
         self.x0 = self.x0 - self.mu_x 
-        self.propcov = np.identity(self.nx) * 1e-8
+        self.propcov = np.identity(self.nx) * 1e-10
 
         if self.LIS == True:
             # compute projection matrices
@@ -38,6 +38,8 @@ class MCMCLIS:
         self.mu_x = config["mu_x"]          # prior mean
         self.gamma_x = config["gamma_x"]    # prior covariance
         self.noisecov = config["noisecov"]  # data noise covariance
+        self.fm = config["fm"]              # forward model
+        self.geom = config["geom"]          # geometry model
         self.linop = config["linop"]        # linear operator
         self.yobs = config["yobs"]          # radiance observation
         self.mcmcDir = config["mcmcDir"]    # directory to save data
@@ -92,17 +94,17 @@ class MCMCLIS:
             logprior = -1/2 * x.dot(np.linalg.solve(self.gamma_x, x))
             x = x + self.mu_x
 
-        '''
+        
         meas = self.fm.calc_rdn(x, self.geom) # apply forward model
         tLH = self.yobs - meas
         loglikelihood = -1/2 * tLH.dot(np.linalg.solve(self.noisecov, tLH))
-        '''
+        
         # if x[425] < 0 or x[426] < 0:
         #     print('ATM parameter is negative')
         #     loglikelihood = -np.Inf
         #     print(x[425:])
         
-        return logprior# + loglikelihood 
+        return logprior + loglikelihood 
 
     def proposal(self, mean, covCholesky):
         ''' Sample proposal from a normal distribution '''
@@ -143,7 +145,7 @@ class MCMCLIS:
             if (i+1) % 500 == 0: 
                 print('Sample: ', i+1)
                 print('   Accept Rate: ', np.mean(accept[i-499:i]))
-                # propChol = np.linalg.cholesky(self.propcov) # update chol of propcov
+                propChol = np.linalg.cholesky(self.propcov) # update chol of propcov
                 print(np.linalg.norm(propChol))
 
                 # plot the proposal
@@ -151,14 +153,22 @@ class MCMCLIS:
                 
             # change proposal covariance
             if i == 999:
-                self.propcov = self.sd * (np.cov(x_vals[:,500:1000]) + eps * np.identity(len(x)))
+                self.propcov = self.sd * (np.cov(x_vals[:,:1000]) + eps * np.identity(len(x)))
                 meanXprev = np.mean(x_vals[:,:1000],1)
             elif i >= 1000:
                 meanX = i / (i + 1) * meanXprev + 1 / (i + 1) * x_vals[:,i]
                 self.propcov = (i-1) / i * self.propcov + self.sd / i * (i * np.outer(meanXprev, meanXprev) - (i+1) * np.outer(meanX, meanX) + np.outer(x_vals[:,i], x_vals[:,i]) + eps * np.identity(len(x)))
                 meanXprev = meanX
-                propChol = np.linalg.cholesky(self.propcov) # update chol of propcov
-            
+                # propChol = np.linalg.cholesky(self.propcov) # update chol of propcov
+
+            # if i == 999:
+            #     self.propcov = self.sd * (np.cov(x_vals[:,500:1000]) + eps * np.identity(len(x)))
+            #     meanXprev = np.mean(x_vals[:,500:1000],1)
+            # elif i >= 1000:
+            #     j = i - 500
+            #     meanX = j / (j + 1) * meanXprev + 1 / (j + 1) * x_vals[:,i]
+            #     self.propcov = (j-1) / j * self.propcov + self.sd / j * (j * np.outer(meanXprev, meanXprev) - (j+1) * np.outer(meanX, meanX) + np.outer(x_vals[:,i], x_vals[:,i]) + eps * np.identity(len(x)))
+            #     meanXprev = meanX
         
         # post processing, store MCMC chain
         x_vals_full = np.zeros([self.nx, self.Nsamp])
