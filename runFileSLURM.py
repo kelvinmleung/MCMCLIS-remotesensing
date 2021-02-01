@@ -21,8 +21,8 @@ a = Analysis(setup, r)
 
 ## MCMC ##
 x0 = setup.isofitMuPos
-Nsamp = 200
-burn = 20
+Nsamp = 2000000
+burn = 200000
 
 m = MCMCIsofit(setup, a, Nsamp, burn, x0)
 m.initMCMC(LIS=False, rank=427) # specify LIS parameters
