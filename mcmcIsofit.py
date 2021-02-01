@@ -100,10 +100,10 @@ class MCMCIsofit:
         ax.scatter(x_vals[indX,:], x_vals[indY,:], c='c', s=0.5)
 
         # plot prior mean/cov
-        # meanPrior = np.array([self.mu_x[indX], self.mu_x[indY]])
-        # covPrior = self.gamma_x[np.ix_([indX,indY],[indX,indY])]
-        # ax.plot(meanPrior[0], meanPrior[1], 'kx', label='Prior', markersize=12)
-        # self.drawEllipse(meanPrior, covPrior, ax, colour='black')
+        meanPrior = np.array([self.mu_x[indX], self.mu_x[indY]])
+        covPrior = self.gamma_x[np.ix_([indX,indY],[indX,indY])]
+        ax.plot(meanPrior[0], meanPrior[1], 'kx', label='Prior', markersize=12)
+        self.drawEllipse(meanPrior, covPrior, ax, colour='black')
         
         # plot Isofit mean/cov
         meanIsofit = np.array([self.mupos_isofit[indX], self.mupos_isofit[indY]])

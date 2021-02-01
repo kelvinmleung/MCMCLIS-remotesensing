@@ -5,7 +5,7 @@ from isofitSetup import Setup
 from genSamples import GenerateSamples
 from regression import Regression
 from analysis import Analysis
-from mcmc import MCMC
+from mcmcIsofit import MCMCIsofit
 
 
 ### Notes ###
