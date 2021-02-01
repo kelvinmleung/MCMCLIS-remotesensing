@@ -51,14 +51,14 @@ class MCMCIsofit:
 
     def initMCMC(self, LIS=False, rank=427):
         mcmcConfig = {
-            "x0": self.x0, # [:10],
+            "x0": self.x0,#[:425], # [:10],
             "Nsamp": self.Nsamp,
             "burn": self.burn,
             "sd": 2.4 ** 2 / rank,
             "LIS": LIS,
             "rank": rank,
-            "mu_x": self.mu_x, # [:10],
-            "gamma_x": self.gamma_x, # [:10,:][:,:10],
+            "mu_x": self.mu_x,#[:425], # [:10],
+            "gamma_x": self.gamma_x,#[:,:425][:425,:], # [:10,:][:,:10],
             "noisecov": self.noisecov,
             "yobs": self.yobs,
             "fm": self.fm,
@@ -100,10 +100,10 @@ class MCMCIsofit:
         ax.scatter(x_vals[indX,:], x_vals[indY,:], c='c', s=0.5)
 
         # plot prior mean/cov
-        meanPrior = np.array([self.mu_x[indX], self.mu_x[indY]])
-        covPrior = self.gamma_x[np.ix_([indX,indY],[indX,indY])]
-        ax.plot(meanPrior[0], meanPrior[1], 'kx', label='Prior', markersize=12)
-        self.drawEllipse(meanPrior, covPrior, ax, colour='black')
+        # meanPrior = np.array([self.mu_x[indX], self.mu_x[indY]])
+        # covPrior = self.gamma_x[np.ix_([indX,indY],[indX,indY])]
+        # ax.plot(meanPrior[0], meanPrior[1], 'kx', label='Prior', markersize=12)
+        # self.drawEllipse(meanPrior, covPrior, ax, colour='black')
         
         # plot Isofit mean/cov
         meanIsofit = np.array([self.mupos_isofit[indX], self.mupos_isofit[indY]])

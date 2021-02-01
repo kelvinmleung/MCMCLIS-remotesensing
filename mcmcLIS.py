@@ -28,6 +28,7 @@ class MCMCLIS:
             self.x0 = self.theta.T @ self.x0
             self.propcov = self.theta.T @ self.propcov @ self.theta
 
+
     def unpackConfig(self, config):
         self.x0 = config["x0"]              # initial value of chain
         self.Nsamp = config["Nsamp"]        # total number of MCMC samples
@@ -78,8 +79,6 @@ class MCMCLIS:
         thetaComp = np.linalg.inv(cholPr.T) @ VComp
         projComp = phiComp @ thetaComp.T
 
-        
-
         return phi, theta, proj, phiComp, thetaComp, projComp
 
 
@@ -95,16 +94,31 @@ class MCMCLIS:
             x = x + self.mu_x
 
         
-        meas = self.fm.calc_rdn(x, self.geom) # apply forward model
-        tLH = self.yobs - meas
-        loglikelihood = -1/2 * tLH.dot(np.linalg.solve(self.noisecov, tLH))
+        # meas = self.fm.calc_rdn(x, self.geom) # apply forward model
+        # tLH = self.yobs - meas
+        # loglikelihood = -1/2 * tLH.dot(np.linalg.solve(self.noisecov, tLH))
+
+        # for fixed atm
+        # xFull = np.concatenate((x, [0.05,1.75]))
+        # meas = self.fm.calc_rdn(xFull, self.geom) # apply forward model
+        # tLH = self.yobs - meas
+        # loglikelihood = -1/2 * tLH.dot(np.linalg.solve(self.noisecov, tLH))
+        
+
+        # plt.figure(100)
+        # plt.plot(meas, 'r')
+        # plt.plot(self.yobs, 'b')
+        # plt.ylim([-0.1, 15])
+        # plt.show(block=False)
+        # plt.pause(0.0001)
+        # plt.close()
         
         # if x[425] < 0 or x[426] < 0:
         #     print('ATM parameter is negative')
         #     loglikelihood = -np.Inf
         #     print(x[425:])
         
-        return logprior + loglikelihood 
+        return logprior #+ loglikelihood 
 
     def proposal(self, mean, covCholesky):
         ''' Sample proposal from a normal distribution '''

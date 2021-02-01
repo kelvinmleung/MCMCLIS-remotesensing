@@ -7,36 +7,34 @@ from regression import Regression
 from analysis import Analysis
 from mcmc import MCMC
 
-'''
-### Notes ###
-r175, 3e6 Samples, start truth, atm=[5, 2.5]
-'''
 
-## PARAMETERS TO CHANGE ##
-# also need to change x0 of MCMC #
-rank = 175
-sd = 2.4 ** 2 / min(rank,427)
-Nsamp = 3000000
-burn = 30000
+### Notes ###
+
 
 ## SETUP ##
 wv, ref = np.loadtxt('setup/data/petunia/petunia_reflectance.txt').T
-atm = [0.5,2.5]
+atm = [0.5, 2.5]
 setup = Setup(wv, ref, atm)
 g = GenerateSamples(setup)
 r = Regression(setup)
 a = Analysis(setup, r)
 
 ## MCMC ##
-m = MCMC(setup, a)
-# mu_xgyLin, gamma_xgyLin = a.posterior(yobs=setup.radNoisy)
-x0 = np.zeros(427)
-#x0[:425] = setup.isofitMuPos[:425]
-x0[:425] = setup.truth[:425]
-x0[425:] = [5,2.5]
-# x0 = setup.truth
+x0 = setup.isofitMuPos
+Nsamp = 200
+burn = 20
 
-m.initValue(x0=x0, yobs=setup.radNoisy, sd=sd, Nsamp=Nsamp, burn=burn, project=True, nr=rank)
-m.runMCMC(alg='adaptive')
+m = MCMCIsofit(setup, a, Nsamp, burn, x0)
+m.initMCMC(LIS=False, rank=427) # specify LIS parameters
+m.runAM()
+
+MCMCmean, MCMCcov = m.calcMeanCov()
+
+## MCMC Diagnostics ##
+mu_xgyLin, gamma_xgyLin = a.posterior(yobs=setup.radNoisy)
+setup.plotPosterior(mu_xgyLin, gamma_xgyLin, MCMCmean, MCMCcov)
+indSet = [30,40,90,100,150,160,250,260,425,426]
+m.diagnostics(MCMCmean, MCMCcov, indSet)
+
 
 
