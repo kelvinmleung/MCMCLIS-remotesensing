@@ -10,7 +10,6 @@ from mcmcIsofit import MCMCIsofit
 
 ### Notes ###
 
-
 ## SETUP ##
 wv, ref = np.loadtxt('setup/data/petunia/petunia_reflectance.txt').T
 atm = [0.5, 2.5]

@@ -17,8 +17,10 @@ class MCMCLIS:
         self.ny = self.noisecov.shape[0] # data dimension
 
         # initialize chain and proposal covariance
-        self.x0 = self.x0 - self.mu_x 
-        self.propcov = np.identity(self.nx) * 1e-10
+        self.x0 = self.x0 - self.mu_x
+
+        self.invGammaX = np.linalg.inv(self.gamma_x)
+        self.invNoiseCov = np.linalg.inv(self.noisecov)
 
         if self.LIS == True:
             # compute projection matrices
@@ -34,6 +36,7 @@ class MCMCLIS:
         self.Nsamp = config["Nsamp"]        # total number of MCMC samples
         self.burn = config["burn"]          # number of samples discarded as burn-in
         self.sd = config["sd"]              # proposal covariance parameter
+        self.propcov = config["propcov"]    # initial proposal covariance
         self.LIS = config["LIS"]            # LIS or no LIS
         self.rank = config["rank"]          # rank of problem
         self.mu_x = config["mu_x"]          # prior mean
@@ -51,7 +54,7 @@ class MCMCLIS:
 
         # compute Hessian
         cholPr = np.linalg.cholesky(self.gamma_x) # cholesky decomp of prior covariance
-        H = self.linop.T @ np.linalg.inv(self.noisecov) @ self.linop # Hessian
+        H = self.linop.T @ self.invNoiseCov @ self.linop # Hessian
         Hn = cholPr.T @ H @ cholPr 
 
         print('Solving generalized eigenvalue problem...')
@@ -86,17 +89,19 @@ class MCMCLIS:
         ''' Calculate log posterior '''
         # input x is zero-mean in LIS parameter space
         if self.LIS == True:
-            gammax = np.identity(np.size(x)) # prior of normalized LIS space
-            logprior = -1/2 * x.dot(np.linalg.solve(gammax, x))
+            # gammax = np.identity(np.size(x)) # prior of normalized LIS space
+            # logprior = -1/2 * x.dot(np.linalg.solve(gammax, x))
+            logprior = -1/2 * x.dot(x)
             x = self.phi @ x  + self.mu_x # project back to original (physical) space
         else:
-            logprior = -1/2 * x.dot(np.linalg.solve(self.gamma_x, x))
+            # logprior = -1/2 * x.dot(np.linalg.solve(self.gamma_x, x))
+            logprior = -1/2 * (x @ self.invGammaX @ x.T)
             x = x + self.mu_x
 
-        
-        # meas = self.fm.calc_rdn(x, self.geom) # apply forward model
-        # tLH = self.yobs - meas
-        # loglikelihood = -1/2 * tLH.dot(np.linalg.solve(self.noisecov, tLH))
+        meas = self.fm.calc_rdn(x, self.geom) # apply forward model
+        tLH = self.yobs - meas
+        loglikelihood = -1/2 * (tLH @ self.invNoiseCov @ tLH.T)
+
 
         # for fixed atm
         # xFull = np.concatenate((x, [0.05,1.75]))

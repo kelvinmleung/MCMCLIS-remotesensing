@@ -51,14 +51,15 @@ class MCMCIsofit:
 
     def initMCMC(self, LIS=False, rank=427):
         mcmcConfig = {
-            "x0": self.x0,#[:425], # [:10],
+            "x0": self.x0,# [:425], # [:10],
             "Nsamp": self.Nsamp,
             "burn": self.burn,
             "sd": 2.4 ** 2 / rank,
+            "propcov": self.gamma_x * (2.4 ** 2) / rank,
             "LIS": LIS,
             "rank": rank,
-            "mu_x": self.mu_x,#[:425], # [:10],
-            "gamma_x": self.gamma_x,#[:,:425][:425,:], # [:10,:][:,:10],
+            "mu_x": self.mu_x,# [:425], # [:10],
+            "gamma_x": self.gamma_x,# [:,:425][:425,:], # [:10,:][:,:10],
             "noisecov": self.noisecov,
             "yobs": self.yobs,
             "fm": self.fm,
@@ -67,6 +68,29 @@ class MCMCIsofit:
             "mcmcDir": self.mcmcDir
             }
         self.mcmc = MCMCLIS(mcmcConfig)
+
+    def initPriorSampling(self, rank=427):
+        mcmcConfig = {
+            "x0": np.zeros(rank),
+            "Nsamp": self.Nsamp,
+            "burn": self.burn,
+            "sd": 2.4 ** 2 / rank,
+            "propcov": np.identity(rank) * (2.4 ** 2) / rank,
+            "LIS": False,
+            "rank": rank,
+            "mu_x": np.zeros(rank),
+            "gamma_x": np.identity(rank),
+            "noisecov": self.noisecov,
+            "yobs": self.yobs,
+            "fm": self.fm,
+            "geom": self.geom,
+            "linop": self.linop,
+            "mcmcDir": self.mcmcDir
+            }
+        self.mcmc = MCMCLIS(mcmcConfig)
+
+        self.mu_x = np.zeros(rank)
+        self.gamma_x = np.identity(rank)
 
     def runAM(self):
         self.mcmc.adaptm()   
@@ -95,28 +119,30 @@ class MCMCIsofit:
 
         fig, ax = plt.subplots()
         
-        ax.plot(self.truth[indX], self.truth[indY], 'go', label='True reflectance', markersize=10)
         
         ax.scatter(x_vals[indX,:], x_vals[indY,:], c='c', s=0.5)
 
         # plot prior mean/cov
-        # meanPrior = np.array([self.mu_x[indX], self.mu_x[indY]])
-        # covPrior = self.gamma_x[np.ix_([indX,indY],[indX,indY])]
-        # ax.plot(meanPrior[0], meanPrior[1], 'kx', label='Prior', markersize=12)
-        # self.drawEllipse(meanPrior, covPrior, ax, colour='black')
-        
+        meanPrior = np.array([self.mu_x[indX], self.mu_x[indY]])
+        covPrior = self.gamma_x[np.ix_([indX,indY],[indX,indY])]
+        ax.plot(meanPrior[0], meanPrior[1], 'kx', label='Prior', markersize=12)
+        self.drawEllipse(meanPrior, covPrior, ax, colour='black')
+        '''
+        ax.plot(self.truth[indX], self.truth[indY], 'go', label='True reflectance', markersize=10)
+
+
         # plot Isofit mean/cov
         meanIsofit = np.array([self.mupos_isofit[indX], self.mupos_isofit[indY]])
         covIsofit = self.gammapos_isofit[np.ix_([indX,indY],[indX,indY])]
         ax.plot(meanIsofit[0], meanIsofit[1], 'rx', label='Isofit posterior', markersize=12)
         self.drawEllipse(meanIsofit, covIsofit, ax, colour='red')
-        
+        '''
         # plot MCMC mean/cov
         meanMCMC = np.array([MCMCmean[indX], MCMCmean[indY]])
         covMCMC = MCMCcov[np.ix_([indX,indY],[indX,indY])]
         ax.plot(meanMCMC[0], meanMCMC[1], 'bx', label='MCMC posterior', markersize=12)
         self.drawEllipse(meanMCMC, covMCMC, ax, colour='blue')
-
+        
         ax.set_title('MCMC - Two Component Visual')
         ax.set_xlabel('Index ' + str(indX))
         ax.set_ylabel('Index ' + str(indY))
@@ -128,7 +154,8 @@ class MCMCIsofit:
         # assume there are 10 elements in indSet
         # default: indSet = [10,20,50,100,150,160,250,260,425,426]
         x_vals = np.load(self.mcmcDir + 'MCMC_x.npy')
-        logpos = np.load(self.mcmcDir + 'logpos.npy')
+        # logpos = np.load(self.mcmcDir + 'logpos.npy')
+        acceptance = np.load(self.mcmcDir + 'acceptance.npy')
         numPairs = int(len(indSet) / 2)
 
         # plot 2D visualization
@@ -166,11 +193,27 @@ class MCMCIsofit:
         fig2.set_size_inches(5, 7)
         fig2.tight_layout()
         fig2.savefig(self.mcmcDir + 'autocorr.png')
-
+        
         # plot logpos
+        # plt.figure()
+        # plt.plot(logpos)
+        # plt.xlabel('Number of Samples')
+        # plt.ylabel('Log Posterior')
+        # plt.savefig(self.mcmcDir + 'logpos.png')
+
+        # acceptance rate
+        print('Acceptance rate:', np.mean(acceptance[self.burn:]))
+        numBin = int(self.Nsamp / 1000)
+        acceptPlot = np.zeros(numBin)
+        for i in range(numBin):
+            acceptPlot[i] = np.mean(acceptance[numBin*i : numBin*(i+1)])
         plt.figure()
-        plt.plot(logpos)
-        plt.xlabel('Number of Samples')
-        plt.ylabel('Log Posterior')
-        plt.savefig(self.mcmcDir + 'logpos.png')
+        plt.plot(acceptPlot)
+        plt.xlabel('Number of Samples (x 1e3)')
+        plt.ylabel('Acceptance Rate')
+        plt.ylim([0, 1])
+        plt.savefig(self.mcmcDir + 'acceptance.png')
+
+        
+        
         
