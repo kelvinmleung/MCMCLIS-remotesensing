@@ -9,11 +9,11 @@ from mcmcIsofit import MCMCIsofit
 
 
 ##### CONFIG #####
-Nsamp = 2000
+Nsamp = 2000000
 init = 'isofit'
 rank = 100
 constrain = True
-mcmcfolder = 'A'
+mcmcfolder = 'A9'
 mcmcfolder = mcmcfolder + '_init' + init + '_rank' + str(rank)
 if constrain == True:
     mcmcfolder = mcmcfolder + '_constrained'
