@@ -47,7 +47,7 @@ class MCMCLIS:
         self.mu_x = config["mu_x"]          # prior mean
         self.gamma_x = config["gamma_x"]    # prior covariance
         self.noisecov = config["noisecov"]  # data noise covariance
-        # self.MAP = config["MAP"]            # isofit MAP estimate (pos. mean)
+        # self.MAP = config["MAP"]          # isofit MAP estimate (pos. mean)
         self.fm = config["fm"]              # forward model
         self.geom = config["geom"]          # geometry model
         self.linop = config["linop"]        # linear operator
@@ -97,7 +97,7 @@ class MCMCLIS:
             # logprior = -1/2 * x.dot(x)
             tPr = x + self.theta.T @ (self.startX - self.mu_x)
             logprior = -1/2 * tPr.dot(tPr)
-            # xFull = self.phi @ x + self.mu_x # project back to original (physical) coordinates
+            #  = self.phi @ x + self.mu_x # project back to original (physical) coordinates
             xFull = self.phi @ x + self.startX
         else:
             tPr = x + self.startX - self.mu_x
@@ -171,9 +171,10 @@ class MCMCLIS:
             z = self.proposal(x, propChol)
             alpha, logposZ, logposX = self.alpha(x, z)
 
-            # add component 
+            # add component and check constraint
             zComp = self.proposal(np.zeros(self.nComp), np.identity(self.nComp))
-            if self.checkConstraint(self.phi @ x + self.phiComp @ zComp + self.startX) == False:
+            xFull = self.phi @ x + self.phiComp @ zComp + self.startX
+            if self.checkConstraint(xFull) == False:
                 alpha = 0
 
             if np.random.random() < alpha:
@@ -200,9 +201,6 @@ class MCMCLIS:
                 print('   Accept Rate: ', np.mean(accept[i-499:i]))
                 propChol = np.linalg.cholesky(self.propcov) # update chol of propcov
                 print(np.linalg.norm(propChol))
-
-                # plot the proposal
-                # self.plotProposal(z)
                 
             # change proposal covariance
             if i == 999:
@@ -236,11 +234,9 @@ class MCMCLIS:
         np.save(self.mcmcDir + 'MCMC_x.npy', x_vals_full)
         np.save(self.mcmcDir + 'logpos.npy', logpos)
         np.save(self.mcmcDir + 'acceptance.npy', accept)
-        # return x_vals  
     
     def plotProposal(self, z):
         if self.LIS == True:
-            # plt.plot(self.phi @ z + self.mu_x)
             plt.plot(self.phi @ z + self.startX)
         else:
             # plt.plot(z + self.mu_x)

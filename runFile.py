@@ -29,7 +29,7 @@ burn = int(0.1 * Nsamp)
 rank = 100
 
 m = MCMCIsofit(setup, a, Nsamp, burn, x0, 'AM')
-m.initMCMC(LIS=True, rank=rank) # specify LIS parameters
+m.initMCMC(LIS=True, rank=rank, folder='TestFolder') # specify LIS parameters
 m.runAM()
 MCMCmean, MCMCcov = m.calcMeanCov()
 

@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import multivariate_normal
@@ -15,7 +16,7 @@ class MCMCIsofit:
 
     def __init__(self, setup, analysis, Nsamp, burn, x0, alg='AM'):
 
-        self.mcmcDir = setup.mcmcDir
+        
         
         # initialize problem parameters
         self.wavelengths = setup.wavelengths
@@ -49,7 +50,13 @@ class MCMCIsofit:
         self.nx = self.gamma_x.shape[0] # parameter dimension
         self.ny = self.noisecov.shape[0] # data dimension
 
-    def initMCMC(self, LIS=False, rank=427):
+    def initMCMC(self, LIS=False, rank=427, folder='MCMCRun'):
+        
+        # create folder
+        self.mcmcDir = setup.mcmcDir + folder
+        if not os.path.exists(self.mcmcDir):
+            os.makedirs(self.mcmcDir)
+
         # define upper and lower bounds 
         lowbound = np.concatenate((np.zeros(425), [0, 1]))
         upbound = np.concatenate((np.ones(425), [1, 4]))
