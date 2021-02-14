@@ -55,7 +55,7 @@ class MCMCIsofit:
         upbound = np.concatenate((np.ones(425), [1, 4]))
 
         mcmcConfig = {
-            "x0": self.x0,
+            "startX": self.x0,
             "Nsamp": self.Nsamp,
             "burn": self.burn,
             "sd": 2.4 ** 2 / rank,
@@ -66,7 +66,7 @@ class MCMCIsofit:
             "rank": rank,
             "mu_x": self.mu_x,
             "gamma_x": self.gamma_x,
-            "MAP": self.x0, #self.truth,# 
+            # "MAP": self.x0, #self.truth,# 
             "noisecov": self.noisecov,
             "yobs": self.yobs,
             "fm": self.fm,

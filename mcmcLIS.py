@@ -19,7 +19,8 @@ class MCMCLIS:
 
         # initialize chain and proposal covariance
         # self.x0 = self.x0 - self.mu_x
-        self.x0 = self.x0 - self.MAP
+        # self.x0 = self.x0 - self.MAP
+        self.x0 = np.zeros(self.rank)
 
         self.invGammaX = np.linalg.inv(self.gamma_x)
         self.invNoiseCov = np.linalg.inv(self.noisecov)
@@ -28,12 +29,13 @@ class MCMCLIS:
             # compute projection matrices
             self.phi, self.theta, self.proj, self.phiComp, self.thetaComp, self.projComp = self.LISproject() 
 
-             # project x0 and proposal covariance to LIS subspace
-            self.x0 = self.theta.T @ self.x0
+            # project x0 and proposal covariance to LIS subspace
+            # self.x0 = self.theta.T @ self.x0
             self.propcov = self.theta.T @ self.propcov @ self.theta
 
     def unpackConfig(self, config):
-        self.x0 = config["x0"]              # initial value of chain
+        # self.x0 = config["x0"]              # initial value of chain
+        self.startX = config["startX"]      # initial value of chain
         self.Nsamp = config["Nsamp"]        # total number of MCMC samples
         self.burn = config["burn"]          # number of burn-in samples
         self.sd = config["sd"]              # proposal covariance parameter
@@ -45,7 +47,7 @@ class MCMCLIS:
         self.mu_x = config["mu_x"]          # prior mean
         self.gamma_x = config["gamma_x"]    # prior covariance
         self.noisecov = config["noisecov"]  # data noise covariance
-        self.MAP = config["MAP"]            # isofit MAP estimate (pos. mean)
+        # self.MAP = config["MAP"]            # isofit MAP estimate (pos. mean)
         self.fm = config["fm"]              # forward model
         self.geom = config["geom"]          # geometry model
         self.linop = config["linop"]        # linear operator
@@ -93,15 +95,15 @@ class MCMCLIS:
         # input x is zero-mean in LIS parameter space
         if self.LIS == True:
             # logprior = -1/2 * x.dot(x)
-            tPr = x + self.theta.T @ (self.MAP - self.mu_x)
+            tPr = x + self.theta.T @ (self.startX - self.mu_x)
             logprior = -1/2 * tPr.dot(tPr)
             # xFull = self.phi @ x + self.mu_x # project back to original (physical) coordinates
-            xFull = self.phi @ x + self.MAP
+            xFull = self.phi @ x + self.startX
         else:
-            tPr = x + self.MAP - self.mu_x
+            tPr = x + self.startX - self.mu_x
             logprior = -1/2 * (tPr @ self.invGammaX @ tPr.T) # (x+mu_isofitpos-mu_x)
             # xFull = x + self.mu_x
-            xFull = x + self.MAP
+            xFull = x + self.startX
 
         # meas = self.fm.calc_rdn(x, self.geom)
         meas = self.fm.calc_rdn(xFull, self.geom) # apply forward model
@@ -145,17 +147,8 @@ class MCMCLIS:
 
     def checkConstraint(self, x):
         # x needs to have dimension = nx
-
-        plt.plot(x)
-        plt.ylim([-0.1, 0.8])
-        plt.show(block=False)
-        plt.pause(0.001)
-        plt.close()
-
         checkA = any(x[i] < self.lowbound[i] for i in range(self.nx)) 
         checkB = any(x[i] > self.upbound[i] for i in range(self.nx)) 
-        print('A', checkA)
-        print('B', checkB)
         if checkA or checkB:
             return False
         return True
@@ -180,7 +173,7 @@ class MCMCLIS:
 
             # add component 
             zComp = self.proposal(np.zeros(self.nComp), np.identity(self.nComp))
-            if self.checkConstraint(self.phi @ x + self.phiComp @ zComp + self.MAP) == False:
+            if self.checkConstraint(self.phi @ x + self.phiComp @ zComp + self.startX) == False:
                 alpha = 0
 
             if np.random.random() < alpha:
@@ -228,17 +221,17 @@ class MCMCLIS:
         #     for i in range(self.Nsamp):
         #         #xComp = self.proposal(np.zeros(nComp), np.identity(nComp))
         #         # x_vals_full[:,i] = self.phi @ x_vals[:,i] + self.phiComp @ xComp + self.mu_x
-        #         # x_vals_full[:,i] = self.phi @ x_vals[:,i] + self.phiComp @ xComp + self.MAP            
+        #         # x_vals_full[:,i] = self.phi @ x_vals[:,i] + self.phiComp @ xComp + self.startX            
         # else:
         #     for i in range(self.Nsamp):
         #         # x_vals_full[:,i] = x_vals[:,i] + self.mu_x
-        #         x_vals_full[:,i] = x_vals[:,i] + self.MAP
+        #         x_vals_full[:,i] = x_vals[:,i] + self.startX
         
         if self.LIS == True:
             x_vals_full = self.phi @ x_vals + self.phiComp @ x_vals_comp
         else:
             x_vals_full = x_vals
-        x_vals_full = x_vals_full + np.outer(self.MAP, np.ones(self.Nsamp))
+        x_vals_full = x_vals_full + np.outer(self.startX, np.ones(self.Nsamp))
 
         np.save(self.mcmcDir + 'MCMC_x.npy', x_vals_full)
         np.save(self.mcmcDir + 'logpos.npy', logpos)
@@ -248,10 +241,10 @@ class MCMCLIS:
     def plotProposal(self, z):
         if self.LIS == True:
             # plt.plot(self.phi @ z + self.mu_x)
-            plt.plot(self.phi @ z + self.MAP)
+            plt.plot(self.phi @ z + self.startX)
         else:
             # plt.plot(z + self.mu_x)
-            plt.plot(z + self.MAP)
+            plt.plot(z + self.startX)
         plt.ylim([-0.1, 0.8])
         plt.show(block=False)
         plt.pause(0.001)
