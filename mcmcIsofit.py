@@ -216,7 +216,8 @@ class MCMCIsofit:
         plt.savefig(self.mcmcDir + 'logpos.png')
 
         # acceptance rate
-        print('Acceptance rate:', np.mean(acceptance[self.burn:]))
+        # print('Acceptance rate:', )
+        acceptRate = np.mean(acceptance[self.burn:])
         binWidth = 1000
         numBin = int(self.Nsamp / binWidth)
         xPlotAccept = np.arange(binWidth, self.Nsamp+1, binWidth)
@@ -227,6 +228,7 @@ class MCMCIsofit:
         plt.plot(xPlotAccept, acceptPlot)
         plt.xlabel('Number of Samples')
         plt.ylabel('Acceptance Rate')
+        plt.title('Acceptance Rate = ' + str(acceptRate))
         plt.ylim([0, 1])
         plt.savefig(self.mcmcDir + 'acceptance.png')
 
