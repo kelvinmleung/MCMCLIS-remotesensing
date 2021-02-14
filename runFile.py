@@ -9,7 +9,7 @@ from mcmcIsofit import MCMCIsofit
 
 
 ##### CONFIG #####
-Nsamp = 2000000
+Nsamp = 2000
 init = 'isofit'
 rank = 100
 constrain = True
