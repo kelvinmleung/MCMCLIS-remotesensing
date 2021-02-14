@@ -18,7 +18,7 @@ class Setup:
     Contains functions to generate training and test samples
     from isofit.
     '''
-    def __init__(self, wv, ref, atm):
+    def __init__(self, wv, ref, atm, mcmcdir='MCMCRun'):
 
         print('Setup in progress...')
         self.wavelengths = wv
@@ -29,7 +29,7 @@ class Setup:
         self.sampleDir = '../results/Regression/samples/'
         self.regDir = '../results/Regression/linearModel/'
         self.analysisDir = '../results/Analysis/'
-        self.mcmcDir = '../results/MCMC/'
+        self.mcmcDir = '../results/MCMC/' + mcmcdir + '/'
 
         # load Isofit
         with open('setup/config/config_inversion.json', 'r') as f:
