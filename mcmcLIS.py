@@ -15,6 +15,7 @@ class MCMCLIS:
         self.unpackConfig(config)
         self.nx = self.gamma_x.shape[0] # parameter dimension
         self.ny = self.noisecov.shape[0] # data dimension
+        self.nComp = self.nx - self.rank
 
         # initialize chain and proposal covariance
         # self.x0 = self.x0 - self.mu_x
@@ -34,9 +35,11 @@ class MCMCLIS:
     def unpackConfig(self, config):
         self.x0 = config["x0"]              # initial value of chain
         self.Nsamp = config["Nsamp"]        # total number of MCMC samples
-        self.burn = config["burn"]          # number of samples discarded as burn-in
+        self.burn = config["burn"]          # number of burn-in samples
         self.sd = config["sd"]              # proposal covariance parameter
         self.propcov = config["propcov"]    # initial proposal covariance
+        self.lowbound = config["lowbound"]  # lower constraint for parameters
+        self.upbound = config["upbound"]    # upper constraint for parameters
         self.LIS = config["LIS"]            # LIS or no LIS
         self.rank = config["rank"]          # rank of problem
         self.mu_x = config["mu_x"]          # prior mean
@@ -105,14 +108,12 @@ class MCMCLIS:
         tLH = self.yobs - meas
         loglikelihood = -1/2 * (tLH @ self.invNoiseCov @ tLH.T)
 
-
         # for fixed atm
         # xFull = np.concatenate((x, [0.05,1.75]))
         # meas = self.fm.calc_rdn(xFull, self.geom) # apply forward model
         # tLH = self.yobs - meas
         # loglikelihood = -1/2 * tLH.dot(np.linalg.solve(self.noisecov, tLH))
         
-
         # plt.figure(100)
         # plt.plot(meas, 'r')
         # plt.plot(self.yobs, 'b')
@@ -121,10 +122,10 @@ class MCMCLIS:
         # plt.pause(0.0001)
         # plt.close()
         
-        if xFull[425] < 0 or xFull[426] < 0:
-            print('ATM parameter is negative')
-            loglikelihood = -np.Inf
-            print(x[425:])
+        # if xFull[425] < 0 or xFull[426] < 0:
+        #     print('ATM parameter is negative')
+        #     loglikelihood = -np.Inf
+        #     print(xFull[425:])
         
         return logprior + loglikelihood 
 
@@ -142,13 +143,33 @@ class MCMCLIS:
         # return both acceptance ratio and logpos
         return np.minimum(1, np.exp(ratio)), logposZ, logposX
 
+    def checkConstraint(self, x):
+        # x needs to have dimension = nx
+
+        plt.plot(x)
+        plt.ylim([-0.1, 0.8])
+        plt.show(block=False)
+        plt.pause(0.001)
+        plt.close()
+
+        checkA = any(x[i] < self.lowbound[i] for i in range(self.nx)) 
+        checkB = any(x[i] > self.upbound[i] for i in range(self.nx)) 
+        print('A', checkA)
+        print('B', checkB)
+        if checkA or checkB:
+            return False
+        return True
+
     def adaptm(self, alg):
         ''' Run Adaptive-Metropolis MCMC algorithm '''
-        x_vals = np.zeros([self.x0.size, self.Nsamp]) # store all samples
+        x_vals = np.zeros([self.rank, self.Nsamp]) # store all samples
+        x_vals_comp = np.zeros([self.nComp, self.Nsamp])
+
         logpos = np.zeros(self.Nsamp) # store the log posterior values
         accept = np.zeros(self.Nsamp, dtype=int)
 
         x = self.x0
+        xComp = np.zeros(self.nComp)
         propChol = np.linalg.cholesky(self.propcov) # cholesky decomp of proposal cov
         eps = 1e-10
         gamma = 0.01
@@ -156,18 +177,28 @@ class MCMCLIS:
         for i in range(self.Nsamp):
             z = self.proposal(x, propChol)
             alpha, logposZ, logposX = self.alpha(x, z)
+
+            # add component 
+            zComp = self.proposal(np.zeros(self.nComp), np.identity(self.nComp))
+            if self.checkConstraint(self.phi @ x + self.phiComp @ zComp + self.MAP) == False:
+                alpha = 0
+
             if np.random.random() < alpha:
                 x = z 
+                xComp = zComp
                 logposX = logposZ
                 accept[i] = 1
-            elif alg == 'DRAM': # if reject, try another smaller proposal
-                z = self.proposal(x, gamma * propChol)
-                alpha, logposZ, logposX = self.alpha(x, z)
-                if np.random.random() < alpha:
-                    x = z 
-                    logposX = logposZ
-                    # accept[i] = 1
+
+            # elif alg == 'DRAM': # if reject, try another smaller proposal
+            # ADD THE COMPONENT COMPLEMENTARY SUBSPACE
+            #     z = self.proposal(x, gamma * propChol)
+            #     alpha, logposZ, logposX = self.alpha(x, z)
+            #     if np.random.random() < alpha:
+            #         x = z 
+            #         logposX = logposZ
+
             x_vals[:,i] = x
+            x_vals_comp[:,i] = xComp 
             logpos[i] = logposX
             
             # print progress
@@ -190,23 +221,29 @@ class MCMCLIS:
                 meanXprev = meanX
 
         # post processing, store MCMC chain
-        x_vals_full = np.zeros([self.nx, self.Nsamp])
+        # x_vals_full = np.zeros([self.nx, self.Nsamp])
+        # if self.LIS == True:
+        #     # add samples of xComp to chain, project back to full subspace
+        #     #nComp = np.shape(self.phiComp)[1] # size of complementary subspace
+        #     for i in range(self.Nsamp):
+        #         #xComp = self.proposal(np.zeros(nComp), np.identity(nComp))
+        #         # x_vals_full[:,i] = self.phi @ x_vals[:,i] + self.phiComp @ xComp + self.mu_x
+        #         # x_vals_full[:,i] = self.phi @ x_vals[:,i] + self.phiComp @ xComp + self.MAP            
+        # else:
+        #     for i in range(self.Nsamp):
+        #         # x_vals_full[:,i] = x_vals[:,i] + self.mu_x
+        #         x_vals_full[:,i] = x_vals[:,i] + self.MAP
+        
         if self.LIS == True:
-            # add samples of xComp to chain, project back to full subspace
-            nComp = np.shape(self.phiComp)[1] # size of complementary subspace
-            for i in range(self.Nsamp):
-                xComp = self.proposal(np.zeros(nComp), np.identity(nComp))
-                # x_vals_full[:,i] = self.phi @ x_vals[:,i] + self.phiComp @ xComp + self.mu_x
-                x_vals_full[:,i] = self.phi @ x_vals[:,i] + self.phiComp @ xComp + self.MAP
+            x_vals_full = self.phi @ x_vals + self.phiComp @ x_vals_comp
         else:
-            for i in range(self.Nsamp):
-                # x_vals_full[:,i] = x_vals[:,i] + self.mu_x
-                x_vals_full[:,i] = x_vals[:,i] + self.MAP
+            x_vals_full = x_vals
+        x_vals_full = x_vals_full + np.outer(self.MAP, np.ones(self.Nsamp))
 
         np.save(self.mcmcDir + 'MCMC_x.npy', x_vals_full)
         np.save(self.mcmcDir + 'logpos.npy', logpos)
         np.save(self.mcmcDir + 'acceptance.npy', accept)
-        return x_vals  
+        # return x_vals  
     
     def plotProposal(self, z):
         if self.LIS == True:

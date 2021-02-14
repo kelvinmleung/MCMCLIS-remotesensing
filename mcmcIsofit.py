@@ -50,17 +50,23 @@ class MCMCIsofit:
         self.ny = self.noisecov.shape[0] # data dimension
 
     def initMCMC(self, LIS=False, rank=427):
+        # define upper and lower bounds 
+        lowbound = np.concatenate((np.zeros(425), [0, 1]))
+        upbound = np.concatenate((np.ones(425), [1, 4]))
+
         mcmcConfig = {
             "x0": self.x0,
             "Nsamp": self.Nsamp,
             "burn": self.burn,
             "sd": 2.4 ** 2 / rank,
-            "propcov": self.linGammaPos * (2.4 ** 2) / rank,
+            "propcov": self.linGammaPos * (2.38 ** 2) / rank,
+            "lowbound": lowbound,
+            "upbound": upbound,
             "LIS": LIS,
             "rank": rank,
             "mu_x": self.mu_x,
             "gamma_x": self.gamma_x,
-            "MAP": self.mupos_isofit,
+            "MAP": self.x0, #self.truth,# 
             "noisecov": self.noisecov,
             "yobs": self.yobs,
             "fm": self.fm,
@@ -76,7 +82,7 @@ class MCMCIsofit:
             "Nsamp": self.Nsamp,
             "burn": self.burn,
             "sd": 2.4 ** 2 / rank,
-            "propcov": np.identity(rank) * (2.4 ** 2) / rank,
+            "propcov": np.identity(rank) * (2.38 ** 2) / rank,
             "LIS": False,
             "rank": rank,
             "mu_x": np.zeros(rank),

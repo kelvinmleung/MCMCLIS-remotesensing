@@ -8,8 +8,7 @@ from analysis import Analysis
 from mcmcIsofit import MCMCIsofit
 ### Notes ###
 '''
-LIS rank 175.
-Try fixed and unfixed atm parameters
+
 
 '''
 
@@ -22,10 +21,10 @@ g = GenerateSamples(setup)
 r = Regression(setup)
 a = Analysis(setup, r)
 
-## MCMC ##
-# x0 = setup.isofitMuPos
-x0 = setup.truth
-Nsamp = 2000000
+## MCMC #
+x0 = setup.isofitMuPos
+# x0 = setup.truth
+Nsamp = 10000
 burn = int(0.1 * Nsamp)
 rank = 100
 
