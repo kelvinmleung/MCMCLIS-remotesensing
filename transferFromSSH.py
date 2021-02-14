@@ -1,17 +1,19 @@
 import subprocess
 
-remoteDir = "kmleung@hypersonic.mit.edu:/master/home/kmleung/JPLproject/results/MCMC/"
-localDir = "/Users/KelvinLeung/Documents/JPLproject/results/MCMC/fromCluster"
+''' Run this on cluster first '''
+# tar -zcvf A9.tgz atmMean.png acceptance.png 2D_30-40.png 2D_90-100.png 2D_150-160.png 2D_250-260.png 2D_425-426.png autocorr.png logpos.png reflVar.png errorRelCov.png trace.png atmVar.png reflMean.png
 
-indSet = [30,40,90,100,150,160,250,260,425,426]
+filename = 'A9.tgz'
 
-listFiles = []
-listFiles = listFiles + ['reflMean.png', 'atmMean.png', 'reflVar.png', 'atmVar.png', ' errorRelCov.png', 'trace.png', 'autocorr.png', 'logpos.png']
-numPairs = int(len(indSet) / 2)
-for i in range(numPairs):
-    listFiles = listFiles + ['2D_' + str(indSet[2*i]) + '-' + str(indSet[2*i+1]) + '.png']
-for i in range(len(listFiles)):
-    subprocess.call(["rsync", "-chavzP", "--stats", "--delete", remoteDir + listFiles[i], localDir])
+remoteDir = "kmleung@hypersonic.mit.edu:/master/home/kmleung/JPLproject/results/MCMC/A9_initisofit_rank100_constrained/"
+localDir = "/Users/KelvinLeung/Documents/JPLproject/results/MCMC/"
+
+subprocess.call(["rsync", "-chavzP", "--stats", "--delete", remoteDir + filename, localDir])
+
+
+
+
+
 
 
 
