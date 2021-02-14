@@ -52,7 +52,7 @@ listFiles = listFiles + ['reflMean.png', 'atmMean.png', 'reflVar.png', 'atmVar.p
 numPairs = int(len(indSet) / 2)
 for i in range(numPairs):
     listFiles = listFiles + ['2D_' + str(indSet[2*i]) + '-' + str(indSet[2*i+1]) + '.png']
-subprocess.call(['tar', '-zcvf', mcmcfolder + '.tgz', listFiles])
+subprocess.call(['tar', '-zcvf', mcmcfolder + '.tgz'] + listFiles)
 
 # plt.show()
 
