@@ -1,4 +1,5 @@
 import subprocess
+import time
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -10,8 +11,8 @@ from mcmcIsofit import MCMCIsofit
 
 
 ##### CONFIG #####
-Nsamp = 3000
-burn = 1000
+Nsamp = 2000000
+burn = 500000
 init = 'MAP'
 rank = 175
 constrain = False
@@ -27,6 +28,8 @@ r = Regression(setup)
 a = Analysis(setup, r)
 
 ## MCMC #
+start_time = time.time()
+
 if init == 'MAP':
     x0 = setup.isofitMuPos
 elif init == 'truth':
@@ -48,10 +51,11 @@ setup.plotPosterior(m.linMuPos, m.linGammaPos, MCMCmean, MCMCcov)
 ## MCMC Diagnostics ##
 indSet = [30,40,90,100,150,160,250,260,425,426]
 m.diagnostics(MCMCmean, MCMCcov, indSet)
+np.savetxt(setup.mcmcDir + 'runtime.txt', np.array([time.time() - start_time]))
 
 # zip the plots
 listFiles = []
-listFiles = listFiles + ['reflMean.png', 'atmMean.png', 'reflVar.png', 'atmVar.png', 'errorRelCov.png', 'trace.png', 'autocorr.png', 'logpos.png', 'acceptance.png']
+listFiles = listFiles + ['reflMean.png', 'atmMean.png', 'reflVar.png', 'atmVar.png', 'errorRelCov.png', 'trace.png', 'autocorr.png', 'logpos.png', 'acceptance.png', 'runtime.txt']
 numPairs = int(len(indSet) / 2)
 for i in range(numPairs):
     listFiles = listFiles + ['2D_' + str(indSet[2*i]) + '-' + str(indSet[2*i+1]) + '.png']
