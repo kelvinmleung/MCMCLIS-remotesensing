@@ -116,18 +116,6 @@ class MCMCLIS:
         # tLH = self.yobs - meas
         # loglikelihood = -1/2 * tLH.dot(np.linalg.solve(self.noisecov, tLH))
         
-        # plt.figure(100)
-        # plt.plot(meas, 'r')
-        # plt.plot(self.yobs, 'b')
-        # plt.ylim([-0.1, 15])
-        # plt.show(block=False)
-        # plt.pause(0.0001)
-        # plt.close()
-        
-        # if xFull[425] < 0 or xFull[426] < 0:
-        #     print('ATM parameter is negative')
-        #     loglikelihood = -np.Inf
-        #     print(xFull[425:])
         
         return logprior + loglikelihood 
 

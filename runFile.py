@@ -12,10 +12,10 @@ from mcmcIsofit import MCMCIsofit
 ##### CONFIG #####
 Nsamp = 3000000
 burn = 1000000
-init = 'truth'
-rank = 100
-constrain = True
-mcmcfolder = 'B4'
+init = 'MAP'
+rank = 175
+constrain = False
+mcmcfolder = 'C1'
 ##### CONFIG #####
 
 ## SETUP ##
