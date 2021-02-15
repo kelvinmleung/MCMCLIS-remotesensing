@@ -10,15 +10,12 @@ from mcmcIsofit import MCMCIsofit
 
 
 ##### CONFIG #####
-Nsamp = 3000
-burn = 1000
-init = 'isofit'
+Nsamp = 3000000
+burn = 1000000
+init = 'MAP'
 rank = 100
 constrain = True
-mcmcfolder = 'b1'
-mcmcfolder = mcmcfolder + '_init' + init + '_rank' + str(rank)
-if constrain == True:
-    mcmcfolder = mcmcfolder + '_constrained'
+mcmcfolder = 'B1'
 ##### CONFIG #####
 
 ## SETUP ##
@@ -30,11 +27,17 @@ r = Regression(setup)
 a = Analysis(setup, r)
 
 ## MCMC #
-if init == 'isofit':
+if init == 'MAP':
     x0 = setup.isofitMuPos
 elif init == 'truth':
     x0 = setup.truth
+elif init == 'linear': # THIS OPTION DOESN'T WORK YET
+    linMuPos, linGammaPos = a.posterior(setup.radNoisy) 
+    x0 = linMuPos
 
+mcmcfolder = mcmcfolder + '_init' + init + '_rank' + str(rank)
+if constrain == True:
+    mcmcfolder = mcmcfolder + '_constrained'
 
 m = MCMCIsofit(setup, a, Nsamp, burn, x0, 'AM')
 m.initMCMC(LIS=True, rank=rank, constrain=constrain) # specify LIS parameters
