@@ -1,7 +1,8 @@
 #!/bin/bash
-#SBATCH --job-name=mcma
+#SBATCH --job-name=mcmc
 #SBATCH --workdir=/master/home/kmleung/JPLproject/MCMCLIS-remotesensing
-#SBATCH --output=runjob2.out
-#SBATCH --error=runjob2.err
+#SBATCH --output=runjob.out
+#SBATCH --error=runjob.err
+#SBATCH --exclusive
  
 python runFile.py
