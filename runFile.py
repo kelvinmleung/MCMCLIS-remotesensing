@@ -14,8 +14,8 @@ Nsamp = 3000000
 burn = 1000000
 init = 'MAP'
 rank = 100
-constrain = False
-mcmcfolder = 'B1'
+constrain = True
+mcmcfolder = 'B2'
 ##### CONFIG #####
 
 ## SETUP ##
