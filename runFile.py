@@ -48,11 +48,12 @@ m.diagnostics(MCMCmean, MCMCcov, indSet)
 
 # zip the plots
 listFiles = []
-listFiles = listFiles + ['reflMean.png', 'atmMean.png', 'reflVar.png', 'atmVar.png', ' errorRelCov.png', 'trace.png', 'autocorr.png', 'logpos.png', 'acceptance.png']
+listFiles = listFiles + ['reflMean.png', 'atmMean.png', 'reflVar.png', 'atmVar.png', 'errorRelCov.png', 'trace.png', 'autocorr.png', 'logpos.png', 'acceptance.png']
 numPairs = int(len(indSet) / 2)
 for i in range(numPairs):
     listFiles = listFiles + ['2D_' + str(indSet[2*i]) + '-' + str(indSet[2*i+1]) + '.png']
-subprocess.call(['tar', '-zcvf', mcmcfolder + '.tgz'] + listFiles)
+subprocess.call(['tar', '--directory', setup.mcmcDir, '-zcvf', '../results/MCMC/' + mcmcfolder + '.tgz'] + listFiles)
 
+# '../results/MCMC/b1_initisofit_rank100_constrained/'
 # plt.show()
 
