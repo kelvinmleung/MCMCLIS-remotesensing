@@ -15,8 +15,8 @@ Nsamp = 2000000
 burn = 500000
 init = 'truth'
 rank = 175
-constrain = True
-mcmcfolder = 'C4'
+constrain = False
+mcmcfolder = 'C3'
 ##### CONFIG #####
 
 ## SETUP ##
