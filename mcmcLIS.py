@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import multivariate_normal
@@ -189,6 +190,9 @@ class MCMCLIS:
                 print('   Accept Rate: ', np.mean(accept[i-499:i]))
                 propChol = np.linalg.cholesky(self.propcov) # update chol of propcov
                 print(np.linalg.norm(propChol))
+                sys.stdout.flush()
+                # flush 
+
                 
             # change proposal covariance
             if i == 999:

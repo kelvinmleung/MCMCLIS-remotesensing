@@ -42,8 +42,6 @@ class Setup:
         # get Isofit noise model and simulate radiance
         rad = self.fm.calc_rdn(self.truth, self.geom)
         self.noisecov = self.fm.Seps(self.truth, rad, self.geom)
-        # self.noisecov = self.fm.Seps(self.truth, rad, self.geom) + np.identity(425)
-        # print(self.noisecov)
         eps = np.random.multivariate_normal(np.zeros(len(rad)), self.noisecov)
         self.radiance = rad
         self.radNoisy = rad + eps
@@ -135,19 +133,19 @@ class Setup:
         plt.legend()
         plt.savefig(self.mcmcDir + 'reflMean.png')
 
-        # plt.figure(65)
-        # isofitError = abs(self.isofitMuPos[:425] - self.truth[:425]) / abs(self.truth[:425])
-        # linError = abs(mu_xgyLin[:425] - self.truth[:425]) / abs(self.truth[:425])
-        # mcmcError = abs(MCMCmean[:425] - self.truth[:425]) / abs(self.truth[:425])
-        # self.plotbands(isofitError,'k.', label='Isofit Posterior',axis='semilogy')
-        # self.plotbands(linError, 'm.',label='Linear Posterior',axis='semilogy')
-        # self.plotbands(mcmcError, 'c.',label='MCMC Posterior',axis='semilogy')
-        # plt.xlabel('Wavelength')
-        # plt.ylabel('Relative Error')
-        # plt.title('Error in Posterior Mean')
-        # plt.grid()
-        # plt.legend()
-        # plt.savefig(self.mcmcDir + 'reflError.png')
+        plt.figure(65)
+        isofitError = abs(self.isofitMuPos[:425] - self.truth[:425]) / abs(self.truth[:425])
+        linError = abs(mu_xgyLin[:425] - self.truth[:425]) / abs(self.truth[:425])
+        mcmcError = abs(MCMCmean[:425] - self.truth[:425]) / abs(self.truth[:425])
+        self.plotbands(isofitError,'k.', label='Isofit Posterior',axis='semilogy')
+        self.plotbands(linError, 'm.',label='Linear Posterior',axis='semilogy')
+        self.plotbands(mcmcError, 'c.',label='MCMC Posterior',axis='semilogy')
+        plt.xlabel('Wavelength')
+        plt.ylabel('Relative Error')
+        plt.title('Error in Posterior Mean')
+        plt.grid()
+        plt.legend()
+        plt.savefig(self.mcmcDir + 'reflError.png')
 
         plt.figure(66)
         plt.plot(self.truth[425], self.truth[426], 'bo',label='True Reflectance')
@@ -161,11 +159,30 @@ class Setup:
         plt.legend()
         plt.savefig(self.mcmcDir + 'atmMean.png')
 
+        # bar graph of atm parameter variances
+        isofitErrorAtm = abs(self.isofitMuPos[425:] - self.truth[425:]) / abs(self.truth[425:])
+        linErrorAtm = abs(mu_xgyLin[425:] - self.truth[425:]) / abs(self.truth[425:])
+        mcmcErrorAtm = abs(MCMCmean[425:] - self.truth[425:]) / abs(self.truth[425:])
+        labels = ['425 - AOD550', '426 - H20STR']
+        x = np.arange(len(labels))  # the label locations
+        width = 0.175
+        fig, ax = plt.subplots()
+        rects2 = ax.bar(x - width, isofitErrorAtm, width, label='Isofit Posterior')
+        rects3 = ax.bar(x, linErrorAtm, width, label='Linear Posterior')
+        rects4 = ax.bar(x + width, mcmcErrorAtm, width, label='MCMC Posterior')
+        ax.set_yscale('log')
+        ax.set_ylabel('Relative Error')
+        ax.set_title('Error in Atm Parameters')
+        ax.set_xticks(x)
+        ax.set_xticklabels(labels)
+        ax.legend()
+        fig.savefig(self.mcmcDir + 'atmError.png')
+
+        # variance plot
         priorVar = np.diag(self.gamma_x)
         isofitVar = np.diag(self.isofitGammaPos)
         linearVar = np.diag(gamma_xgyLin)
         MCMCVar = np.diag(MCMCcov)
-
         plt.figure(67)
         self.plotbands(priorVar[:425], 'b.',label='Prior', axis='semilogy')
         self.plotbands(isofitVar[:425],'k.', label='Isofit Posterior', axis='semilogy')
