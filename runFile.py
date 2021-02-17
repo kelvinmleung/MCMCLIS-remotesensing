@@ -11,11 +11,11 @@ from mcmcIsofit import MCMCIsofit
 
 
 ##### CONFIG #####
-Nsamp = 10000
-burn = 1000
-init = 'truth'
+Nsamp = 6000000
+burn = 1000000
+init = 'MAP'
 rank = 100
-mcmcfolder = 'B6'
+mcmcfolder = 'B5'
 ##### CONFIG #####
 
 ## SETUP ##
