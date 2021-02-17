@@ -13,9 +13,9 @@ from mcmcIsofit import MCMCIsofit
 ##### CONFIG #####
 Nsamp = 6000000
 burn = 1000000
-init = 'truth'
-rank = 175
-mcmcfolder = 'C6'
+init = 'MAP'
+rank = 100
+mcmcfolder = 'B5'
 ##### CONFIG #####
 
 ## SETUP ##
