@@ -50,7 +50,7 @@ class MCMCIsofit:
         self.nx = self.gamma_x.shape[0] # parameter dimension
         self.ny = self.noisecov.shape[0] # data dimension
 
-    def initMCMC(self, LIS=False, rank=427, constrain=True):
+    def initMCMC(self, LIS=False, rank=427, constrain=False):
         
         # create folder
         if not os.path.exists(self.mcmcDir):
