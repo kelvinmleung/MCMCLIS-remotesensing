@@ -58,7 +58,6 @@ class Setup:
         self.bands = bands
         self.bandsX = bands + [425,426]
 
-    
     def getPrior(self, fullconfig):
         # get index of prior used in inversion
         mcs = MultiComponentSurface(fullconfig)

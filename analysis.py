@@ -124,15 +124,69 @@ class Analysis:
         cholPr = np.linalg.cholesky(self.gamma_x)
         H = self.phi.T @ np.linalg.inv(self.gamma_ygx) @ self.phi
         Hn = cholPr.T @ H @ cholPr
-        eigvecLIS, eigvalLIS, s1 = np.linalg.svd(Hn)# z
+        eigvecLIS, eigvalLIS, s1 = np.linalg.svd(Hn) # z
 
-        eigvecLIS = cholPr @ eigvecLIS
+        eigvecLIS = cholPr @ eigvecLIS # v
 
         idx = eigvalLIS.argsort()[::-1]   
         eigvalLIS = eigvalLIS[idx]
         eigvecLIS = eigvecLIS[:,idx]
 
         return eigvalLIS, eigvecLIS
+
+    def eigPlots(self, eigval, eigvec, rank=427, title='LIS'):
+        plt.figure(1)
+        plt.semilogy(eigval) # - np.ones(self.nx)
+        plt.title('Eigenvalue Decay')
+        plt.grid()
+
+        xPlot = range(self.nx)
+        plt.figure(2)
+        for i in range(5):
+            plt.plot(xPlot, eigvec[:,i],label=str(i+1))
+        plt.title('Leading Eigendirections')
+        plt.xlabel('Index')
+        plt.legend()
+        plt.grid()
+
+        plt.figure(3)
+        ploty = np.zeros(self.nx)
+        for i in range(rank):
+            ploty = ploty + eigval[i] / (1 + eigval[i]) * (eigvec[:,i] ** 2)
+        plt.plot(xPlot[425:], ploty[425:], 'ro')
+        plt.semilogy(xPlot, ploty)
+        plt.title('Sum of Leading Eigendirections, rank='+str(rank))
+        plt.xlabel('Index')
+        plt.ylabel(r'$\frac{\lambda_i}{1 + \lambda_i} v_{ij}^2$')
+        plt.grid()
+
+        indSort = ploty.argsort()[::-1]   
+        sortPlotY = ploty[indSort]
+        sortPlotInd = np.array(xPlot)[indSort]
+
+        plt.figure(4)
+        barWidth = 1
+        bars = np.concatenate((sortPlotY[:rank], ploty[425:]))
+        r1 = np.arange(len(bars))
+        # Make the plot
+        plt.bar(r1, bars, color='#557f2d', width=barWidth, edgecolor='white')
+        plt.yscale('log')
+        # Add xticks on the middle of the group bars
+        plt.xlabel('Index Number', fontweight='bold')
+        plt.ylabel(r'$\lambda_i v_{ij}^2$')
+        plt.xticks(range(len(bars)), [str(sortPlotInd[i]) for i in range(rank)] + ['AOD', 'H20'])
+
+
+        # plt.figure(24)
+        # ploty = np.zeros(self.ny)
+        # for i in range(rank):
+        #     u_hat = s.linalg.sqrtm(self.gamma_ygx) @ invL.T @ eigvecLIS[:,i]
+        #     ploty = ploty + eigvalLIS[i] * (u_hat**2)
+        # plt.semilogy(self.wl, ploty,label= 'rank '+str(rank))
+        # plt.title('Sum of Leading Eigendirections, rank='+str(rank))
+        # plt.xlabel('Wavelength')
+        # plt.legend()
+        # plt.grid()
 
     def eigLISdata(self):
         L = np.linalg.cholesky(self.gamma_ygx)
