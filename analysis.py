@@ -67,7 +67,7 @@ class Analysis:
 
         mu, gamma_xgy = self.posterior(self.radiance)
 
-        # plt.figure(2)
+        # plt.figure()
         # plt.plot(mu[:425])
         eigvecPCA, eigvalPCA, s1 = np.linalg.svd(self.gamma_x - gamma_xgy)
         #eigvecPCA, eigvalPCA, s1 = np.linalg.svd(self.gamma_y)
@@ -76,14 +76,14 @@ class Analysis:
         eigvalPCA = eigvalPCA[idx]
         eigvecPCA = eigvecPCA[:,idx]
         
-        # plt.figure(11)
+        # plt.figure()
         # plt.semilogy(eigvalPCA)
         # plt.title('Eigenvalue Decay - PCA')
         # plt.grid()
 
         # plt.show()
         '''
-        plt.figure(12)
+        plt.figure()
         for i in range(5):
             plt.plot(self.wl,eigvecPCA[:,i],label=str(i+1))
         plt.title('Leading Eigendirections - PCA')
@@ -92,7 +92,7 @@ class Analysis:
         plt.grid()
         '''
         '''
-        plt.figure(13)
+        plt.figure()
         for i in range(5):
             plt.plot(self.wl, eigvalPCA[i] * (eigvecPCA[:,i]**2),label=str(i+1))
         plt.title('Leading Eigendirections - PCA, scaled by eigval')
@@ -104,14 +104,14 @@ class Analysis:
         ploty = np.zeros(self.ny)
         for i in range(rank):
             ploty = ploty + eigvalPCA[i] * (eigvecPCA[:,i]**2)
-        plt.figure(14)
+        plt.figure()
         plt.semilogy(self.wl, ploty,label= 'rank '+str(rank))
         plt.title('Sum of Leading Eigendirections - PCA, rank='+str(rank))
         plt.xlabel('Wavelength')
         plt.legend()
         plt.grid()
 
-        plt.figure(15)
+        plt.figure()
         plt.semilogy(self.wl, ploty / np.diag(self.gamma_y),label= 'rank '+str(rank))
         plt.title('Sum of Leading Eigendirections (scaled Gamma_y) - PCA, rank='+str(rank))
         plt.xlabel('Wavelength')
@@ -135,13 +135,13 @@ class Analysis:
         return eigvalLIS, eigvecLIS
 
     def eigPlots(self, eigval, eigvec, rank=427, title='LIS'):
-        plt.figure(1)
+        plt.figure()
         plt.semilogy(eigval) # - np.ones(self.nx)
-        plt.title('Eigenvalue Decay')
+        plt.title(title + ' Eigenvalue Decay')
         plt.grid()
 
         xPlot = range(self.nx)
-        plt.figure(2)
+        plt.figure()
         for i in range(5):
             plt.plot(xPlot, eigvec[:,i],label=str(i+1))
         plt.title('Leading Eigendirections')
@@ -149,7 +149,7 @@ class Analysis:
         plt.legend()
         plt.grid()
 
-        plt.figure(3)
+        plt.figure()
         ploty = np.zeros(self.nx)
         for i in range(rank):
             ploty = ploty + eigval[i] / (1 + eigval[i]) * (eigvec[:,i] ** 2)
@@ -164,7 +164,7 @@ class Analysis:
         sortPlotY = ploty[indSort]
         sortPlotInd = np.array(xPlot)[indSort]
 
-        plt.figure(4)
+        plt.figure()
         barWidth = 1
         bars = np.concatenate((sortPlotY[:rank], ploty[425:]))
         r1 = np.arange(len(bars))
@@ -177,7 +177,7 @@ class Analysis:
         plt.xticks(range(len(bars)), [str(sortPlotInd[i]) for i in range(rank)] + ['AOD', 'H20'])
 
 
-        # plt.figure(24)
+        # plt.figure()
         # ploty = np.zeros(self.ny)
         # for i in range(rank):
         #     u_hat = s.linalg.sqrtm(self.gamma_ygx) @ invL.T @ eigvecLIS[:,i]
@@ -197,13 +197,13 @@ class Analysis:
         eigvalLIS = eigvalLIS[idx]
         eigvecLIS = eigvecLIS[:,idx]
         
-        # plt.figure(21)
+        # plt.figure()
         # plt.semilogy(eigvalLIS- np.ones(self.ny))
         # plt.title('Eigenvalue Decay - LIS (eig-1)')
         # plt.grid()
         
         '''
-        plt.figure(22)
+        plt.figure()
         for i in range(5):
             plt.plot(self.wl,invL.T @ eigvecLIS[:,i],label=str(i+1))
         plt.title('Leading Eigendirections - LIS')
@@ -212,7 +212,7 @@ class Analysis:
         plt.grid()
         '''
         '''
-        plt.figure(23)
+        plt.figure()
         for i in range(5):
             u_hat = s.linalg.sqrtm(self.gamma_ygx) @ invL.T @ eigvecLIS[:,i]
             plt.plot(self.wl, eigvalLIS[i] * (u_hat ** 2),label=str(i+1))
@@ -222,7 +222,7 @@ class Analysis:
         plt.grid()
 
         rank = 10
-        plt.figure(24)
+        plt.figure()
         ploty = np.zeros(self.ny)
         for i in range(rank):
             u_hat = s.linalg.sqrtm(self.gamma_ygx) @ invL.T @ eigvecLIS[:,i]
@@ -233,7 +233,7 @@ class Analysis:
         plt.legend()
         plt.grid()
 
-        plt.figure(25)
+        plt.figure()
         plt.semilogy(self.wl, ploty / np.diag(self.gamma_y),label= 'rank '+str(rank))
         plt.title('Sum of Leading Eigendirections (scaled Gamma_y) - LIS, rank='+str(rank))
         plt.xlabel('Wavelength')
@@ -253,7 +253,7 @@ class Analysis:
         temp = basisLIS @ (self.truthrad - self.r.meanY)
         Y_LIS = basisLIS.T @ temp + self.r.meanY
 
-        plt.figure(31)
+        plt.figure()
         plt.plot(self.wl, self.truthrad,label='Truth')
         plt.plot(self.wl, Y_PCA,label='PCA')
         plt.plot(self.wl, Y_LIS,label='LIS')
@@ -263,7 +263,7 @@ class Analysis:
         plt.legend()
         plt.grid()
 
-        self.plotcontour(self.gamma_y, 32, 'Covariance Gamma_y')
+        self.plotcontour(self.gamma_y, 'Covariance Gamma_y')
 
         L = np.linalg.cholesky(self.gamma_ygx)
         gamma_y_PCA = np.zeros([self.ny, self.ny])
@@ -275,8 +275,8 @@ class Analysis:
 
         gamma_y_LIS = L @ gamma_y_LIS @ L.T
 
-        self.plotcontour(gamma_y_PCA, 33, 'Gamma_y - Reconstruction using '+str(dim)+' PCA eigenvectors')
-        self.plotcontour(gamma_y_LIS, 34, 'Gamma_y - Reconstruction using '+str(dim)+' LIC eigenvectors')
+        self.plotcontour(gamma_y_PCA, 'Gamma_y - Reconstruction using '+str(dim)+' PCA eigenvectors')
+        self.plotcontour(gamma_y_LIS, 'Gamma_y - Reconstruction using '+str(dim)+' LIC eigenvectors')
 
         # error norm difference of reconstructed gamma_y
         errorPCA = np.zeros(100)
@@ -292,7 +292,7 @@ class Analysis:
             errorLIS[i] = np.linalg.norm(L @ gamma_y_LIS @ L.T - self.gamma_y)/np.linalg.norm(self.gamma_y)
 
         # reconstruction error (relative) for 1 to 100 eigenvectors
-        plt.figure(35)
+        plt.figure()
         plt.semilogy(range(100), errorPCA, label='PCA')
         plt.semilogy(range(100), errorLIS, label='LIS')
         plt.title('Gamma_y reconstruction error comparison')
@@ -418,7 +418,7 @@ class Analysis:
 
         
 
-        plt.figure(41)
+        plt.figure()
         plt.semilogy(dims, gamma_errorPCA, label='PCA')
         plt.semilogy(dims, gamma_errorLIS, label='LIS')
         plt.xlabel('Dimension of Subspace')
@@ -427,7 +427,7 @@ class Analysis:
         plt.legend()
         plt.grid()
         
-        plt.figure(42)
+        plt.figure()
         plt.semilogy(dims, mu_errorPCA, label='PCA')
         plt.semilogy(dims, mu_errorLIS, label='LIS')
         plt.xlabel('Dimension of Subspace')
@@ -461,11 +461,11 @@ class Analysis:
 
         # Maybe need to plot the mu_xgy calculated using self.radiance (radiance "truth")
 
-    def plotcontour(self, gamma, fig, title):
+    def plotcontour(self, gamma, title):
         X_plot = np.arange(1,426,1)
         Y_plot = np.arange(1,426,1)
         X_plot, Y_plot = np.meshgrid(X_plot, Y_plot)
-        plt.figure(fig)
+        plt.figure()
         plt.contourf(X_plot,Y_plot,gamma[:425,:425])
         plt.title(title)
         plt.axis('equal')
@@ -481,7 +481,7 @@ class Analysis:
             y_lasso = (self.phi_tilde.T @ self.scaleX[i,:].T) * np.sqrt(self.r.varY) + self.r.meanY
             relerror[:,i] = abs(y_isofit - y_lasso) / abs(y_isofit)
 
-        plt.figure(61)
+        plt.figure()
         plt.semilogy(self.wl, relerror, linewidth=0.5)
         plt.title('Error in radiance using certain reflectance samples')
         plt.xlabel('Wavelength')

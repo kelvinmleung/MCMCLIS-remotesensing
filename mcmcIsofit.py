@@ -174,7 +174,7 @@ class MCMCIsofit:
         # plot 2D visualization
         for i in range(numPairs):
             fig = self.twoDimVisual(MCMCmean, MCMCcov, indX=indSet[2*i], indY=indSet[2*i+1])
-            fig.savefig(self.mcmcDir + '2D_' + str(indSet[2*i]) + '-' + str(indSet[2*i+1]) + '.png')
+            fig.savefig(self.mcmcDir + '2D_' + str(indSet[2*i]) + '-' + str(indSet[2*i+1]) + '.png', dpi=300)
 
         # subplot setup
         fig1, axs1 = plt.subplots(5, 2)
@@ -203,17 +203,17 @@ class MCMCIsofit:
 
         fig1.set_size_inches(5, 7)
         fig1.tight_layout()
-        fig1.savefig(self.mcmcDir + 'trace.png')
+        fig1.savefig(self.mcmcDir + 'trace.png', dpi=300)
         fig2.set_size_inches(5, 7)
         fig2.tight_layout()
-        fig2.savefig(self.mcmcDir + 'autocorr.png')
+        fig2.savefig(self.mcmcDir + 'autocorr.png', dpi=300)
         
         # plot logpos
         plt.figure()
         plt.plot(logpos)
         plt.xlabel('Number of Samples')
         plt.ylabel('Log Posterior')
-        plt.savefig(self.mcmcDir + 'logpos.png')
+        plt.savefig(self.mcmcDir + 'logpos.png', dpi=300)
 
         # acceptance rate
         # print('Acceptance rate:', )
@@ -230,7 +230,7 @@ class MCMCIsofit:
         plt.ylabel('Acceptance Rate')
         plt.title('Acceptance Rate = ' + str(acceptRate))
         plt.ylim([0, 1])
-        plt.savefig(self.mcmcDir + 'acceptance.png')
+        plt.savefig(self.mcmcDir + 'acceptance.png', dpi=300)
 
 '''
 import numpy as np
@@ -252,7 +252,7 @@ plt.plot(xPlotAccept, acceptPlot)
 plt.xlabel('Number of Samples')
 plt.ylabel('Acceptance Rate')
 plt.ylim([0, 1])
-plt.savefig('../results/MCMC/acceptance.png')
+plt.savefig('../results/MCMC/acceptance.png', dpi=300)
 plt.show()
 
 '''

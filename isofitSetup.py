@@ -3,6 +3,7 @@ import numpy as np
 import scipy as s
 from scipy.io import loadmat
 import matplotlib.pyplot as plt
+import matplotlib
 
 sys.path.insert(0, '../isofit/')
 
@@ -49,6 +50,9 @@ class Setup:
         # inversion using simulated radiance
         self.isofitMuPos, self.isofitGammaPos = self.invModel(self.radNoisy)
 
+        self.nx = self.truth.shape[0]
+        self.ny = self.reflectance.shape[0]
+        
         # get indices that are in the window (i.e. take out deep water spectra)
         wl = self.wavelengths
         bands = []
@@ -118,9 +122,56 @@ class Setup:
         plt.axis('equal')
         plt.colorbar()
 
+    def genErrorMAP(self, numSamp):
+
+        deltaTwo = abs(self.truth - self.isofitMuPos) * 2
+
+        invPrior = np.linalg.inv(self.gamma_x)
+        invNoise = np.linalg.inv(self.noisecov)
+        varIsofit = np.diag(self.isofitGammaPos)
+        varPrior = np.diag(self.gamma_x)
+        varApprox = np.zeros([self.nx, numSamp])
+        plotAOD = np.zeros(numSamp)
+        plotH2O = np.zeros(numSamp)
+        aodError = np.zeros(numSamp)
+        h2oError = np.zeros(numSamp)
+
+        for i in range(numSamp):
+            if (i+1) % 100 == 0:
+                print(i+1)
+            sampX = np.random.uniform(self.isofitMuPos - deltaTwo, self.isofitMuPos + deltaTwo)
+            sampX = abs(sampX)
+            plotAOD[i] = sampX[425]
+            plotH2O[i] = sampX[426]
+            
+            jac = self.fm.K(sampX, self.geom)
+            posApprox = np.linalg.inv(jac.T @ invNoise @ jac + invPrior)
+            varApprox[:,i] = np.diag(posApprox)
+
+            aodError[i] = abs(varApprox[425,i]-varPrior[425]) / abs(varPrior[425])
+            h2oError[i] = abs(varApprox[426,i]-varPrior[426]) / abs(varPrior[426])
+            
+
+        # self.plotHeatMap(plotAOD, plotH2O, varApprox[425,:], title='AOD variance')
+        # self.plotHeatMap(plotAOD, plotH2O, varApprox[426,:], title='H2O variance')
+        self.plotHeatMap(plotAOD, plotH2O, aodError, title='Relative Error in AOD variance')
+        self.plotHeatMap(plotAOD, plotH2O, h2oError, title='Relative Error in H2O variance')
+        
+    def plotHeatMap(self, plotAOD, plotH2O, plotVal, title=''):
+        plt.figure()
+        plt.scatter(plotAOD, plotH2O, c=plotVal, s=20, marker='s', cmap='GnBu', norm=matplotlib.colors.LogNorm())
+        plt.plot(self.truth[425], self.truth[426], 'rx', markersize=12, label='Truth')
+        plt.plot(self.isofitMuPos[425], self.isofitMuPos[426], 'kx', markersize=12, label='MAP')
+        plt.title(title)
+        plt.xlabel('AOD - Index 425')
+        plt.ylabel('H2O - Index 426')
+        plt.colorbar()
+        plt.legend()
+
     def plotPosterior(self, mu_xgyLin, gamma_xgyLin, MCMCmean, MCMCcov):
 
-        plt.figure(64)
+        plt.figure()
+        # self.plotbands(self.mu_x[:425], 'r', label='Prior')
         self.plotbands(self.truth[:425], 'b.',label='True Reflectance')
         self.plotbands(self.isofitMuPos[:425],'k.', label='Isofit Posterior')
         self.plotbands(mu_xgyLin[:425], 'm.',label='Linear Posterior')
@@ -130,9 +181,9 @@ class Setup:
         plt.title('Posterior Mean Comparison')
         plt.grid()
         plt.legend()
-        plt.savefig(self.mcmcDir + 'reflMean.png')
+        plt.savefig(self.mcmcDir + 'reflMean.png', dpi=300)
 
-        plt.figure(65)
+        plt.figure()
         isofitError = abs(self.isofitMuPos[:425] - self.truth[:425]) / abs(self.truth[:425])
         linError = abs(mu_xgyLin[:425] - self.truth[:425]) / abs(self.truth[:425])
         mcmcError = abs(MCMCmean[:425] - self.truth[:425]) / abs(self.truth[:425])
@@ -144,9 +195,9 @@ class Setup:
         plt.title('Error in Posterior Mean')
         plt.grid()
         plt.legend()
-        plt.savefig(self.mcmcDir + 'reflError.png')
+        plt.savefig(self.mcmcDir + 'reflError.png', dpi=300)
 
-        plt.figure(66)
+        plt.figure()
         plt.plot(self.truth[425], self.truth[426], 'bo',label='True Reflectance')
         plt.plot(self.mu_x[425], self.mu_x[426], 'r.',label='Prior')
         plt.plot(self.isofitMuPos[425],self.isofitMuPos[426],'k.', label='Isofit Posterior')
@@ -156,13 +207,13 @@ class Setup:
         plt.ylabel('H2OSTR')
         plt.grid()
         plt.legend()
-        plt.savefig(self.mcmcDir + 'atmMean.png')
+        plt.savefig(self.mcmcDir + 'atmMean.png', dpi=300)
 
         # bar graph of atm parameter variances
         isofitErrorAtm = abs(self.isofitMuPos[425:] - self.truth[425:]) / abs(self.truth[425:])
         linErrorAtm = abs(mu_xgyLin[425:] - self.truth[425:]) / abs(self.truth[425:])
         mcmcErrorAtm = abs(MCMCmean[425:] - self.truth[425:]) / abs(self.truth[425:])
-        labels = ['425 - AOD550', '426 - H20STR']
+        labels = ['425 - AOD550', '426 - H2OSTR']
         x = np.arange(len(labels))  # the label locations
         width = 0.175
         fig, ax = plt.subplots()
@@ -175,14 +226,14 @@ class Setup:
         ax.set_xticks(x)
         ax.set_xticklabels(labels)
         ax.legend()
-        fig.savefig(self.mcmcDir + 'atmError.png')
+        fig.savefig(self.mcmcDir + 'atmError.png', dpi=300)
 
         # variance plot
         priorVar = np.diag(self.gamma_x)
         isofitVar = np.diag(self.isofitGammaPos)
         linearVar = np.diag(gamma_xgyLin)
         MCMCVar = np.diag(MCMCcov)
-        plt.figure(67)
+        plt.figure()
         self.plotbands(priorVar[:425], 'b.',label='Prior', axis='semilogy')
         self.plotbands(isofitVar[:425],'k.', label='Isofit Posterior', axis='semilogy')
         self.plotbands(linearVar[:425], 'm.',label='Linear Posterior', axis='semilogy')
@@ -192,10 +243,10 @@ class Setup:
         plt.title('Marginal Variance Comparison')
         plt.grid()
         plt.legend()
-        plt.savefig(self.mcmcDir + 'reflVar.png')
+        plt.savefig(self.mcmcDir + 'reflVar.png', dpi=300)
 
         # bar graph of atm parameter variances
-        labels = ['425 - AOD550', '426 - H20STR']
+        labels = ['425 - AOD550', '426 - H2OSTR']
         x = np.arange(len(labels))  # the label locations
         width = 0.175
         fig, ax = plt.subplots()
@@ -209,7 +260,7 @@ class Setup:
         ax.set_xticks(x)
         ax.set_xticklabels(labels)
         ax.legend()
-        fig.savefig(self.mcmcDir + 'atmVar.png')
+        fig.savefig(self.mcmcDir + 'atmVar.png', dpi=300)
 
         # plot: x-axis is error in posterior mean, y-axis is error in mean weighted by covariance
         
@@ -221,7 +272,7 @@ class Setup:
         linearPlotY = np.linalg.norm(np.diag(linearVar ** (-0.5)) * (mu_xgyLin - self.truth)) ** 2
         MCMCPlotY = np.linalg.norm(np.diag(MCMCVar ** (-0.5)) * (MCMCmean - self.truth)) ** 2
 
-        plt.figure(69)
+        plt.figure()
         plt.loglog(isofitPlotX, isofitPlotY, 'k*', label='Isofit')
         plt.loglog(linearPlotX, linearPlotY, 'm*', label='Linear')
         plt.loglog(MCMCPlotX, MCMCPlotY, 'c*', label='MCMC')
@@ -229,6 +280,6 @@ class Setup:
         plt.xlabel(r'$| \mu_{pos} - \mu_{true} |_2^2$')
         plt.ylabel(r'$| diag(\Gamma_{pos}^{-1/2}) \mu_{pos} - \mu_{true} |_2^2$')
         plt.legend()
-        plt.savefig(self.mcmcDir + 'errorRelCov.png')
+        plt.savefig(self.mcmcDir + 'errorRelCov.png', dpi=300)
     
 
