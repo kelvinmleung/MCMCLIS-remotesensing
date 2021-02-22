@@ -162,9 +162,9 @@ class MCMCLIS:
 
             # add component and check constraint
             zComp = self.proposal(np.zeros(self.nComp), np.identity(self.nComp))
-            xFull = self.phi @ x + self.phiComp @ zComp + self.startX
-            if self.checkConstraint(xFull) == False:
-                alpha = 0
+            # xFull = self.phi @ x + self.phiComp @ zComp + self.startX
+            # if self.checkConstraint(xFull) == False:
+            #     alpha = 0
 
             if np.random.random() < alpha:
                 x = z 

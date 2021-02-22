@@ -13,10 +13,10 @@ from mcmcIsofit import MCMCIsofit
 ##### CONFIG #####
 Nsamp = 6000000
 burn = 1000000
-init = 'truth'
-rank = 100
-LIS = True
-mcmcfolder = 'B10'
+init = 'MAP'
+rank = 427
+LIS = False
+mcmcfolder = 'N1'
 ##### CONFIG #####
 
 ## SETUP ##
