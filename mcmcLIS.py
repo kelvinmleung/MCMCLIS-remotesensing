@@ -219,7 +219,7 @@ class MCMCLIS:
         
         if self.LIS == True:
             # x_vals_full = self.phi @ x_vals + self.phiComp @ x_vals_comp
-            x_vals_full = self.phi @ x_vals + self.phiComp @ x_vals_comp + np.outer(self.proj(self.startX - self.mu_x) + self.mu_x, np.ones(self.Nsamp))
+            x_vals_full = self.phi @ x_vals + self.phiComp @ x_vals_comp + np.outer(self.proj @ (self.startX - self.mu_x) + self.mu_x, np.ones(self.Nsamp))
         else:
             x_vals_full = x_vals + np.outer(self.startX, np.ones(self.Nsamp))
         # x_vals_full = x_vals_full + np.outer(self.startX, np.ones(self.Nsamp))
