@@ -14,8 +14,9 @@ from mcmcIsofit import MCMCIsofit
 Nsamp = 6000000
 burn = 1000000
 init = 'MAP'
-rank = 427
-mcmcfolder = 'N1'
+rank = 100
+LIS = True
+mcmcfolder = 'B9'
 ##### CONFIG #####
 
 ## SETUP ##
@@ -41,7 +42,7 @@ mcmcfolder = mcmcfolder + '_init' + init + '_rank' + str(rank)
 #     mcmcfolder = mcmcfolder + '_constrained'
 
 m = MCMCIsofit(setup, a, Nsamp, burn, x0, 'AM')
-m.initMCMC(LIS=False, rank=rank) # specify LIS parameters
+m.initMCMC(LIS=LIS, rank=rank) # specify LIS parameters
 m.runAM()
 MCMCmean, MCMCcov = m.calcMeanCov()
 setup.plotPosterior(m.linMuPos, m.linGammaPos, MCMCmean, MCMCcov)
