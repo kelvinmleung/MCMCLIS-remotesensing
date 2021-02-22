@@ -41,7 +41,7 @@ mcmcfolder = mcmcfolder + '_init' + init + '_rank' + str(rank)
 #     mcmcfolder = mcmcfolder + '_constrained'
 
 m = MCMCIsofit(setup, a, Nsamp, burn, x0, 'AM')
-m.initMCMC(LIS=True, rank=rank) # specify LIS parameters
+m.initMCMC(LIS=False, rank=rank) # specify LIS parameters
 m.runAM()
 MCMCmean, MCMCcov = m.calcMeanCov()
 setup.plotPosterior(m.linMuPos, m.linGammaPos, MCMCmean, MCMCcov)
