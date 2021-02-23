@@ -14,10 +14,10 @@ from plots import Plots
 ##### CONFIG #####
 Nsamp = 6000000
 burn = 1000000
-init = 'MAP'
+init = 'truth'
 rank = 175
 LIS = True
-mcmcfolder = 'C9'
+mcmcfolder = 'C10'
 # mcmcNoLISdir = 'N1'
 ##### CONFIG #####
 
