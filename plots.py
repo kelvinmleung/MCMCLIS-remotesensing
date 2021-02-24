@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 class Plots:
 
 
-    def __init__(self, setup, r, a, m, mcmcNoLIS=''):
+    def __init__(self, setup, r, a, m, burn, autocorrMax, mcmcNoLIS=''):
         self.setup = setup
         self.m = m
 
@@ -39,8 +39,8 @@ class Plots:
         self.Nsamp = m.Nsamp
         self.MCMCmean, self.MCMCcov = m.calcMeanCov()
 
-        self.burn = 4000000
-        self.autocorrMax = 10000
+        self.burn = burn
+        self.autocorrMax = autocorrMax
 
         self.indset = [20,30, 150,160, 250,260]
 
@@ -51,37 +51,36 @@ class Plots:
         return x_vals, x_vals_ac
 
     def plotPosterior(self):
-        self.posmeansurf()
-        self.posvarsurf()
+        self.posmean()
+        self.posvar()
         self.poserrorsurf()
-        self.posmeanatm()
-        self.posvarsurf()
-        self.poserrorsurf()
+        self.poserroratm()
 
-    def CSE21plots_double(self):
-        x_vals1, x_vals_ac1 = self.readFile(self.mcmcDir)
+
+        x_vals, x_vals_ac = self.readFile(self.mcmcDir)
         x_vals2, x_vals_ac2 = self.readFile(self.mcmcDir2)
-        
-        self.plot2Dmarginal(x_vals1)
+
+        self.plot2Dmarginal(x_vals)
+
+        self.plot2ac(x_vals_ac, x_vals_ac2)
 
         
-
     def twoDimVisual(self, indX, indY, x_vals):
         fig, ax = plt.subplots()
         ax.plot(self.truth[indX], self.truth[indY], 'go', label='True reflectance', markersize=10)     
         ax.scatter(x_vals[indX,:], x_vals[indY,:], c='c', s=0.5)
 
         # plot Isofit mean/cov
-        meanIsofit = np.array([self.mupos_isofit[indX], self.mupos_isofit[indY]])
-        covIsofit = self.gammapos_isofit[np.ix_([indX,indY],[indX,indY])]
+        meanIsofit = np.array([self.isofitMuPos[indX], self.isofitMuPos[indY]])
+        covIsofit = self.isofitGammaPos[np.ix_([indX,indY],[indX,indY])]
         ax.plot(meanIsofit[0], meanIsofit[1], 'rx', label='Isofit posterior', markersize=12)
-        self.drawEllipse(meanIsofit, covIsofit, ax, colour='red')
+        self.m.drawEllipse(meanIsofit, covIsofit, ax, colour='red')
         
         # plot MCMC mean/cov
         meanMCMC = np.array([self.MCMCmean[indX], self.MCMCmean[indY]])
         covMCMC = self.MCMCcov[np.ix_([indX,indY],[indX,indY])]
         ax.plot(meanMCMC[0], meanMCMC[1], 'bx', label='MCMC posterior', markersize=12)
-        self.drawEllipse(meanMCMC, covMCMC, ax, colour='blue')
+        self.m.drawEllipse(meanMCMC, covMCMC, ax, colour='blue')
         
         ax.set_title('MCMC - Two Component Visual')
         ax.set_xlabel('Index ' + str(indX))
@@ -98,25 +97,24 @@ class Plots:
         for i in range(numPairs):
             indX = self.indset[2*i]
             indY = self.indset[2*i+1]
-            fig, ax = self.twoDimVisual(self.MCMCmean, self.MCMCcov, indX=indX, indY=indY)
+            fig, ax = self.twoDimVisual(indX, indY, x_vals)
+
             ax.set_title('CHANGE TITLE')
             ax.set_xlabel('Wavelength Channel ' + str(self.wavelengths[indX]))
             ax.set_ylabel('Wavelength Channel ' + str(self.wavelengths[indY]))
             fig.savefig(self.mcmcDir + '2D_' + str(indX) + '-' + str(indY) + '.png', dpi=300)
 
-        # plot 2D atm
-        indX = self.indset[2*i]
-        indY = self.indset[2*i+1]
-        fig, ax = self.m.twoDimVisual(self.MCMCmean, self.MCMCcov, indX=425, indY=426)
+        # # plot 2D atm
+        # indX = self.indset[2*i]
+        # indY = self.indset[2*i+1]
+        fig, ax = self.twoDimVisual(indX=425, indY=426, x_vals=x_vals)
         ax.set_title('CHANGE TITLE')
         ax.set_xlabel('AOD550')
         ax.set_ylabel('H2OSTR')
         fig.savefig(self.mcmcDir + '2D_atm.png', dpi=300)
 
-    def autocorr(self, x_vals_ac):
+    def autocorr(self, x_elem):
         
-        x_vals = x_vals_ac 
-        x_elem = x_vals[ind,:]
         Nsamp = self.autocorrMax
         meanX = np.mean(x_elem)
         varX = np.var(x_elem)
@@ -128,22 +126,36 @@ class Plots:
 
         return ac[:int(Nsamp/2)]
 
-    def plot2ac(self, ac, ac2):
+    def plot2ac(self, x_vals_ac, x_vals_ac2):
+        
+        numPairs = int(len(self.indset) / 2)
+        # subplot setup
+        fig1, axs1 = plt.subplots(numPairs, 2)
+        fig2, axs2 = plt.subplots(numPairs, 2)
+        xPlot = np.zeros(numPairs * 2, dtype=int)
+        yPlot = np.zeros(numPairs * 2, dtype=int)
+        xPlot[::2] = range(numPairs)
+        xPlot[1::2] = range(numPairs)
+        yPlot[1::2] = 1
 
         for i in range(len(self.indset)):
-            print('Diagnostics:',self.indset[i])
-            x_elem = x_vals[indSet[i],:]
+            print('Autocorr:',self.indset[i])
             xp = xPlot[i]
             yp = yPlot[i]
 
+            ac = self.autocorr(x_vals_ac[self.indset[i],:])
+            ac2 = self.autocorr(x_vals_ac2[self.indset[i],:])
+
             # plot autocorrelation
-            axs2[xp,yp].plot(range(1,len(ac)+1), ac1)
+            axs2[xp,yp].plot(range(1,len(ac)+1), ac)
             axs2[xp,yp].plot(range(1,len(ac2)+1), ac2)
-            axs2[xp,yp].set_title('Autocorrelation - Index ' + str(indSet[i]))
+            axs2[xp,yp].set_title('Autocorrelation - Index ' + str(self.indset[i]))
 
         fig2.set_size_inches(5, 7)
         fig2.tight_layout()
-        fig2.savefig(self.mcmcDir + 'autocorr.png', dpi=300)
+        # fig2.savefig(self.mcmcDir + 'autocorr.png', dpi=300)
+
+    
         
 
     
@@ -163,7 +175,7 @@ class Plots:
         return
     
 
-    def posmeansurf(self):
+    def posmean(self):
         plt.figure()
         # self.plotbands(self.mu_x[:425], 'r', label='Prior')
         self.plotbands(self.truth[:425], 'b.',label='True Reflectance')
@@ -175,8 +187,55 @@ class Plots:
         plt.title('Posterior Mean Comparison')
         plt.grid()
         plt.legend()
-        plt.savefig(self.mcmcDir + 'reflMean.png', dpi=300)
+        # plt.savefig(self.mcmcDir + 'reflMean.png', dpi=300)
+
+        plt.figure()
+        plt.plot(self.truth[425], self.truth[426], 'bo',label='True Reflectance')
+        plt.plot(self.mu_x[425], self.mu_x[426], 'r.',label='Prior')
+        plt.plot(self.isofitMuPos[425],self.isofitMuPos[426],'k.', label='Isofit Posterior')
+        plt.plot(self.linMuPos[425], self.linMuPos[426],'mx',label='Linear Posterior')
+        plt.plot(self.MCMCmean[425], self.MCMCmean[426], 'cx',label='MCMC Posterior')
+        plt.xlabel('AOT550')
+        plt.ylabel('H2OSTR')
+        plt.grid()
+        plt.legend()
+        # plt.savefig(self.mcmcDir + 'atmMean.png', dpi=300)
     
+    def posvar(self):
+        priorVar = np.diag(self.gamma_x)
+        isofitVar = np.diag(self.isofitGammaPos)
+        linearVar = np.diag(self.linGammaPos)
+        MCMCVar = np.diag(self.MCMCcov)
+        plt.figure()
+        self.plotbands(priorVar[:425], 'b.',label='Prior', axis='semilogy')
+        self.plotbands(isofitVar[:425],'k.', label='Isofit Posterior', axis='semilogy')
+        self.plotbands(linearVar[:425], 'm.',label='Linear Posterior', axis='semilogy')
+        self.plotbands(MCMCVar[:425], 'c.',label='MCMC Posterior', axis='semilogy')
+        plt.xlabel('Wavelength')
+        plt.ylabel('Variance')
+        plt.title('Marginal Variance Comparison')
+        plt.grid()
+        plt.legend()
+        # plt.savefig(self.mcmcDir + 'reflVar.png', dpi=300)
+
+        labels = ['425 - AOD550', '426 - H2OSTR']
+        x = np.arange(len(labels))  # the label locations
+        width = 0.175
+        fig, ax = plt.subplots()
+        rects1 = ax.bar(x - 3*width/2, priorVar[425:], width, label='Prior')
+        rects2 = ax.bar(x - width/2, isofitVar[425:], width, label='Isofit Posterior')
+        rects3 = ax.bar(x + width/2, linearVar[425:], width, label='Linear Posterior')
+        rects4 = ax.bar(x + 3*width/2, MCMCVar[425:], width, label='MCMC Posterior')
+        ax.set_yscale('log')
+        ax.set_ylabel('Variance')
+        ax.set_title('Marginal Variance of Atm')
+        ax.set_xticks(x)
+        ax.set_xticklabels(labels)
+        ax.legend()
+        # fig.savefig(self.mcmcDir + 'atmVar.png', dpi=300)
+
+        return
+
     def poserrorsurf(self):
         plt.figure()
         isofitError = abs(self.isofitMuPos[:425] - self.truth[:425]) / abs(self.truth[:425])
@@ -190,41 +249,9 @@ class Plots:
         plt.title('Error in Posterior Mean')
         plt.grid()
         plt.legend()
-        plt.savefig(self.mcmcDir + 'reflError.png', dpi=300)
-    
-    def posvarsurf(self):
-        priorVar = np.diag(self.gamma_x)
-        isofitVar = np.diag(self.isofitGammaPos)
-        linearVar = np.diag(gamma_xgyLin)
-        MCMCVar = np.diag(MCMCcov)
-        plt.figure()
-        self.plotbands(priorVar[:425], 'b.',label='Prior', axis='semilogy')
-        self.plotbands(isofitVar[:425],'k.', label='Isofit Posterior', axis='semilogy')
-        self.plotbands(linearVar[:425], 'm.',label='Linear Posterior', axis='semilogy')
-        self.plotbands(MCMCVar[:425], 'c.',label='MCMC Posterior', axis='semilogy')
-        plt.xlabel('Wavelength')
-        plt.ylabel('Variance')
-        plt.title('Marginal Variance Comparison')
-        plt.grid()
-        plt.legend()
-        plt.savefig(self.mcmcDir + 'reflVar.png', dpi=300)
-        return
+        # plt.savefig(self.mcmcDir + 'reflError.png', dpi=300)
 
-    def posmeanatm(self):
-        plt.figure()
-        plt.plot(self.truth[425], self.truth[426], 'bo',label='True Reflectance')
-        plt.plot(self.mu_x[425], self.mu_x[426], 'r.',label='Prior')
-        plt.plot(self.isofitMuPos[425],self.isofitMuPos[426],'k.', label='Isofit Posterior')
-        plt.plot(self.linMuPos[425], self.linMuPos[426],'mx',label='Linear Posterior')
-        plt.plot(self.MCMCmean[425], self.MCMCmean[426], 'cx',label='MCMC Posterior')
-        plt.xlabel('AOT550')
-        plt.ylabel('H2OSTR')
-        plt.grid()
-        plt.legend()
-        plt.savefig(self.mcmcDir + 'atmMean.png', dpi=300)
-        return
-
-    def posvaratm(self):
+    def poserroratm(self):
         isofitErrorAtm = abs(self.isofitMuPos[425:] - self.truth[425:]) / abs(self.truth[425:])
         linErrorAtm = abs(self.linMuPos[425:] - self.truth[425:]) / abs(self.truth[425:])
         mcmcErrorAtm = abs(self.MCMCmean[425:] - self.truth[425:]) / abs(self.truth[425:])
@@ -241,28 +268,9 @@ class Plots:
         ax.set_xticks(x)
         ax.set_xticklabels(labels)
         ax.legend()
-        fig.savefig(self.mcmcDir + 'atmError.png', dpi=300)
+        # fig.savefig(self.mcmcDir + 'atmError.png', dpi=300)
         return
-
-    def poserroratm(self):
-        labels = ['425 - AOD550', '426 - H2OSTR']
-        x = np.arange(len(labels))  # the label locations
-        width = 0.175
-        fig, ax = plt.subplots()
-        rects1 = ax.bar(x - 3*width/2, priorVar[425:], width, label='Prior')
-        rects2 = ax.bar(x - width/2, isofitVar[425:], width, label='Isofit Posterior')
-        rects3 = ax.bar(x + width/2, linearVar[425:], width, label='Linear Posterior')
-        rects4 = ax.bar(x + 3*width/2, MCMCVar[425:], width, label='MCMC Posterior')
-        ax.set_yscale('log')
-        ax.set_ylabel('Variance')
-        ax.set_title('Marginal Variance of Atm')
-        ax.set_xticks(x)
-        ax.set_xticklabels(labels)
-        ax.legend()
-        fig.savefig(self.mcmcDir + 'atmVar.png', dpi=300)
-
-    def autocorr(self):
-        return
+        
 
     
     

@@ -177,8 +177,8 @@ class MCMCIsofit:
             fig.savefig(self.mcmcDir + '2D_' + str(indSet[2*i]) + '-' + str(indSet[2*i+1]) + '.png', dpi=300)
 
         # subplot setup
-        fig1, axs1 = plt.subplots(5, 2)
-        fig2, axs2 = plt.subplots(5, 2)
+        fig1, axs1 = plt.subplots(numPairs, 2)
+        fig2, axs2 = plt.subplots(numPairs, 2)
         xPlot = np.zeros(numPairs * 2, dtype=int)
         yPlot = np.zeros(numPairs * 2, dtype=int)
         xPlot[::2] = range(numPairs)

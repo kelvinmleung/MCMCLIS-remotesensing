@@ -162,9 +162,9 @@ class MCMCLIS:
 
             # add component and check constraint
             zComp = self.proposal(np.zeros(self.nComp), np.identity(self.nComp))
-            # xFull = self.phi @ x + self.phiComp @ zComp + self.startX
-            # if self.checkConstraint(xFull) == False:
-            #     alpha = 0
+            xFull = self.phi @ x + self.phiComp @ zComp + self.startX
+            if self.checkConstraint(xFull) == False:
+                alpha = 0
 
             if np.random.random() < alpha:
                 x = z 
@@ -218,11 +218,10 @@ class MCMCLIS:
         #         x_vals_full[:,i] = x_vals[:,i] + self.startX
         
         if self.LIS == True:
-            # x_vals_full = self.phi @ x_vals + self.phiComp @ x_vals_comp
-            x_vals_full = self.phi @ x_vals + self.phiComp @ x_vals_comp + np.outer(self.proj @ (self.startX - self.mu_x) + self.mu_x, np.ones(self.Nsamp))
+            x_vals_full = self.phi @ x_vals + self.phiComp @ x_vals_comp
         else:
-            x_vals_full = x_vals + np.outer(self.startX, np.ones(self.Nsamp))
-        # x_vals_full = x_vals_full + np.outer(self.startX, np.ones(self.Nsamp))
+            x_vals_full = x_vals
+        x_vals_full = x_vals_full + np.outer(self.startX, np.ones(self.Nsamp))
 
         np.save(self.mcmcDir + 'MCMC_x.npy', x_vals_full)
         np.save(self.mcmcDir + 'logpos.npy', logpos)
