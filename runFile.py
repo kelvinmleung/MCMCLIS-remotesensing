@@ -1,19 +1,19 @@
-# import subprocess
-# import time
-# import numpy as np
-# import matplotlib.pyplot as plt
+import subprocess
+import time
+import numpy as np
+import matplotlib.pyplot as plt
 
 from isofitSetup import Setup
-# from genSamples import GenerateSamples
-# from regression import Regression
-# from analysis import Analysis
-# from mcmcIsofit import MCMCIsofit
-# from plots import Plots
+from genSamples import GenerateSamples
+from regression import Regression
+from analysis import Analysis
+from mcmcIsofit import MCMCIsofit
+from plots import Plots
 
 
 ##### CONFIG #####
-Nsamp = 10000
-burn = 1000
+Nsamp = 1000
+burn = 100
 init = 'MAP'
 rank = 100
 LIS = True
@@ -29,6 +29,8 @@ setup = Setup(wv, ref, atm, mcmcdir=mcmcfolder)
 g = GenerateSamples(setup)
 r = Regression(setup)
 a = Analysis(setup, r)
+
+
 
 ## MCMC #
 if init == 'MAP':
@@ -52,10 +54,11 @@ if runMCMC == True:
     # m.diagnostics(MCMCmean, MCMCcov, indSet)
     # np.savetxt(setup.mcmcDir + 'runtime.txt', np.array([time.time() - start_time]))
 # elif runPlot == True:
-burn = 5000
-autocorrMax = 10000
+burn = 500
+autocorrMax = 1000
 p = Plots(setup, r, a, m, burn, autocorrMax, mcmcNoLIS=mcmcNoLISdir)
-p.plotPosterior()
+# p.plotPosterior()
+p.plotRegression()
 plt.show()
 
 

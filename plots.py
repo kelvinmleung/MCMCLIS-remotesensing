@@ -20,8 +20,6 @@ class Plots:
         self.mcmcDir = setup.mcmcDir
         self.mcmcDir2 = '../results/MCMC/' + mcmcNoLIS + '/'
 
-        # reg things to plot
-
 
         # eigval/vec to plot
         # self.eigval
@@ -29,12 +27,35 @@ class Plots:
 
         # mean and covariance
         self.truth = setup.truth
+        self.radiance = setup.radiance
         self.mu_x = setup.mu_x
         self.gamma_x = setup.gamma_x
         self.isofitMuPos = setup.isofitMuPos
         self.isofitGammaPos = setup.isofitGammaPos
         self.linMuPos = m.linMuPos
         self.linGammaPos = m.linGammaPos
+
+        paramDir = '../results/Parameters/'
+        np.save(paramDir + 'wavelengths.npy', self.wavelengths)
+        np.save(paramDir + 'truth.npy', self.truth)
+        np.save(paramDir + 'radiance.npy', self.radiance)
+
+        np.save(paramDir + 'mu_x.npy', self.mu_x)
+        np.save(paramDir + 'gamma_x.npy', self.gamma_x)
+        np.save(paramDir + 'isofitMuPos.npy', self.isofitMuPos)
+        np.save(paramDir + 'isofitGammaPos.npy', self.isofitGammaPos)
+        np.save(paramDir + 'linMuPos.npy', self.linMuPos)
+        np.save(paramDir + 'linGammaPos.npy', self.linGammaPos)
+
+        np.save(paramDir + 'meanX.npy', r.meanX)
+        np.save(paramDir + 'meanY.npy', r.meanY)
+        np.save(paramDir + 'varX.npy', r.varX)
+        np.save(paramDir + 'varY.npy', r.varY)
+
+
+        # reg things to plot
+        phi = a.phi_tilde
+        self.ylinear = phi.dot((self.truth - r.meanX) / np.sqrt(r.varX)) * np.sqrt(r.varY) + r.meanY
 
         self.Nsamp = m.Nsamp
         self.MCMCmean, self.MCMCcov = m.calcMeanCov()
@@ -49,6 +70,16 @@ class Plots:
         x_vals = x_vals_all[:, self.burn:]
         x_vals_ac = x_vals_all[:, self.autocorrMax:]
         return x_vals, x_vals_ac
+
+    def plotRegression(self):
+        plt.figure()
+        plt.plot(self.setup.radiance, 'r', label='RT Model')
+        plt.plot(self.ylinear, 'b', label='Linear Model')
+        plt.xlabel('Wavelength')
+        plt.ylabel('Radiance')
+        plt.title('Forward Model Prediction')
+        plt.legend()
+
 
     def plotPosterior(self):
         self.posmean()
