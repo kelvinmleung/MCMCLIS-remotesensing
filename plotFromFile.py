@@ -11,7 +11,7 @@ class PlotFromFile:
 
     def __init__(self, mcmcfolder):
 
-
+        self.mcmcfolder = mcmcfolder
 
         self.paramDir = '../results/Parameters/'
         self.regDir = '../results/Regression/linearmodel/'
@@ -26,9 +26,6 @@ class PlotFromFile:
         self.loadMCMC()
 
         
-
-        ######## CONFIGURE THE TITLES AND STANDARDIZE FONT/SIZE
-
     def loadFromFile(self):
         self.wavelengths = np.load(self.paramDir + 'wavelengths.npy')
         self.truth = np.load(self.paramDir + 'truth.npy')
@@ -50,11 +47,14 @@ class PlotFromFile:
     def loadMCMC(self):
         x_vals = np.load(self.mcmcDir + 'MCMC_x.npy', mmap_mode='r')
 
-        self.x_vals_plot = x_vals[:,::100]
+        self.x_vals_plot = x_vals[:,::50]
 
         self.x_vals_ac = x_vals[:,:self.NsampAC]
         self.MCMCmean = np.mean(x_vals[:,self.burn:], axis=1)
         self.MCMCcov = np.cov(x_vals[:,self.burn:])
+
+        np.save(self.paramDir + 'MCMCmean' + str(self.mcmcfolder) + '.npy', self.MCMCmean)
+        np.save(self.paramDir + 'MCMCcov' + str(self.mcmcfolder) + '.npy', self.MCMCcov)
 
         x_vals_noLIS = np.load(self.mcmcDirNoLIS + 'MCMC_x.npy', mmap_mode='r')
         self.x_vals_ac_noLIS = x_vals_noLIS[:,:self.NsampAC]
@@ -74,8 +74,8 @@ class PlotFromFile:
         ylinear = self.phi.dot((self.truth - self.meanX) / np.sqrt(self.varX)) * np.sqrt(self.varY) + self.meanY
 
         plt.figure()
-        plt.plot(self.radiance, 'r', linewidth=1.5, label='RT Model')
-        plt.plot(ylinear, 'b', linewidth=1.5, label='Linear Model')
+        plt.plot(self.wavelengths, self.radiance, 'r', linewidth=1.5, label='RT Model')
+        plt.plot(self.wavelengths, ylinear, 'b', linewidth=1.5, label='Linear Model')
         plt.xlabel('Wavelength')
         plt.ylabel('Radiance')
         plt.title('Forward Model Prediction')
@@ -104,7 +104,7 @@ class PlotFromFile:
         ax[2,1].set_xlabel(r'$\lambda = $' + str(self.wavelengths[indset2[1]]) + ' nm')
         ax[2,2].set_xlabel(r'$\lambda = $' + str(self.wavelengths[indset2[2]]) + ' nm')
         handles, labels = ax[0,0].get_legend_handles_labels()
-        fig.legend(handles, labels, loc='center right')
+        # fig.legend(handles, labels, loc='center right')
 
     def plotkdcontour(self, indX, indY):
 
@@ -119,33 +119,31 @@ class PlotFromFile:
         values = np.vstack([x, y])
         kernel = st.gaussian_kde(values)
         f = np.reshape(kernel(positions).T, xx.shape)
+        f = f / np.max(f) # normalize
 
         fig = plt.figure()
         ax = fig.gca()
         ax.set_xlim(xmin, xmax)
         ax.set_ylim(ymin, ymax)
-        # Contourf plot
 
-        # cfset = ax.contourf(xx, yy, f, levs, cmap='Blues')#, norm=colors.LogNorm())
-        cfset = ax.contourf(xx, yy, f, levels=[0,100,1000,2000,4000,8000,16000], cmap='Blues')  # locator=ticker.LogLocator(),
-        ######## Or kernel density estimate plot instead of the contourf plot
-        # im = ax.imshow(np.rot90(f), cmap='Blues', extent=[xmin, xmax, ymin, ymax]) 
-        # Contour plot
-        # cset = ax.contour(xx, yy, f, colors='k')
+        levs = [0, 0.02, 0.05, 0.1, 0.25, 0.5, 1]
+        # Contourf plot
+        cfset = ax.contourf(xx, yy, f, levels=levs, cmap='Blues') 
+        cset = ax.contour(xx, yy, f, levels=levs, colors='k') ##############################ADD INLINE
+        plt.clabel(cset, levs, fontsize='smaller')
 
         # plot truth, isofit, and mcmc mean
         meanIsofit = np.array([self.isofitMuPos[indX], self.isofitMuPos[indY]])
         meanMCMC = np.array([self.MCMCmean[indX], self.MCMCmean[indY]])
-        ax.plot(self.truth[indX], self.truth[indY], 'ro', label='True reflectance', markersize=8)  
-        ax.plot(meanIsofit[0], meanIsofit[1], 'gx', label='MAP', markersize=12)
-        ax.plot(meanMCMC[0], meanMCMC[1], 'yx', label='MCMC', markersize=12)
+        ax.plot(self.truth[indX], self.truth[indY], 'go', label='Truth', markersize=8)  
+        ax.plot(meanIsofit[0], meanIsofit[1], 'rx', label='MAP', markersize=12)
+        ax.plot(meanMCMC[0], meanMCMC[1], 'kx', label='MCMC', markersize=12)
 
         # Label plot
         # ax.clabel(cset, inline=1, fontsize=10)
         ax.set_xlabel(r'$\lambda = $' + str(self.wavelengths[indX]) + ' nm')
         ax.set_ylabel(r'$\lambda = $' + str(self.wavelengths[indY]) + ' nm')
         ax.legend()
-        # fig.colorbar(im, cax=cax, orientation='vertical')
         fig.colorbar(cfset)
 
 
@@ -190,7 +188,7 @@ class PlotFromFile:
     def plotposmean(self):
         plt.figure()
         # self.plotbands(self.mu_x[:425], 'r', label='Prior')
-        self.plotbands(self.truth[:425], 'r',label='True Reflectance')
+        self.plotbands(self.truth[:425], 'r',label='Truth')
         self.plotbands(self.isofitMuPos[:425],'k', label='MAP Estimate')
         # self.plotbands(self.linMuPos[:425], 'm.',label='Linear Posterior')
         self.plotbands(self.MCMCmean[:425], 'b',label='MCMC Posterior')
@@ -201,7 +199,7 @@ class PlotFromFile:
         # plt.savefig(self.mcmcDir + 'reflMean.png', dpi=300)
 
         plt.figure()
-        plt.plot(self.truth[425], self.truth[426], 'rx',label='True Atm Param')
+        plt.plot(self.truth[425], self.truth[426], 'rx',label='Truth')
         # plt.plot(self.mu_x[425], self.mu_x[426], 'r.',label='Prior')
         plt.plot(self.isofitMuPos[425],self.isofitMuPos[426],'ko', label='MAP Estimate')
         # plt.plot(self.linMuPos[425], self.linMuPos[426],'mx',label='Linear Posterior')
@@ -209,7 +207,7 @@ class PlotFromFile:
         plt.xlabel('AOD550')
         plt.ylabel('H2OSTR')
         plt.title('Posterior Mean - Atmospheric Parameters')
-        plt.xlim([0, 0.3])
+        plt.xlim([0, 0.2])
         plt.ylim([2, 3])
         plt.legend()
 
@@ -220,7 +218,7 @@ class PlotFromFile:
         MCMCVar = np.diag(self.MCMCcov)
         plt.figure()
         self.plotbands(priorVar[:425], 'r',label='Prior', axis='semilogy')
-        self.plotbands(isofitVar[:425],'k', label='MAP Estimate', axis='semilogy')
+        self.plotbands(isofitVar[:425],'k', label='Laplace Approx', axis='semilogy')
         self.plotbands(MCMCVar[:425], 'b',label='MCMC Posterior', axis='semilogy')
         plt.xlabel('Wavelength')
         plt.ylabel('Marginal Variance')
@@ -232,9 +230,9 @@ class PlotFromFile:
         x = np.arange(len(labels))  # the label locations
         width = 0.175
         fig, ax = plt.subplots()
-        rects1 = ax.bar(x - width, priorVar[425:], width, label='Prior')
-        rects2 = ax.bar(x, isofitVar[425:], width, label='MAP Estimate')
-        rects3 = ax.bar(x + width, MCMCVar[425:], width, label='MCMC Posterior')
+        rects1 = ax.bar(x - width, priorVar[425:], width, color='red', label='Prior')
+        rects2 = ax.bar(x, isofitVar[425:], width, color='black', label='Laplace Approx')
+        rects3 = ax.bar(x + width, MCMCVar[425:], width, color='blue', label='MCMC Posterior')
         ax.set_yscale('log')
         ax.set_ylabel('Marginal Variance')
         ax.set_title('Posterior Variance - Atmospheric Parameters')
@@ -244,6 +242,68 @@ class PlotFromFile:
         # fig.savefig(self.mcmcDir + 'atmVar.png', dpi=300)
 
 
+    def plotCompareRank(self):
+        
+        meanB8 = np.load(self.paramDir + 'MCMCmeanB8.npy')
+        covB8 = np.load(self.paramDir + 'MCMCcovB8.npy')
+        meanC8 = np.load(self.paramDir + 'MCMCmeanC8.npy')
+        covC8 = np.load(self.paramDir + 'MCMCcovC8.npy')
+        
+        varB8 = np.diag(covB8)
+        varC8 = np.diag(covC8)
+        varMAP = np.diag(self.isofitGammaPos)
+
+        errMeanMAP = abs(self.isofitMuPos - self.truth) / self.truth
+        errMeanB8 = abs(meanB8 - self.truth) / self.truth
+        errMeanC8 = abs(meanC8 - self.truth) / self.truth
+
+        # posterior mean error
+        plt.figure()
+        self.plotbands(errMeanMAP,'k.', label='MAP Estimate', axis='semilogy')
+        self.plotbands(errMeanB8, 'r.',label='LIS r=100', axis='semilogy')
+        self.plotbands(errMeanC8, 'b.',label='LIS r=175', axis='semilogy')
+        plt.xlabel('Wavelength')
+        plt.ylabel('Relative Error')
+        plt.title('Error in Posterior Mean - Surface Reflectance')
+        plt.legend()
+
+        labels = ['425 - AOD550', '426 - H2OSTR']
+        x = np.arange(len(labels))  # the label locations
+        width = 0.175
+        fig, ax = plt.subplots()
+        rects2 = ax.bar(x - width, errMeanMAP[425:], width, color='black', label='MAP Estimate')
+        rects1 = ax.bar(x, errMeanB8[425:], width, color='red', label='LIS r=100')
+        rects3 = ax.bar(x + width, errMeanC8[425:], width, color='blue', label='LIS r=175')
+        ax.set_yscale('log')
+        ax.set_ylabel('Relative Error')
+        ax.set_title('Error in Posterior Mean - Atm.')
+        ax.set_xticks(x)
+        ax.set_xticklabels(labels)
+        ax.legend()
+
+        # posterior variance
+        plt.figure()
+        self.plotbands(varMAP,'k', label='Laplace Approx', axis='semilogy')
+        self.plotbands(varB8, 'r',label='LIS r=100', axis='semilogy')
+        self.plotbands(varC8, 'b',label='LIS r=175', axis='semilogy')
+        plt.xlabel('Wavelength')
+        plt.ylabel('Marginal Variance')
+        plt.title('Posterior Variance - Surface Reflectance')
+        plt.legend()
+
+        labels = ['425 - AOD550', '426 - H2OSTR']
+        x = np.arange(len(labels))  # the label locations
+        width = 0.175
+        fig, ax = plt.subplots()
+        rects2 = ax.bar(x - width, varMAP[425:], width, color='black', label='Laplace Approx')
+        rects1 = ax.bar(x, varB8[425:], width, color='red', label='LIS r=100')
+        rects3 = ax.bar(x + width, varC8[425:], width, color='blue', label='LIS r=175')
+        ax.set_yscale('log')
+        ax.set_ylabel('Marginal Variance')
+        ax.set_title('Posterior Variance - Atmospheric Parameters')
+        ax.set_xticks(x)
+        ax.set_xticklabels(labels)
+        ax.legend()
     
 
     def drawEllipse(self, mean, cov, ax, colour):
@@ -261,7 +321,7 @@ class PlotFromFile:
     def twoDimVisual(self, indX, indY, ax):
         x_vals = self.x_vals_plot
 
-        ax.plot(self.truth[indX], self.truth[indY], 'ro', label='True reflectance', markersize=8)     
+        ax.plot(self.truth[indX], self.truth[indY], 'ro', label='Truth', markersize=8)     
         ax.scatter(x_vals[indX,:], x_vals[indY,:], c='cornflowerblue', s=0.5)
 
         # plot Isofit mean/cov

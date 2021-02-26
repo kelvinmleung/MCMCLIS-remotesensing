@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from plotFromFile import PlotFromFile
 
 
-mcmcfolder = 'B8'
+mcmcfolder = 'C8'
 p = PlotFromFile(mcmcfolder)
 
 # p.plotRegression()
@@ -14,8 +14,10 @@ p = PlotFromFile(mcmcfolder)
 # p.plotposmean()
 # p.plotposvar()
 # p.plot2ac()
-p.plotkdcontour(indX=90, indY=100)
-plt.title('LIS - 100 Dimensions')
+# p.plotkdcontour(indX=90, indY=100)
+# plt.title('r = 175')
+
+p.plotCompareRank()
 
 
 plt.show()
