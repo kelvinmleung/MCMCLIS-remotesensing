@@ -15,9 +15,9 @@ from plots import Plots
 Nsamp = 6000000
 burn = 3000000
 init = 'truth'
-rank = 100
+rank = 175
 LIS = True
-mcmcfolder = 'B9'
+mcmcfolder = 'C9'
 ##### CONFIG #####
 
 ## SETUP ##
