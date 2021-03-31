@@ -12,17 +12,17 @@ from plots import Plots
 
 
 ##### CONFIG #####
-Nsamp = 6000000
-burn = 3000000
-init = 'MAP'
-rank = 50
+Nsamp = 600
+burn = 300
+init = 'truth'
+rank = 175
 LIS = True
-mcmcfolder = 'D7'
+mcmcfolder = 'C9'
 ##### CONFIG #####
 
 ## SETUP ##
 wv, ref = np.loadtxt('setup/data/petunia/petunia_reflectance.txt').T
-atm = [0.05, 2.5]
+atm = [0.01, 2.5]
 setup = Setup(wv, ref, atm, mcmcdir=mcmcfolder)
 g = GenerateSamples(setup)
 r = Regression(setup)
@@ -39,15 +39,17 @@ m = MCMCIsofit(setup, a, Nsamp, burn, x0, 'AM')
 m.initMCMC(LIS=LIS, rank=rank) # specify LIS parameters
 
 
-start_time = time.time()
-m.runAM()
-MCMCmean, MCMCcov = m.calcMeanCov()
-setup.plotPosterior(m.linMuPos, m.linGammaPos, MCMCmean, MCMCcov)
 
-## MCMC Diagnostics ##
-indSet = [30,40,90,100,150,160,250,260,425,426]
-m.diagnostics(MCMCmean, MCMCcov, indSet)
-np.savetxt(setup.mcmcDir + 'runtime.txt', np.array([time.time() - start_time]))
+# get error in regression
+GE = np.load(r.regDir + 'lassoGE.npy')
+print(np.mean(GE))
+
+# get sparsity plot
+r.plotFullLasso()
+# get eigenvalue plot
+
+plt.show()
+
 
 
 

@@ -62,7 +62,7 @@ class MCMCLIS:
         cholPr = np.linalg.cholesky(self.gamma_x) # cholesky decomp of prior covariance
         H = self.linop.T @ self.invNoiseCov @ self.linop # Hessian
         Hn = cholPr.T @ H @ cholPr 
-        V = self.solveEig(Hn, plot=False, title='LIS Eigenvalue Decay')
+        V = self.solveEig(Hn, plot=True, title='LIS Eigenvalue Decay')
         
         # LIS subspace
         VLIS = V[:,:self.rank] 
@@ -85,9 +85,9 @@ class MCMCLIS:
         idx = eigval.argsort()[::-1]
         eigval = eigval[idx]
         if plot == True:
-            plt.semilogy(eigval)
+            plt.semilogy(eigval, 'b')
             plt.title(title)
-            plt.grid()
+            # plt.grid()
             plt.show()
         return eigvec[:,idx]
 

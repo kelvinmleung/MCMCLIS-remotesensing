@@ -18,7 +18,7 @@ class PlotFromFile:
         self.mcmcDir = '../results/MCMC/' + mcmcfolder + '/'
         self.mcmcDirNoLIS = '../results/MCMC/N1/'
 
-        self.burn = 5000000
+        self.burn = 4000000
         self.NsampAC = 10000
         self.numPlotAC = 2000
 
@@ -47,11 +47,15 @@ class PlotFromFile:
     def loadMCMC(self):
         x_vals = np.load(self.mcmcDir + 'MCMC_x.npy', mmap_mode='r')
 
-        self.x_vals_plot = x_vals[:,::50]
+        # self.x_vals_plot = x_vals[:,::50]
+        # self.MCMCmean = np.mean(x_vals[:,self.burn:], axis=1)
+        # self.MCMCcov = np.cov(x_vals[:,self.burn:])
 
-        self.x_vals_ac = x_vals[:,:self.NsampAC]
+        self.x_vals_plot = x_vals[:,self.burn::50]
         self.MCMCmean = np.mean(x_vals[:,self.burn:], axis=1)
         self.MCMCcov = np.cov(x_vals[:,self.burn:])
+
+        self.x_vals_ac = x_vals[:,:self.NsampAC]
 
         np.save(self.paramDir + 'MCMCmean' + str(self.mcmcfolder) + '.npy', self.MCMCmean)
         np.save(self.paramDir + 'MCMCcov' + str(self.mcmcfolder) + '.npy', self.MCMCcov)
@@ -81,30 +85,36 @@ class PlotFromFile:
         plt.title('Forward Model Prediction')
         plt.legend()
     
-    def plot2Dmarginal(self, indset1=[100,250,410], indset2=[70,101,260]):
+    def plot2Dmarginal(self, indset1=[100], indset2=[30,101,260]): #,250,410
         
         n = len(indset1)
-        fig, ax = plt.subplots(n, n)
+        m = len(indset2)
+        fig, ax = plt.subplots(n, m)
+        
         for i in range(n):
-            for j in range(n):
+            for j in range(m):
                 indX = indset1[i]
                 indY = indset2[j]
 
-                ax[i,j] = self.twoDimVisual(indY, indX, ax[i,j])
+                ax[j] = self.twoDimVisual(indY, indX, ax[j])
                 # ax[i,j].set_title('CHANGE TITLE')
                 # ax[i,j].set_xlabel('Wavelength Channel ' + str(self.wavelengths[indY]))
                 # ax[i,j].set_ylabel('Wavelength Channel ' + str(self.wavelengths[indX]))
         # ax.set_title('2D Marginal Plots ')
         # fig.savefig(self.mcmcDir + '2Dmarginal.png', dpi=300)
 
-        ax[0,0].set_ylabel(r'$\lambda = $' + str(self.wavelengths[indset1[0]]) + ' nm')
-        ax[1,0].set_ylabel(r'$\lambda = $' + str(self.wavelengths[indset1[1]]) + ' nm')
-        ax[2,0].set_ylabel(r'$\lambda = $' + str(self.wavelengths[indset1[2]]) + ' nm')
-        ax[2,0].set_xlabel(r'$\lambda = $' + str(self.wavelengths[indset2[0]]) + ' nm')
-        ax[2,1].set_xlabel(r'$\lambda = $' + str(self.wavelengths[indset2[1]]) + ' nm')
-        ax[2,2].set_xlabel(r'$\lambda = $' + str(self.wavelengths[indset2[2]]) + ' nm')
-        handles, labels = ax[0,0].get_legend_handles_labels()
-        # fig.legend(handles, labels, loc='center right')
+        ax[0].set_ylabel(r'$\lambda = $' + str(self.wavelengths[indset1[0]]) + ' nm')
+        # ax[1,0].set_ylabel(r'$\lambda = $' + str(self.wavelengths[indset1[1]]) + ' nm')
+        # ax[2,0].set_ylabel(r'$\lambda = $' + str(self.wavelengths[indset1[2]]) + ' nm')
+
+        ax[0].set_xlabel(r'$\lambda = $' + str(self.wavelengths[indset2[0]]) + ' nm')
+        ax[1].set_xlabel(r'$\lambda = $' + str(self.wavelengths[indset2[1]]) + ' nm')
+        ax[2].set_xlabel(r'$\lambda = $' + str(self.wavelengths[indset2[2]]) + ' nm')
+        # ax[2,0].set_xlabel(r'$\lambda = $' + str(self.wavelengths[indset2[0]]) + ' nm')
+        # ax[2,1].set_xlabel(r'$\lambda = $' + str(self.wavelengths[indset2[1]]) + ' nm')
+        # ax[2,2].set_xlabel(r'$\lambda = $' + str(self.wavelengths[indset2[2]]) + ' nm')
+        handles, labels = ax[0].get_legend_handles_labels()
+        fig.legend(handles, labels, loc='center right')
 
     def plotkdcontour(self, indX, indY):
 
@@ -127,6 +137,7 @@ class PlotFromFile:
         ax.set_ylim(ymin, ymax)
 
         levs = [0, 0.02, 0.05, 0.1, 0.25, 0.5, 1]
+        levs = [0, 0.05, 0.2, 0.5, 1]
         # Contourf plot
         cfset = ax.contourf(xx, yy, f, levels=levs, cmap='Blues') 
         cset = ax.contour(xx, yy, f, levels=levs, colors='k') ##############################ADD INLINE
@@ -165,11 +176,11 @@ class PlotFromFile:
             axs[i].plot(range(1,len(ac2)+1), ac2, 'r', label='No LIS')
             axs[i].set_title(r'$\lambda = $' + str(self.wavelengths[indset[i]]) + ' nm')
         
-        axs[0].set_xlabel('MCMC iteration')
-        axs[0].set_ylabel('Autocorrelation')
+        axs[0].set_xlabel('Lag', fontsize=14)
+        axs[0].set_ylabel('Autocorrelation', fontsize=14)
         
         handles, labels = axs[0].get_legend_handles_labels()
-        fig.legend(handles, labels, loc='center right')
+        fig.legend(handles, labels, loc='center right', fontsize=14)
         # fig2.savefig(self.mcmcDir + 'autocorr.png', dpi=300)
 
     
@@ -226,7 +237,7 @@ class PlotFromFile:
         plt.legend()
         # plt.savefig(self.mcmcDir + 'reflVar.png', dpi=300)
 
-        labels = ['425 - AOD550', '426 - H2OSTR']
+        labels = ['AOD550', 'H2OSTR']
         x = np.arange(len(labels))  # the label locations
         width = 0.175
         fig, ax = plt.subplots()
@@ -256,7 +267,7 @@ class PlotFromFile:
         errMeanMAP = abs(self.isofitMuPos - self.truth) / self.truth
         errMeanB8 = abs(meanB8 - self.truth) / self.truth
         errMeanC8 = abs(meanC8 - self.truth) / self.truth
-
+        '''
         # posterior mean error
         plt.figure()
         self.plotbands(errMeanMAP,'k.', label='MAP Estimate', axis='semilogy')
@@ -280,7 +291,7 @@ class PlotFromFile:
         ax.set_xticks(x)
         ax.set_xticklabels(labels)
         ax.legend()
-
+        '''
         # posterior variance
         plt.figure()
         self.plotbands(varMAP,'k', label='Laplace Approx', axis='semilogy')
@@ -327,7 +338,7 @@ class PlotFromFile:
         # plot Isofit mean/cov
         meanIsofit = np.array([self.isofitMuPos[indX], self.isofitMuPos[indY]])
         covIsofit = self.isofitGammaPos[np.ix_([indX,indY],[indX,indY])]
-        ax.plot(meanIsofit[0], meanIsofit[1], 'kx', label='MAP', markersize=12)
+        ax.plot(meanIsofit[0], meanIsofit[1], 'kx', label='MAP/Laplace', markersize=12)
         self.drawEllipse(meanIsofit, covIsofit, ax, colour='black')
         
         # plot MCMC mean/cov

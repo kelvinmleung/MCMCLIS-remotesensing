@@ -136,8 +136,8 @@ class Regression:
         plt.legend()
 
         plt.figure(36)
-        plt.spy(phi, precision=1e-15,markersize=2)
-        plt.title(r'Sparsity Plot - $\Phi$')
+        plt.spy(phi, color='b', precision=1e-15,markersize=2)
+        plt.title('Sparsity Plot - G')
 
 
     def plotlog(self, plotx, ploty, fig, title='', xLabel='', yLabel=''):
