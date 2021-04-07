@@ -20,8 +20,8 @@ mcmcfolder = mcmcfolder + 'A7'
 
 
 ##### CONFIG 2 #####
-Nsamp = 6000
-burn = 3000
+Nsamp = 6000000
+burn = 3000000
 init = 'truth'
 rank = 100
 LIS = True
