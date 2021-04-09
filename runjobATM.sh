@@ -16,11 +16,3 @@ mv runFileA3.py atmRuns/
 mv atmRuns/runFileA5.py .
 python runFileA5.py
 mv runFileA5.py atmRuns/
-
-mv atmRuns/runFileA7.py .
-python runFileA7.py
-mv runFileA7.py atmRuns/
-
-mv atmRuns/runFileA9.py .
-python runFileA9.py
-mv runFileA9.py atmRuns/
