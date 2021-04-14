@@ -12,8 +12,8 @@ from plots import Plots
 
 
 ##### CONFIG 1 #####
-H2O = 2.5
-mcmcfolder = 'H25'
+H2O = 2
+mcmcfolder = 'H2'
 
 AOD = 0.5
 mcmcfolder = mcmcfolder + 'A5'
