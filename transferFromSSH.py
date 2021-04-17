@@ -12,10 +12,11 @@ subprocess.call(["rsync", "-chavzP", "--stats", "--delete", remoteDir + filename
 ./dropbox_uploader.sh upload ../JPLproject/results/MCMC/N1 /
 ./dropbox_uploader.sh upload ../JPLproject/results/MCMC/B9 /
 
-./dropbox_uploader.sh upload ../JPLproject/results/MCMC/H2A1 /
-./dropbox_uploader.sh upload ../JPLproject/results/MCMC/H25A1 /
-./dropbox_uploader.sh upload ../JPLproject/results/MCMC/H25A3 /
-./dropbox_uploader.sh upload ../JPLproject/results/MCMC/H25A5 /
+./dropbox_uploader.sh upload ../JPLproject/results/MCMC/H2A5 /
+./dropbox_uploader.sh upload ../JPLproject/results/MCMC/H2A3 /
+
+
+./dropbox_uploader.sh upload ../JPLproject/results/MCMC/H2A5 /
 
 
 ./dropbox_uploader.sh download /C7 ../JPLproject/results/MCMC
