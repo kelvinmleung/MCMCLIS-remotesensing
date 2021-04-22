@@ -92,12 +92,6 @@ class Analysis:
 
         return eigvalLIS, eigvecLIS
 
-    def plotEig(self, eigval, eigvec, title):
-        plt.figure()
-        plt.semilogy(eigval, 'b.')
-        plt.title(title + ' Eigenvalue Decay')
-        # plt.grid()
-
     def eigPlots(self, eigval, eigvec, rank=427, title='LIS'):
         plt.figure()
         plt.semilogy(eigval) # - np.ones(self.nx)
@@ -166,10 +160,9 @@ class Analysis:
         mu_xgy = gamma_xgy @ (self.phi.T @ np.linalg.inv(self.gamma_ygx) @ yobs + np.linalg.inv(self.gamma_x) @ self.mu_x)
         return mu_xgy, gamma_xgy
     
-    def comparePosParam(self, maxdim):
+    def comparePosParam(self, gamma_xgy, maxdim):
         eigvalPCA, eigvecPCA = self.eigPCA()
         eigvalLIS, eigvecLIS = self.eigLIS()
-        mu, gamma_xgy = self.posterior(self.radiance)
 
         dims = range(5,maxdim,5)
         mu_errorPCA = np.zeros(len(dims))
@@ -193,7 +186,7 @@ class Analysis:
                 gamma_xgy_PCA = gamma_xgy_PCA - eigvalPCA[j] * np.outer(eigvecPCA[:,j], eigvecPCA[:,j].T)
                 gamma_xgy_LIS = gamma_xgy_LIS - eigvalLIS[j] / (eigvalLIS[j] + 1) * np.outer(eigvecLIS[:,j], eigvecLIS[:,j].T)
             
-            N = 1000
+            N = 100
             for j in range(N):
                 mu_PCA = gamma_xgy_PCA @ (self.phi.T @ invYGX @ self.Y[j,:] + invX @ self.mu_x)
                 mu_LIS = gamma_xgy_LIS @ (self.phi.T @ invYGX @ self.Y[j,:] + invX @ self.mu_x)
@@ -201,10 +194,10 @@ class Analysis:
                 mu_errorPCA[i] = mu_errorPCA[i] + 1/N * np.abs(mu_PCA - self.X[j,:]).T @ invXGY @ np.abs(mu_PCA - self.X[j,:])
                 mu_errorLIS[i] = mu_errorLIS[i] + 1/N * np.abs(mu_LIS - self.X[j,:]).T @ invXGY @ np.abs(mu_LIS - self.X[j,:])
             
-            eigsPCA = s.linalg.eigh(gamma_xgy, gamma_xgy_PCA, eigvals_only=True)
-            eigsLIS = s.linalg.eigh(gamma_xgy, gamma_xgy_LIS, eigvals_only=True)
-            # eigsPCA = s.linalg.eigh(self.gamma_x, gamma_xgy_PCA, eigvals_only=True)
-            # eigsLIS = s.linalg.eigh(self.gamma_x, gamma_xgy_LIS, eigvals_only=True)
+            # eigsPCA = s.linalg.eigh(gamma_xgy, gamma_xgy_PCA, eigvals_only=True)
+            # eigsLIS = s.linalg.eigh(gamma_xgy, gamma_xgy_LIS, eigvals_only=True)
+            eigsPCA = s.linalg.eigh(self.gamma_x, gamma_xgy_PCA, eigvals_only=True)
+            eigsLIS = s.linalg.eigh(self.gamma_x, gamma_xgy_LIS, eigvals_only=True)
 
             for j in range(eigsPCA.size):
                 gamma_errorPCA[i] = gamma_errorPCA[i] + (np.log(eigsPCA[j])) ** 2
@@ -219,11 +212,9 @@ class Analysis:
         np.save(self.analysisDir + 'mu_errorLISparam.npy', mu_errorLIS)
 
 
-    def comparePosData(self, maxdim):
+    def comparePosData(self, gamma_xgy, maxdim):
         eigvalPCA, eigvecPCA = self.eigPCAdata()
         eigvalLIS, eigvecLIS = self.eigLISdata()
-        mu, gamma_xgy = self.posterior(self.radiance)
-
         dims = range(5,maxdim,5)
         #maxdim = 425
         mu_errorPCA = np.zeros(len(dims))
@@ -250,7 +241,7 @@ class Analysis:
             mu_PCA = np.zeros(self.nx)
             mu_LIS = np.zeros(self.nx)
 
-            N = 10000
+            N = 100
             print('\tRunning Bayes risk calculation...')
             for j in range(N):
                 #print('\tMonte Carlo: Iteration', j+1)
@@ -294,7 +285,7 @@ class Analysis:
         np.save(self.analysisDir + 'gamma_errorLISdata.npy',gamma_errorLIS)
         np.save(self.analysisDir + 'mu_errorPCAdata.npy', mu_errorPCA)
         np.save(self.analysisDir + 'mu_errorLISdata.npy', mu_errorLIS)
-
+        
     '''
     def posterior_plots(self, dim, eigvecPCA, eigvecLIS, gamma_xgy, mu_xgy):
         # plot for dim = 30
