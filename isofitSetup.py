@@ -283,3 +283,68 @@ class Setup:
         plt.savefig(self.mcmcDir + 'errorRelCov.png', dpi=300)
     
 
+    def testIsofitStartPt(self, N):
+
+        posAOD = np.zeros(N)
+        posH2O = np.zeros(N)
+        
+        for i in range(N):
+            randAOD = (1 - 0) * np.random.random() + 0
+            randH2O = (4 - 1) * np.random.random() + 1
+
+            np.savetxt('setup/x0isofit.txt', [randAOD, randH2O])
+
+            # inversion using simulated radiance
+            isofitMuPos, isofitGammaPos = self.invModel(self.radiance)
+            posAOD[i] = isofitMuPos[425]
+            posH2O[i] = isofitMuPos[426]
+
+        np.save('posAOD_x0isofit.npy', posAOD)
+        np.save('posH2O_x0isofit.npy', posH2O)
+
+    def testIsofitStartPtPlot(self):
+        x = np.load('posAOD_x0isofit.npy')
+        y = np.load('posH2O_x0isofit.npy')
+
+        # Peform the kernel density estimate
+        xx, yy = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
+        positions = np.vstack([xx.ravel(), yy.ravel()])
+        values = np.vstack([x, y])
+        kernel = st.gaussian_kde(values)
+        f = np.reshape(kernel(positions).T, xx.shape)
+        f = f / np.max(f) # normalize
+
+        fig = plt.figure()
+        ax = fig.gca()
+        ax.set_xlim(xmin, xmax)
+        ax.set_ylim(ymin, ymax)
+
+        # levs = [0, 0.02, 0.05, 0.1, 0.25, 0.5, 1]
+        # levs = [0, 0.05, 0.2, 0.5, 1]
+        # Contourf plot
+        cfset = ax.contourf(xx, yy, f, cmap='Blues' ) # levels=levs
+        plt.clabel(cfset, levs, fontsize='smaller')
+
+        # # plot truth, isofit, and mcmc mean
+        # meanIsofit = np.array([self.isofitMuPos[indX], self.isofitMuPos[indY]])
+        # meanMCMC = np.array([self.MCMCmean[indX], self.MCMCmean[indY]])
+        # ax.plot(self.truth[indX], self.truth[indY], 'go', label='Truth', markersize=8)  
+        # ax.plot(meanIsofit[0], meanIsofit[1], 'rx', label='MAP', markersize=12)
+        # ax.plot(meanMCMC[0], meanMCMC[1], 'kx', label='MCMC', markersize=12)
+        ax.scatter(x, y, 'b.')
+
+        # Label plot
+        # ax.clabel(cset, inline=1, fontsize=10)
+        ax.set_xlabel('AOD')
+        ax.set_ylabel('H2O')
+        ax.legend()
+        fig.colorbar(cfset)
+
+
+
+
+
+
+
+
+
