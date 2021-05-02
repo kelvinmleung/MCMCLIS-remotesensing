@@ -14,10 +14,10 @@ from plots import Plots
 ##### CONFIG #####
 Nsamp = 6000000
 burn = 1000000
-init = 'truth'
+init = 'MAP'
 rank = 100
 LIS = True
-mcmcfolder = 'E3'
+mcmcfolder = 'E4'
 ##### CONFIG #####
 
 ## SETUP ##
@@ -33,7 +33,6 @@ if init == 'MAP':
     x0 = setup.isofitMuPos
 elif init == 'truth':
     x0 = setup.truth
-    x0[425:] = [0.3,2.55]
 mcmcfolder = mcmcfolder + '_init' + init + '_rank' + str(rank)
 
 m = MCMCIsofit(setup, a, Nsamp, burn, x0, 'AM')
