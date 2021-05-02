@@ -5,6 +5,4 @@
 #SBATCH --error=runjob3.err
 #SBATCH --exclusive
  
-mv atmRuns/runFileA5.py .
-python runFileA5.py
-mv runFileA5.py atmRuns/
+python runFile.py
