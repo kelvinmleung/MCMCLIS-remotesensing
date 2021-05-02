@@ -17,7 +17,7 @@ burn = 1000000
 init = 'truth'
 rank = 100
 LIS = True
-mcmcfolder = 'E2'
+mcmcfolder = 'E3'
 ##### CONFIG #####
 
 ## SETUP ##
@@ -33,7 +33,7 @@ if init == 'MAP':
     x0 = setup.isofitMuPos
 elif init == 'truth':
     x0 = setup.truth
-    x0[425:] = [0.1,2.6]
+    x0[425:] = [0.3,2.55]
 mcmcfolder = mcmcfolder + '_init' + init + '_rank' + str(rank)
 
 m = MCMCIsofit(setup, a, Nsamp, burn, x0, 'AM')
