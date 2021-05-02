@@ -13,16 +13,16 @@ from plots import Plots
 
 ##### CONFIG #####
 Nsamp = 6000000
-burn = 3000000
+burn = 1000000
 init = 'truth'
-rank = 50
+rank = 100
 LIS = True
-mcmcfolder = 'D8'
+mcmcfolder = 'E1'
 ##### CONFIG #####
 
 ## SETUP ##
 wv, ref = np.loadtxt('setup/data/petunia/petunia_reflectance.txt').T
-atm = [0.05, 2.5]
+atm = [0.5, 2.5]
 setup = Setup(wv, ref, atm, mcmcdir=mcmcfolder)
 g = GenerateSamples(setup)
 r = Regression(setup)

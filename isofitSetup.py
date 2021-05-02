@@ -5,6 +5,8 @@ from scipy.io import loadmat
 import matplotlib.pyplot as plt
 import matplotlib
 
+import scipy.stats as st
+
 sys.path.insert(0, '../isofit/')
 
 import isofit
@@ -25,6 +27,7 @@ class Setup:
         self.wavelengths = wv
         self.reflectance = ref
         self.truth = np.concatenate((ref, atm))
+        np.save('x0isofit/atmSample.npy', [atm[0], atm[1]]) # set for Isofit initialization
 
         # specify storage directories 
         self.sampleDir = '../results/Regression/samples/'
@@ -49,7 +52,6 @@ class Setup:
         
         # inversion using simulated radiance
         self.isofitMuPos, self.isofitGammaPos = self.invModel(self.radNoisy)
-
         self.nx = self.truth.shape[0]
         self.ny = self.reflectance.shape[0]
         
@@ -284,29 +286,112 @@ class Setup:
     
 
     def testIsofitStartPt(self, N):
+        randAOD = np.zeros(N)
+        randH2O = np.zeros(N)
 
+        refl = np.zeros([N,425])
         posAOD = np.zeros(N)
         posH2O = np.zeros(N)
+        varAOD = np.zeros(N)
+        varH2O = np.zeros(N)
+
+        pdfVal = np.zeros(N)
+
+        nfev = np.zeros(N)
+        status = np.zeros(N)
         
         for i in range(N):
-            randAOD = (1 - 0) * np.random.random() + 0
-            randH2O = (4 - 1) * np.random.random() + 1
+            if (i+1) % 1 == 0:
+                print('Iteration ' + str(i+1))
+            randAOD[i] = (1 - 0) * np.random.random() + 0
+            randH2O[i] = (4 - 1) * np.random.random() + 1
 
-            np.savetxt('setup/x0isofit.txt', [randAOD, randH2O])
+            np.save('x0isofit/atmSample.npy', [randAOD[i], randH2O[i]])
 
             # inversion using simulated radiance
             isofitMuPos, isofitGammaPos = self.invModel(self.radiance)
+
+            refl[i,:] = isofitMuPos[:425]
             posAOD[i] = isofitMuPos[425]
             posH2O[i] = isofitMuPos[426]
+            varAOD[i] = isofitGammaPos[425,425]
+            varH2O[i] = isofitGammaPos[426,426]
 
-        np.save('posAOD_x0isofit.npy', posAOD)
-        np.save('posH2O_x0isofit.npy', posH2O)
+            # print(isofitGammaPos[self.bandsX,:][:,self.bandsX])
+            # print(np.linalg.det(isofitGammaPos[self.bandsX,:][:,self.bandsX]))
+
+            pdfVal[i] = st.multivariate_normal.pdf(x=isofitMuPos, mean=isofitMuPos, cov=isofitGammaPos)
+            nfev[i] = np.load('x0isofit/nfevTmp.npy')
+            status[i] = np.load('x0isofit/statusTmp.npy')
+
+        np.save('x0isofit/randAOD.npy', randAOD)
+        np.save('x0isofit/randH2O.npy', randH2O)
+        np.save('x0isofit/posAOD.npy', posAOD)
+        np.save('x0isofit/posH2O.npy', posH2O)
+        np.save('x0isofit/refl.npy', refl)
+        np.save('x0isofit/varAOD.npy', varAOD)
+        np.save('x0isofit/varH2O.npy', varH2O)
+        np.save('x0isofit/pdfVal.npy', pdfVal)
+        np.save('x0isofit/nfev.npy', nfev)
+        np.save('x0isofit/status.npy', status)
+
+    def plotScatterIsofitTest(self, x, y, c, title):
+        plt.figure()
+        plt.scatter(x, y, c=c, cmap='Blues')
+        plt.title(title)
+        plt.xlabel('AOD')
+        plt.ylabel('H2O')
+        plt.colorbar()
 
     def testIsofitStartPtPlot(self):
-        x = np.load('posAOD_x0isofit.npy')
-        y = np.load('posH2O_x0isofit.npy')
+        randAOD = np.load('x0isofit/randAOD.npy')
+        randH2O = np.load('x0isofit/randH2O.npy')
 
-        # Peform the kernel density estimate
+        x = np.load('x0isofit/posAOD.npy')
+        y = np.load('x0isofit/posH2O.npy')
+
+        refl = np.load('x0isofit/refl.npy')
+        varAOD = np.load('x0isofit/varAOD.npy')
+        varH2O = np.load('x0isofit/varH2O.npy')
+        pdfVal = np.load('x0isofit/pdfVal.npy')
+
+        nfev = np.load('x0isofit/nfev.npy')
+        status = np.load('x0isofit/status.npy')
+    
+        self.plotScatterIsofitTest(x, y, pdfVal, title='PDF Value of MAP')
+        plt.savefig('x0isofit/pdfVal.png', dpi=300)
+        self.plotScatterIsofitTest(x, y, varAOD, title='Variance of AOD')
+        plt.savefig('x0isofit/varAOD.png', dpi=300)
+        self.plotScatterIsofitTest(x, y, varH2O, title='Variance of H2O')
+        plt.savefig('x0isofit/varH2O.png', dpi=300)
+        self.plotScatterIsofitTest(x, y, nfev, title='Number of Function Evaluations')
+        plt.savefig('x0isofit/nfev.png', dpi=300)
+        self.plotScatterIsofitTest(x, y, status, title='Status of Convergence')
+        plt.savefig('x0isofit/status.png', dpi=300)
+
+        # plot some sample reflectances
+        plt.figure()
+        for i in range(10):
+            self.plotbands(refl[i,:], '-')
+        plt.title('Reflectances from retrievals with random initial atm')
+        plt.xlabel('Wavelength')
+        plt.ylabel('Reflectance')
+        plt.savefig('x0isofit/refl.png', dpi=300)
+
+        # plot the initial samples
+        plt.figure()
+        plt.scatter(randAOD, randH2O)
+        plt.title('Initial Values of Atmospheric Parameters')
+        plt.xlabel('AOD')
+        plt.ylabel('H2O')
+        plt.savefig('x0isofit/x0atm.png', dpi=300)
+
+
+        '''
+        [xmin, xmax] = [0, 1]
+        [ymin, ymax] = [1, 4]
+        
+        # Perform the kernel density estimate
         xx, yy = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
         positions = np.vstack([xx.ravel(), yy.ravel()])
         values = np.vstack([x, y])
@@ -318,12 +403,10 @@ class Setup:
         ax = fig.gca()
         ax.set_xlim(xmin, xmax)
         ax.set_ylim(ymin, ymax)
-
-        # levs = [0, 0.02, 0.05, 0.1, 0.25, 0.5, 1]
-        # levs = [0, 0.05, 0.2, 0.5, 1]
+        
         # Contourf plot
         cfset = ax.contourf(xx, yy, f, cmap='Blues' ) # levels=levs
-        plt.clabel(cfset, levs, fontsize='smaller')
+        plt.clabel(cfset, fontsize='smaller')
 
         # # plot truth, isofit, and mcmc mean
         # meanIsofit = np.array([self.isofitMuPos[indX], self.isofitMuPos[indY]])
@@ -331,7 +414,7 @@ class Setup:
         # ax.plot(self.truth[indX], self.truth[indY], 'go', label='Truth', markersize=8)  
         # ax.plot(meanIsofit[0], meanIsofit[1], 'rx', label='MAP', markersize=12)
         # ax.plot(meanMCMC[0], meanMCMC[1], 'kx', label='MCMC', markersize=12)
-        ax.scatter(x, y, 'b.')
+        # ax.scatter(x, y, 'b.')
 
         # Label plot
         # ax.clabel(cset, inline=1, fontsize=10)
@@ -339,6 +422,9 @@ class Setup:
         ax.set_ylabel('H2O')
         ax.legend()
         fig.colorbar(cfset)
+        '''
+        
+        
 
 
 
