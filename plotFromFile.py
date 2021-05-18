@@ -18,6 +18,7 @@ class PlotFromFile:
         self.mcmcDir = '../results/MCMC/' + mcmcfolder + '/'
         self.mcmcDirNoLIS = '../results/MCMC/N1/'
 
+        self.Nsamp = 6000000
         self.burn = 4000000
         self.NsampAC = 10000
         self.numPlotAC = 2000
@@ -171,10 +172,19 @@ class PlotFromFile:
             ac = ac[:self.numPlotAC]
             ac2 = ac2[:self.numPlotAC]
 
+            print('Index:', indset[i])
+            print('ESS LIS:', self.ESS(ac))
+            print('ESS No LIS:', self.ESS(ac2))
+
             # plot autocorrelation
             axs[i].plot(range(1,len(ac)+1), ac, 'b', label='LIS r = 100')
             axs[i].plot(range(1,len(ac2)+1), ac2, 'r', label='No LIS')
-            axs[i].set_title(r'$\lambda = $' + str(self.wavelengths[indset[i]]) + ' nm')
+            if indset[i] < 425:
+                axs[i].set_title(r'$\lambda = $' + str(self.wavelengths[indset[i]]) + ' nm')
+            elif indset[i] == 425:
+                axs[i].set_title('AOD')
+            elif indset[i] == 426:
+                axs[i].set_title('H2O')
         
         axs[0].set_xlabel('Lag', fontsize=14)
         axs[0].set_ylabel('Autocorrelation', fontsize=14)
@@ -195,6 +205,13 @@ class PlotFromFile:
             ac[k] = cov[1,0] / varX
 
         return ac
+
+    def ESS(self, ac):
+        denom = 0
+        for i in range(len(ac)):
+            denom = denom + ac[i]
+        return self.Nsamp / (1 + 2 * denom)
+
 
     def plotposmean(self):
         plt.figure()
@@ -251,6 +268,29 @@ class PlotFromFile:
         ax.set_xticklabels(labels)
         ax.legend()
         # fig.savefig(self.mcmcDir + 'atmVar.png', dpi=300)
+
+    def plotPosSparsity(self, tol):
+
+        deadbands = list(range(185,215)) + list(range(281,315)) + list(range(414,425))
+        cov = self.MCMCcov
+        for i in deadbands:
+            cov[i,:] = np.zeros(cov.shape[0])
+            cov[:,i] = np.zeros(cov.shape[0])
+
+        plt.figure()
+        plt.spy(cov, color='b', precision=tol, markersize=2)
+        plt.title('Sparsity Plot of Posterior Covariance - Tolerance = ' + str(tol))
+
+    def plotPosCovRow(self, indset=[120,250,410]):
+        
+        for i in indset:
+            plt.figure()
+            self.plotbands(self.MCMCcov[i,:], 'b.', axis='semilogy')
+            plt.title('Posterior Covariance - Row of index ' + str(i) + ', wavelength=' + str(self.wavelengths[i]))
+            plt.xlabel('Wavelength')
+            plt.ylabel('Value of Covariance Matrix')
+
+
 
 
     def plotCompareRank(self):
@@ -352,6 +392,9 @@ class PlotFromFile:
         # ax.set_ylabel('Index ' + str(indY))
         # ax.legend()
         return ax
+
+
+
     
 
     
