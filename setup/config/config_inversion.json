@@ -19,7 +19,8 @@
     },
     "surface": {
       "surface_category": "multicomponent_surface",
-      "surface_file": "setup/data/surface.mat"
+      "surface_file": "setup/data/surface.mat",
+      "normalize": "None"
     },
     "radiative_transfer": {
       "radiative_transfer_engines": {

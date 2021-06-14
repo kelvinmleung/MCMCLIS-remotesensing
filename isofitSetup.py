@@ -27,7 +27,7 @@ class Setup:
         self.wavelengths = wv
         self.reflectance = ref
         self.truth = np.concatenate((ref, atm))
-        np.save('x0isofit/atmSample.npy', [atm[0], atm[1]]) # set for Isofit initialization
+        # np.save('x0isofit/atmSample.npy', [atm[0], atm[1]]) # set for Isofit initialization
 
         # specify storage directories 
         self.sampleDir = '../results/Regression/samples/'
@@ -423,12 +423,29 @@ class Setup:
         ax.legend()
         fig.colorbar(cfset)
         '''
+
+    def genStartPoints(self):
+        # refl = np.load('x0isofit/refl.npy')
+        randAOD = np.load('x0isofit/randAOD.npy')
+        randH2O = np.load('x0isofit/randH2O.npy')
         
-        
+        N = randAOD.shape[0]
+        truth = np.zeros([N,427])
+        # radiances = np.zeros([N,425])
+
+        for i in range(N):
+            truth[i,:425] = self.reflectance
+            truth[i,425] = randAOD[i]
+            truth[i,426] = randH2O[i]
+
+            # no noise added
+
+            # radiances[i,:] = self.fm.calc_rdn(truth[i,:], self.geom)
 
 
-
-
+        np.save('x0isofit/truths.npy', truth)
+        np.save('x0isofit/radiance.npy', self.radiance)
+        np.save('x0isofit/noisecov.npy', self.noisecov)
 
 
 

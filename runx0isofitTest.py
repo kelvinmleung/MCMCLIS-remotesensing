@@ -13,6 +13,15 @@ wv, ref = np.loadtxt('setup/data/petunia/petunia_reflectance.txt').T
 atm = [0.5, 2.5]
 setup = Setup(wv, ref, atm)
 
+
+# get already generated results for David - June 8, 2021
+setup.genStartPoints()
+
+truths = np.load('x0isofit/truths.npy')
+radiance = np.load('x0isofit/radiance.npy')
+
+
+'''
 ### ADDED in inverse.py on line 347
 # x0atm = np.load('x0isofit/atmSample.npy')
 # x0[425:] = x0atm
@@ -25,11 +34,11 @@ setup = Setup(wv, ref, atm)
 # np.save('x0isofit/atmSample.npy', [atm[0], atm[1]]) # set for Isofit initialization
 
 
-setup.testIsofitStartPt(5000)
+setup.testIsofitStartPt(1000)
 
 # x = np.load('posAOD_x0isofit.npy')
 # y = np.load('posH2O_x0isofit.npy')
 
 setup.testIsofitStartPtPlot()
-
+'''
 plt.show()

@@ -6,10 +6,10 @@ import matplotlib.pyplot as plt
 from plotFromFile import PlotFromFile
 
 
-mcmcfolder = 'B8'
+mcmcfolder = 'C7'
 p = PlotFromFile(mcmcfolder)
 
-p.plotRegression()
+# p.plotRegression()
 p.plot2Dmarginal()
 p.plotposmean()
 p.plotposvar()
@@ -17,7 +17,7 @@ p.plotposvar()
 # p.plot2ac(indset=[20,50,90,120,150,200,230,250,400,410,425,426])
 
 p.plotkdcontour(indX=90, indY=100)
-plt.title('r = 175')
+# plt.title('r = 175')
 
 # p.plotCompareRank()
 
