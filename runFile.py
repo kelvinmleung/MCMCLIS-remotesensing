@@ -17,13 +17,14 @@ burn = 1000000
 init = 'MAP'
 rank = 100
 LIS = True
-mcmcfolder = 'E4'
+mcmcfolder = 'F1'
 ##### CONFIG #####
 
 ## SETUP ##
-wv, ref = np.loadtxt('setup/data/petunia/petunia_reflectance.txt').T
-atm = [0.5, 2.5]
-setup = Setup(wv, ref, atm, mcmcdir=mcmcfolder)
+# wv, ref = np.loadtxt('setup/data/petunia/petunia_reflectance.txt').T
+wv, ref, refnoise = np.loadtxt('setup/data/beckmanlawn/insitu.txt').T
+atm = [0.1, 2.5]
+setup = Setup(wv, ref, atm, mcmcdir=mcmcfolder, rad='simulated')
 g = GenerateSamples(setup)
 r = Regression(setup)
 a = Analysis(setup, r)
@@ -33,16 +34,19 @@ if init == 'MAP':
     x0 = setup.isofitMuPos
 elif init == 'truth':
     x0 = setup.truth
+elif init == 'linpos':
+    x0, gammapos = a.posterior(setup.radNoisy)
+elif init == 'midMAPtruth':
+    x0 = 0.5 * (setup.isofitMuPos + setup.truth)
 mcmcfolder = mcmcfolder + '_init' + init + '_rank' + str(rank)
 
 m = MCMCIsofit(setup, a, Nsamp, burn, x0, 'AM')
 m.initMCMC(LIS=LIS, rank=rank) # specify LIS parameters
 
-
 start_time = time.time()
 m.runAM()
 MCMCmean, MCMCcov = m.calcMeanCov()
-setup.plotPosterior(m.linMuPos, m.linGammaPos, MCMCmean, MCMCcov)
+setup.plotPosterior(MCMCmean, MCMCcov)
 
 ## MCMC Diagnostics ##
 indSet = [30,40,90,100,150,160,250,260,425,426]

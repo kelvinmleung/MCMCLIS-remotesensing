@@ -21,7 +21,7 @@ class Setup:
     Contains functions to generate training and test samples
     from isofit.
     '''
-    def __init__(self, wv, ref, atm, mcmcdir='MCMCRun'):
+    def __init__(self, wv, ref, atm, mcmcdir='MCMCRun', rad='simulated'):
 
         print('Setup in progress...')
         self.wavelengths = wv
@@ -44,11 +44,16 @@ class Setup:
         self.mu_x, self.gamma_x = self.getPrior(fullconfig)
 
         # get Isofit noise model and simulate radiance
-        rad = self.fm.calc_rdn(self.truth, self.geom)
-        self.noisecov = self.fm.Seps(self.truth, rad, self.geom)
-        eps = np.random.multivariate_normal(np.zeros(len(rad)), self.noisecov)
-        self.radiance = rad
-        self.radNoisy = rad + eps
+        if rad =='simulated':
+            rad = self.fm.calc_rdn(self.truth, self.geom)
+            self.noisecov = self.fm.Seps(self.truth, rad, self.geom)
+            eps = np.random.multivariate_normal(np.zeros(len(rad)), self.noisecov)
+            self.radiance = rad
+            self.radNoisy = rad + eps
+        # elif rad == 'real':
+        #     self.radiance = 
+
+
         
         # inversion using simulated radiance
         self.isofitMuPos, self.isofitGammaPos = self.invModel(self.radNoisy)
@@ -170,7 +175,7 @@ class Setup:
         plt.colorbar()
         plt.legend()
 
-    def plotPosterior(self, mu_xgyLin, gamma_xgyLin, MCMCmean, MCMCcov):
+    def plotPosterior(self, MCMCmean, MCMCcov): #mu_xgyLin, gamma_xgyLin,
 
         plt.figure()
         # self.plotbands(self.mu_x[:425], 'r', label='Prior')
