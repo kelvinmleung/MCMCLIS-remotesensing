@@ -8,7 +8,6 @@ from genSamples import GenerateSamples
 from regression import Regression
 from analysis import Analysis
 from mcmcIsofit import MCMCIsofit
-from plots import Plots
 
 
 ##### CONFIG #####
