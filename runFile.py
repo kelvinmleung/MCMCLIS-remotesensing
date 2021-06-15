@@ -21,7 +21,10 @@ mcmcfolder = 'F1'
 
 ## SETUP ##
 # wv, ref = np.loadtxt('setup/data/petunia/petunia_reflectance.txt').T
-wv, ref, refnoise = np.loadtxt('setup/data/beckmanlawn/insitu.txt').T
+wvl, wv, wvr = np.loadtxt('setup/data/wavelengths.txt').T
+wv = wv * 1000
+wvRaw, refRaw, refnoise = np.loadtxt('setup/data/beckmanlawn/insitu.txt').T
+ref = np.interp(wv, wvRaw, refRaw)
 atm = [0.1, 2.5]
 setup = Setup(wv, ref, atm, mcmcdir=mcmcfolder, rad='simulated')
 g = GenerateSamples(setup)
