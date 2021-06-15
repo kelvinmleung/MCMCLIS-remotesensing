@@ -13,10 +13,10 @@ from mcmcIsofit import MCMCIsofit
 ##### CONFIG #####
 Nsamp = 6000000
 burn = 1000000
-init = 'truth'
+init = 'linpos'
 rank = 100
 LIS = True
-mcmcfolder = 'F2'
+mcmcfolder = 'F3'
 ##### CONFIG #####
 
 ## SETUP ##
