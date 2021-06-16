@@ -25,7 +25,8 @@ wvl, wv, wvr = np.loadtxt('setup/data/wavelengths.txt').T
 wv = wv * 1000
 wvRaw, refRaw, refnoise = np.loadtxt('setup/data/beckmanlawn/insitu.txt').T
 ref = np.interp(wv, wvRaw, refRaw)
-datamatfile = 'setup/data/beckmanlawn/ang20171108t184227_data_v2p11_BeckmanLawn.mat'
+# datamatfile = 'setup/data/beckmanlawn/ang20171108t184227_data_v2p11_BeckmanLawn.mat'
+datamatfile = ''
 atm = [0.1, 2.5]
 setup = Setup(wv, ref, atm, mcmcdir=mcmcfolder, datamatfile=datamatfile)
 g = GenerateSamples(setup)

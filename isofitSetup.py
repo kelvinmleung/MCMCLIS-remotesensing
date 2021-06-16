@@ -56,6 +56,7 @@ class Setup:
             mat = loadmat(datamatfile)
             self.radiance = mat['meas']
             self.radNoisy = mat['meas']
+            print(self.radiance)
 
 
         
