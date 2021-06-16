@@ -11,12 +11,12 @@ from mcmcIsofit import MCMCIsofit
 
 
 ##### CONFIG #####
-Nsamp = 6000
-burn = 1000
+Nsamp = 6000000
+burn = 1000000
 init = 'MAP'
 rank = 100
 LIS = True
-mcmcfolder = 'G1'
+mcmcfolder = 'F1'
 ##### CONFIG #####
 
 ## SETUP ##
@@ -47,7 +47,7 @@ m = MCMCIsofit(setup, a, Nsamp, burn, x0, 'AM')
 m.initMCMC(LIS=LIS, rank=rank) # specify LIS parameters
 
 start_time = time.time()
-m.runAM()
+# m.runAM()
 MCMCmean, MCMCcov = m.calcMeanCov()
 setup.plotPosterior(MCMCmean, MCMCcov)
 
