@@ -21,7 +21,7 @@ class Setup:
     Contains functions to generate training and test samples
     from isofit.
     '''
-    def __init__(self, wv, ref, atm, mcmcdir='MCMCRun', rad='simulated'):
+    def __init__(self, wv, ref, atm, mcmcdir='MCMCRun', datamatfile=''):
 
         print('Setup in progress...')
         self.wavelengths = wv
@@ -43,15 +43,19 @@ class Setup:
         self.geom = Geometry()
         self.mu_x, self.gamma_x = self.getPrior(fullconfig)
 
-        # get Isofit noise model and simulate radiance
-        if rad =='simulated':
+        
+        if datamatfile == '':
+            # get Isofit noise model and simulate radiance
             rad = self.fm.calc_rdn(self.truth, self.geom)
             self.noisecov = self.fm.Seps(self.truth, rad, self.geom)
             eps = np.random.multivariate_normal(np.zeros(len(rad)), self.noisecov)
             self.radiance = rad
             self.radNoisy = rad + eps
-        # elif rad == 'real':
-        #     self.radiance = 
+        else:
+            # directly load radiance from file
+            mat = loadmat(datamatfile)
+            self.radiance = mat['meas']
+            self.radNoisy = mat['meas']
 
 
         
@@ -192,7 +196,7 @@ class Setup:
 
         plt.figure()
         isofitError = abs(self.isofitMuPos[:425] - self.truth[:425]) / abs(self.truth[:425])
-        linError = abs(mu_xgyLin[:425] - self.truth[:425]) / abs(self.truth[:425])
+        # linError = abs(mu_xgyLin[:425] - self.truth[:425]) / abs(self.truth[:425])
         mcmcError = abs(MCMCmean[:425] - self.truth[:425]) / abs(self.truth[:425])
         self.plotbands(isofitError,'k.', label='Isofit Posterior',axis='semilogy')
         # self.plotbands(linError, 'm.',label='Linear Posterior',axis='semilogy')
@@ -218,7 +222,7 @@ class Setup:
 
         # bar graph of atm parameter variances
         isofitErrorAtm = abs(self.isofitMuPos[425:] - self.truth[425:]) / abs(self.truth[425:])
-        linErrorAtm = abs(mu_xgyLin[425:] - self.truth[425:]) / abs(self.truth[425:])
+        # linErrorAtm = abs(mu_xgyLin[425:] - self.truth[425:]) / abs(self.truth[425:])
         mcmcErrorAtm = abs(MCMCmean[425:] - self.truth[425:]) / abs(self.truth[425:])
         labels = ['425 - AOD550', '426 - H2OSTR']
         x = np.arange(len(labels))  # the label locations
@@ -238,7 +242,7 @@ class Setup:
         # variance plot
         priorVar = np.diag(self.gamma_x)
         isofitVar = np.diag(self.isofitGammaPos)
-        linearVar = np.diag(gamma_xgyLin)
+        # linearVar = np.diag(gamma_xgyLin)
         MCMCVar = np.diag(MCMCcov)
         plt.figure()
         self.plotbands(priorVar[:425], 'b.',label='Prior', axis='semilogy')
@@ -272,11 +276,11 @@ class Setup:
         # plot: x-axis is error in posterior mean, y-axis is error in mean weighted by covariance
         
         isofitPlotX = np.linalg.norm(self.isofitMuPos - self.truth) ** 2
-        linearPlotX = np.linalg.norm(mu_xgyLin - self.truth) ** 2
+        # linearPlotX = np.linalg.norm(mu_xgyLin - self.truth) ** 2
         MCMCPlotX = np.linalg.norm(MCMCmean - self.truth) ** 2
 
         isofitPlotY = np.linalg.norm(np.diag(isofitVar ** (-0.5)) * (self.isofitMuPos - self.truth)) ** 2
-        linearPlotY = np.linalg.norm(np.diag(linearVar ** (-0.5)) * (mu_xgyLin - self.truth)) ** 2
+        # linearPlotY = np.linalg.norm(np.diag(linearVar ** (-0.5)) * (mu_xgyLin - self.truth)) ** 2
         MCMCPlotY = np.linalg.norm(np.diag(MCMCVar ** (-0.5)) * (MCMCmean - self.truth)) ** 2
 
         plt.figure()

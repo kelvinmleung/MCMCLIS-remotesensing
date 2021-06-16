@@ -11,12 +11,12 @@ from mcmcIsofit import MCMCIsofit
 
 
 ##### CONFIG #####
-Nsamp = 6000000
-burn = 1000000
-init = 'midMAPtruth'
+Nsamp = 6000
+burn = 1000
+init = 'MAP'
 rank = 100
 LIS = True
-mcmcfolder = 'F4'
+mcmcfolder = 'G1'
 ##### CONFIG #####
 
 ## SETUP ##
@@ -25,8 +25,9 @@ wvl, wv, wvr = np.loadtxt('setup/data/wavelengths.txt').T
 wv = wv * 1000
 wvRaw, refRaw, refnoise = np.loadtxt('setup/data/beckmanlawn/insitu.txt').T
 ref = np.interp(wv, wvRaw, refRaw)
+datamatfile = 'setup/data/beckmanlawn/ang20171108t184227_data_v2p11_BeckmanLawn.mat'
 atm = [0.1, 2.5]
-setup = Setup(wv, ref, atm, mcmcdir=mcmcfolder, rad='simulated')
+setup = Setup(wv, ref, atm, mcmcdir=mcmcfolder, datamatfile=datamatfile)
 g = GenerateSamples(setup)
 r = Regression(setup)
 a = Analysis(setup, r)
