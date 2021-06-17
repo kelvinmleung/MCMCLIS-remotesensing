@@ -11,8 +11,8 @@ from mcmcIsofit import MCMCIsofit
 
 
 ##### CONFIG #####
-Nsamp = 6000
-burn = 1000
+Nsamp = 6000000
+burn = 1000000
 init = 'MAP'
 rank = 100
 LIS = True
