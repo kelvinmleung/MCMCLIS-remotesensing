@@ -11,12 +11,12 @@ from mcmcIsofit import MCMCIsofit
 
 
 ##### CONFIG #####
-Nsamp = 6000000
-burn = 1000000
-init = 'linpos'
+Nsamp = 6000
+burn = 1000
+init = 'MAP'
 rank = 100
 LIS = True
-mcmcfolder = 'F3'
+mcmcfolder = 'G1'
 ##### CONFIG #####
 
 ## SETUP ##
@@ -25,8 +25,8 @@ wvl, wv, wvr = np.loadtxt('setup/data/wavelengths.txt').T
 wv = wv * 1000
 wvRaw, refRaw, refnoise = np.loadtxt('setup/data/beckmanlawn/insitu.txt').T
 ref = np.interp(wv, wvRaw, refRaw)
-# datamatfile = 'setup/data/beckmanlawn/ang20171108t184227_data_v2p11_BeckmanLawn.mat'
-datamatfile = ''
+datamatfile = 'setup/data/beckmanlawn/ang20171108t184227_data_v2p11_BeckmanLawn.mat'
+# datamatfile = ''
 atm = [0.1, 2.5]
 setup = Setup(wv, ref, atm, mcmcdir=mcmcfolder, datamatfile=datamatfile)
 g = GenerateSamples(setup)
@@ -48,7 +48,7 @@ m = MCMCIsofit(setup, a, Nsamp, burn, x0, 'AM')
 m.initMCMC(LIS=LIS, rank=rank) # specify LIS parameters
 
 start_time = time.time()
-# m.runAM()
+m.runAM()
 MCMCmean, MCMCcov = m.calcMeanCov()
 setup.plotPosterior(MCMCmean, MCMCcov)
 
@@ -56,6 +56,22 @@ setup.plotPosterior(MCMCmean, MCMCcov)
 indSet = [30,40,90,100,150,160,250,260,425,426]
 m.diagnostics(MCMCmean, MCMCcov, indSet)
 np.savetxt(setup.mcmcDir + 'runtime.txt', np.array([time.time() - start_time]))
+'''
 
+plt.figure()
+setup.plotbands(setup.radianceSim, 'b', linewidth=1.5, label='Simulated')
+setup.plotbands(setup.radiance, 'r', linewidth=1.5, label='Measured')
+plt.title('Radiance - Beckman Lawn')
+plt.legend()
 
+isofitMuPosSim, isofitGammaPosSim = setup.invModel(setup.radianceSim)
+
+plt.figure()
+setup.plotbands(setup.truth, 'b', linewidth=1, label='Truth')
+setup.plotbands(setup.isofitMuPos, 'r', linewidth=1, label='Isofit - Measured')
+setup.plotbands(isofitMuPosSim, 'k', linewidth=1, label='Isofit - Simulated')
+plt.title('Posterior Reflectance from Isofit')
+plt.legend()
+plt.show()
+'''
 

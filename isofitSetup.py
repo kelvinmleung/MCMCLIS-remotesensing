@@ -43,25 +43,24 @@ class Setup:
         self.geom = Geometry()
         self.mu_x, self.gamma_x = self.getPrior(fullconfig)
 
+        # get Isofit noise model and simulate radiance
+        rad = self.fm.calc_rdn(self.truth, self.geom)
+        self.noisecov = self.fm.Seps(self.truth, rad, self.geom)
+        eps = np.random.multivariate_normal(np.zeros(len(rad)), self.noisecov)
+        # self.radiance = rad
+        # self.radNoisy = rad + eps
+        self.radianceSim = rad
         
         if datamatfile == '':
-            # get Isofit noise model and simulate radiance
-            rad = self.fm.calc_rdn(self.truth, self.geom)
-            self.noisecov = self.fm.Seps(self.truth, rad, self.geom)
-            eps = np.random.multivariate_normal(np.zeros(len(rad)), self.noisecov)
-            self.radiance = rad
-            self.radNoisy = rad + eps
+            self.radiance = rad + eps
         else:
             # directly load radiance from file
             mat = loadmat(datamatfile)
-            self.radiance = mat['meas']
-            self.radNoisy = mat['meas']
-            print(self.radiance)
-
+            self.radiance = mat['meas'][0]
 
         
         # inversion using simulated radiance
-        self.isofitMuPos, self.isofitGammaPos = self.invModel(self.radNoisy)
+        self.isofitMuPos, self.isofitGammaPos = self.invModel(self.radiance)
         self.nx = self.truth.shape[0]
         self.ny = self.reflectance.shape[0]
         
@@ -197,10 +196,8 @@ class Setup:
 
         plt.figure()
         isofitError = abs(self.isofitMuPos[:425] - self.truth[:425]) / abs(self.truth[:425])
-        # linError = abs(mu_xgyLin[:425] - self.truth[:425]) / abs(self.truth[:425])
         mcmcError = abs(MCMCmean[:425] - self.truth[:425]) / abs(self.truth[:425])
         self.plotbands(isofitError,'k.', label='Isofit Posterior',axis='semilogy')
-        # self.plotbands(linError, 'm.',label='Linear Posterior',axis='semilogy')
         self.plotbands(mcmcError, 'c.',label='MCMC Posterior',axis='semilogy')
         plt.xlabel('Wavelength')
         plt.ylabel('Relative Error')
@@ -210,10 +207,9 @@ class Setup:
         plt.savefig(self.mcmcDir + 'reflError.png', dpi=300)
 
         plt.figure()
-        plt.plot(self.truth[425], self.truth[426], 'bo',label='True Reflectance')
+        # plt.plot(self.truth[425], self.truth[426], 'bo',label='True Reflectance')
         plt.plot(self.mu_x[425], self.mu_x[426], 'r.',label='Prior')
         plt.plot(self.isofitMuPos[425],self.isofitMuPos[426],'k.', label='Isofit Posterior')
-        # plt.plot(mu_xgyLin[425], mu_xgyLin[426],'mx',label='Linear Posterior')
         plt.plot(MCMCmean[425], MCMCmean[426], 'cx',label='MCMC Posterior')
         plt.xlabel('AOT550')
         plt.ylabel('H2OSTR')
@@ -222,33 +218,29 @@ class Setup:
         plt.savefig(self.mcmcDir + 'atmMean.png', dpi=300)
 
         # bar graph of atm parameter variances
-        isofitErrorAtm = abs(self.isofitMuPos[425:] - self.truth[425:]) / abs(self.truth[425:])
-        # linErrorAtm = abs(mu_xgyLin[425:] - self.truth[425:]) / abs(self.truth[425:])
-        mcmcErrorAtm = abs(MCMCmean[425:] - self.truth[425:]) / abs(self.truth[425:])
-        labels = ['425 - AOD550', '426 - H2OSTR']
-        x = np.arange(len(labels))  # the label locations
-        width = 0.175
-        fig, ax = plt.subplots()
-        rects2 = ax.bar(x - width, isofitErrorAtm, width, label='Isofit Posterior')
-        # rects3 = ax.bar(x, linErrorAtm, width, label='Linear Posterior')
-        rects4 = ax.bar(x + width, mcmcErrorAtm, width, label='MCMC Posterior')
-        ax.set_yscale('log')
-        ax.set_ylabel('Relative Error')
-        ax.set_title('Error in Atm Parameters')
-        ax.set_xticks(x)
-        ax.set_xticklabels(labels)
-        ax.legend()
-        fig.savefig(self.mcmcDir + 'atmError.png', dpi=300)
+        # isofitErrorAtm = abs(self.isofitMuPos[425:] - self.truth[425:]) / abs(self.truth[425:])
+        # mcmcErrorAtm = abs(MCMCmean[425:] - self.truth[425:]) / abs(self.truth[425:])
+        # labels = ['425 - AOD550', '426 - H2OSTR']
+        # x = np.arange(len(labels))  # the label locations
+        # width = 0.175
+        # fig, ax = plt.subplots()
+        # rects2 = ax.bar(x - width, isofitErrorAtm, width, label='Isofit Posterior')
+        # rects4 = ax.bar(x + width, mcmcErrorAtm, width, label='MCMC Posterior')
+        # ax.set_yscale('log')
+        # ax.set_ylabel('Relative Error')
+        # ax.set_title('Error in Atm Parameters')
+        # ax.set_xticks(x)
+        # ax.set_xticklabels(labels)
+        # ax.legend()
+        # fig.savefig(self.mcmcDir + 'atmError.png', dpi=300)
 
         # variance plot
         priorVar = np.diag(self.gamma_x)
         isofitVar = np.diag(self.isofitGammaPos)
-        # linearVar = np.diag(gamma_xgyLin)
         MCMCVar = np.diag(MCMCcov)
         plt.figure()
         self.plotbands(priorVar[:425], 'b.',label='Prior', axis='semilogy')
         self.plotbands(isofitVar[:425],'k.', label='Isofit Posterior', axis='semilogy')
-        # self.plotbands(linearVar[:425], 'm.',label='Linear Posterior', axis='semilogy')
         self.plotbands(MCMCVar[:425], 'c.',label='MCMC Posterior', axis='semilogy')
         plt.xlabel('Wavelength')
         plt.ylabel('Variance')
@@ -262,10 +254,9 @@ class Setup:
         x = np.arange(len(labels))  # the label locations
         width = 0.175
         fig, ax = plt.subplots()
-        rects1 = ax.bar(x - 3*width/2, priorVar[425:], width, label='Prior')
-        rects2 = ax.bar(x - width/2, isofitVar[425:], width, label='Isofit Posterior')
-        # rects3 = ax.bar(x + width/2, linearVar[425:], width, label='Linear Posterior')
-        rects4 = ax.bar(x + 3*width/2, MCMCVar[425:], width, label='MCMC Posterior')
+        rects1 = ax.bar(x - width, priorVar[425:], width, label='Prior')
+        rects2 = ax.bar(x, isofitVar[425:], width, label='Isofit Posterior')
+        rects4 = ax.bar(x + width, MCMCVar[425:], width, label='MCMC Posterior')
         ax.set_yscale('log')
         ax.set_ylabel('Variance')
         ax.set_title('Marginal Variance of Atm')
@@ -276,23 +267,21 @@ class Setup:
 
         # plot: x-axis is error in posterior mean, y-axis is error in mean weighted by covariance
         
-        isofitPlotX = np.linalg.norm(self.isofitMuPos - self.truth) ** 2
-        # linearPlotX = np.linalg.norm(mu_xgyLin - self.truth) ** 2
-        MCMCPlotX = np.linalg.norm(MCMCmean - self.truth) ** 2
+        # isofitPlotX = np.linalg.norm(self.isofitMuPos - self.truth) ** 2
+        # MCMCPlotX = np.linalg.norm(MCMCmean - self.truth) ** 2
 
-        isofitPlotY = np.linalg.norm(np.diag(isofitVar ** (-0.5)) * (self.isofitMuPos - self.truth)) ** 2
-        # linearPlotY = np.linalg.norm(np.diag(linearVar ** (-0.5)) * (mu_xgyLin - self.truth)) ** 2
-        MCMCPlotY = np.linalg.norm(np.diag(MCMCVar ** (-0.5)) * (MCMCmean - self.truth)) ** 2
+        # isofitPlotY = np.linalg.norm(np.diag(isofitVar ** (-0.5)) * (self.isofitMuPos - self.truth)) ** 2
+        # MCMCPlotY = np.linalg.norm(np.diag(MCMCVar ** (-0.5)) * (MCMCmean - self.truth)) ** 2
 
-        plt.figure()
-        plt.loglog(isofitPlotX, isofitPlotY, 'k*', label='Isofit')
-        # plt.loglog(linearPlotX, linearPlotY, 'm*', label='Linear')
-        plt.loglog(MCMCPlotX, MCMCPlotY, 'c*', label='MCMC')
-        plt.title('Error in Posterior')
-        plt.xlabel(r'$| \mu_{pos} - \mu_{true} |_2^2$')
-        plt.ylabel(r'$| diag(\Gamma_{pos}^{-1/2}) \mu_{pos} - \mu_{true} |_2^2$')
-        plt.legend()
-        plt.savefig(self.mcmcDir + 'errorRelCov.png', dpi=300)
+        # plt.figure()
+        # plt.loglog(isofitPlotX, isofitPlotY, 'k*', label='Isofit')
+        # # plt.loglog(linearPlotX, linearPlotY, 'm*', label='Linear')
+        # plt.loglog(MCMCPlotX, MCMCPlotY, 'c*', label='MCMC')
+        # plt.title('Error in Posterior')
+        # plt.xlabel(r'$| \mu_{pos} - \mu_{true} |_2^2$')
+        # plt.ylabel(r'$| diag(\Gamma_{pos}^{-1/2}) \mu_{pos} - \mu_{true} |_2^2$')
+        # plt.legend()
+        # plt.savefig(self.mcmcDir + 'errorRelCov.png', dpi=300)
     
 
     def testIsofitStartPt(self, N):

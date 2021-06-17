@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.stats import multivariate_normal
+from scipy.stats import multivariate_normal, gaussian_kde
 from matplotlib.patches import Ellipse
 import matplotlib.transforms as transforms
 
@@ -22,8 +22,8 @@ class MCMCIsofit:
         self.wavelengths = setup.wavelengths
         self.reflectance = setup.reflectance # true reflectance
         self.truth = setup.truth # true state (ref + atm)
-        self.radiance = setup.radiance # true radiance
-        self.yobs = setup.radNoisy
+        # self.radiance = setup.radiance # true radiance
+        self.yobs = setup.radiance
         self.bands = setup.bands # reflectance indices excluding deep water spectra
         self.bandsX = setup.bandsX # same indices including atm parameters
 
@@ -135,7 +135,7 @@ class MCMCIsofit:
         x_vals = np.load(self.mcmcDir + 'MCMC_x.npy')
 
         fig, ax = plt.subplots()
-        ax.plot(self.truth[indX], self.truth[indY], 'go', label='True reflectance', markersize=10)     
+        # ax.plot(self.truth[indX], self.truth[indY], 'go', label='True reflectance', markersize=10)     
         ax.scatter(x_vals[indX,:], x_vals[indY,:], c='c', s=0.5)
 
         # plot prior mean/cov
@@ -163,18 +163,79 @@ class MCMCIsofit:
 
         return fig
 
+    def kdcontour(self, MCMCmean, MCMCcov, indX, indY):
+        x_vals = np.load(self.mcmcDir + 'MCMC_x.npy')
+        x_vals_plot = x_vals[:,self.burn::50]
+
+        x = x_vals_plot[indX,:]
+        y = x_vals_plot[indY,:]
+
+        isofitPosX = self.mupos_isofit[indX]
+        isofitPosY = self.mupos_isofit[indY]
+        xmin, xmax = min(min(x), isofitPosX), max(max(x), isofitPosX)
+        ymin, ymax = min(min(y), isofitPosY), max(max(y), isofitPosY)
+
+        if indX < 425 and indY < 425:
+            xmin, xmax = min(xmin, self.truth[indX]), max(xmax, self.truth[indX])
+            ymin, ymax = min(ymin, self.truth[indY]), max(ymax, self.truth[indY])
+
+        # Peform the kernel density estimate
+        xx, yy = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
+        positions = np.vstack([xx.ravel(), yy.ravel()])
+        values = np.vstack([x, y])
+        kernel = gaussian_kde(values)
+        f = np.reshape(kernel(positions).T, xx.shape)
+        f = f / np.max(f) # normalize
+
+        fig = plt.figure()
+        plt.title('Contour Plot of Posterior Samples')
+        ax = fig.gca()
+        ax.set_xlim(xmin, xmax)
+        ax.set_ylim(ymin, ymax)
+
+        # levs = [0, 0.02, 0.05, 0.1, 0.25, 0.5, 1]
+        levs = [0, 0.05, 0.1, 0.2, 0.5, 1]
+        # Contourf plot
+        cfset = ax.contourf(xx, yy, f, levels=levs, cmap='Blues') 
+        cset = ax.contour(xx, yy, f, levels=levs, colors='k') ##############################ADD INLINE
+        plt.clabel(cset, levs, fontsize='smaller')
+
+        # plot truth, isofit, and mcmc mean
+        meanIsofit = np.array([isofitPosX, isofitPosY])
+        meanMCMC = np.array([MCMCmean[indX], MCMCmean[indY]])
+        ax.plot(meanIsofit[0], meanIsofit[1], 'rx', label='MAP', markersize=12)
+        ax.plot(meanMCMC[0], meanMCMC[1], 'kx', label='MCMC', markersize=12)
+
+        if indX < 425 and indY < 425:
+            # Label plot
+            # ax.clabel(cset, inline=1, fontsize=10)
+            ax.set_xlabel(r'$\lambda = $' + str(self.wavelengths[indX]) + ' nm')
+            ax.set_ylabel(r'$\lambda = $' + str(self.wavelengths[indY]) + ' nm')
+
+            # plot truth
+            ax.plot(self.truth[indX], self.truth[indY], 'go', label='Truth', markersize=8)  
+        else:
+            if indX == 425:
+                ax.set_xlabel('AOD550')
+                ax.set_ylabel('H20STR')
+        ax.legend()
+        fig.colorbar(cfset)
+        return fig
+
     def diagnostics(self, MCMCmean, MCMCcov, indSet=[10,20,50,100,150,160,250,260,425,426]):
         # assume there are 10 elements in indSet
         # default: indSet = [10,20,50,100,150,160,250,260,425,426]
         x_vals = np.load(self.mcmcDir + 'MCMC_x.npy')
         logpos = np.load(self.mcmcDir + 'logpos.npy')
         acceptance = np.load(self.mcmcDir + 'acceptance.npy')
-        numPairs = int(len(indSet) / 2)
+        numPairs = int(len(indSet) / 2) 
 
         # plot 2D visualization
         for i in range(numPairs):
-            fig = self.twoDimVisual(MCMCmean, MCMCcov, indX=indSet[2*i], indY=indSet[2*i+1])
-            fig.savefig(self.mcmcDir + '2D_' + str(indSet[2*i]) + '-' + str(indSet[2*i+1]) + '.png', dpi=300)
+            # fig = self.twoDimVisual(MCMCmean, MCMCcov, indX=indSet[2*i], indY=indSet[2*i+1])
+            # fig.savefig(self.mcmcDir + '2D_' + str(indSet[2*i]) + '-' + str(indSet[2*i+1]) + '.png', dpi=300)
+            fig = self.kdcontour(MCMCmean, MCMCcov, indX=indSet[2*i], indY=indSet[2*i+1])
+            fig.savefig(self.mcmcDir + 'contour_' + str(indSet[2*i]) + '-' + str(indSet[2*i+1]) + '.png', dpi=300)
 
         # subplot setup
         fig1, axs1 = plt.subplots(numPairs, 2)

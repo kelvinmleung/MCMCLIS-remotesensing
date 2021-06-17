@@ -22,7 +22,7 @@ class Analysis:
         self.wl = setup.wavelengths
         self.reflectance = setup.reflectance
         self.truth = setup.truth
-        self.radiance = setup.radiance
+        self.radiance = setup.radianceSim
         self.noisecov = setup.noisecov
         self.bands = setup.bands
         self.bandsX = setup.bandsX

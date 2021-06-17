@@ -62,7 +62,7 @@ class MCMCLIS:
         cholPr = np.linalg.cholesky(self.gamma_x) # cholesky decomp of prior covariance
         H = self.linop.T @ self.invNoiseCov @ self.linop # Hessian
         Hn = cholPr.T @ H @ cholPr 
-        V = self.solveEig(Hn, plot=True, title='LIS Eigenvalue Decay')
+        V = self.solveEig(Hn, plot=False, title='LIS Eigenvalue Decay')
         
         # LIS subspace
         VLIS = V[:,:self.rank] 
@@ -189,7 +189,7 @@ class MCMCLIS:
                 print('Sample: ', i+1)
                 print('   Accept Rate: ', np.mean(accept[i-499:i]))
                 propChol = np.linalg.cholesky(self.propcov) # update chol of propcov
-                print(np.linalg.norm(propChol))
+                # print(np.linalg.norm(propChol))
                 sys.stdout.flush()
                 # flush 
 

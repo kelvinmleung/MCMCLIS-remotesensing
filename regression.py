@@ -21,7 +21,7 @@ class Regression:
         self.wavelengths = setup.wavelengths
         self.reflectance = setup.reflectance
         self.truth = setup.truth
-        self.radiance = setup.radiance
+        self.radiance = setup.radianceSim
         self.bands = setup.bands
         self.bandsX = setup.bandsX
 
