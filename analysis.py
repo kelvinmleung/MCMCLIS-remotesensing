@@ -111,7 +111,7 @@ class Analysis:
         ploty = np.zeros(self.nx)
         for i in range(rank):
             ploty = ploty + eigval[i] / (1 + eigval[i]) * (eigvec[:,i] ** 2)
-        plt.plot(xPlot[425:], ploty[425:], 'ro')
+        plt.plot(xPlot[self.nx-2:], ploty[self.nx-2:], 'ro')
         plt.semilogy(xPlot, ploty)
         plt.title('Sum of Leading Eigendirections, rank='+str(rank))
         plt.xlabel('Index')
@@ -124,7 +124,7 @@ class Analysis:
 
         plt.figure()
         barWidth = 1
-        bars = np.concatenate((sortPlotY[:rank], ploty[425:]))
+        bars = np.concatenate((sortPlotY[:rank], ploty[self.nx-2:]))
         r1 = np.arange(len(bars))
         # Make the plot
         plt.bar(r1, bars, color='#557f2d', width=barWidth, edgecolor='white')
@@ -216,7 +216,7 @@ class Analysis:
         eigvalPCA, eigvecPCA = self.eigPCAdata()
         eigvalLIS, eigvecLIS = self.eigLISdata()
         dims = range(5,maxdim,5)
-        #maxdim = 425
+        #maxdim = self.nx-2
         mu_errorPCA = np.zeros(len(dims))
         mu_errorLIS = np.zeros(len(dims))
         gamma_errorPCA = np.zeros(len(dims))
@@ -303,11 +303,11 @@ class Analysis:
         # Maybe need to plot the mu_xgy calculated using self.radiance (radiance "truth")
     '''
     def plotcontour(self, gamma, title):
-        X_plot = np.arange(1,426,1)
-        Y_plot = np.arange(1,426,1)
+        X_plot = np.arange(1,self.ny+1,1)
+        Y_plot = np.arange(1,self.ny+1,1)
         X_plot, Y_plot = np.meshgrid(X_plot, Y_plot)
         plt.figure()
-        plt.contourf(X_plot,Y_plot,gamma[:425,:425])
+        plt.contourf(X_plot,Y_plot,gamma[:self.nx-2,:self.nx-2])
         plt.title(title)
         plt.axis('equal')
         plt.colorbar()
@@ -316,7 +316,7 @@ class Analysis:
         ##### Errors in Linear vs Isofit models for reflectances #####
 
         n = 10
-        relerror = np.zeros([425,n])
+        relerror = np.zeros([self.nx-2,n])
         for i in range(n):
             y_isofit = self.Y[i,:]
             y_lasso = (self.phi_tilde.T @ self.scaleX[i,:].T) * np.sqrt(self.r.varY) + self.r.meanY

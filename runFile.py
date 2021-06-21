@@ -3,6 +3,7 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 
+from fileProcessing import FileProcessing
 from isofitSetup import Setup
 from genSamples import GenerateSamples
 from regression import Regression
@@ -21,14 +22,26 @@ mcmcfolder = 'G4'
 
 ## SETUP ##
 # wv, ref = np.loadtxt('setup/data/petunia/petunia_reflectance.txt').T
-wvl, wv, wvr = np.loadtxt('setup/data/wavelengths.txt').T
-wv = wv * 1000
-wvRaw, refRaw, refnoise = np.loadtxt('setup/data/beckmanlawn/insitu.txt').T
-ref = np.interp(wv, wvRaw, refRaw)
-datamatfile = 'setup/data/beckmanlawn/ang20171108t184227_data_v2p11_BeckmanLawn.mat'
+
+# wvl, wv, wvr = np.loadtxt('setup/data/wavelengths.txt').T
+# wv = wv * 1000
+# wvRaw, refRaw, refnoise = np.loadtxt('setup/data/beckmanlawn/insitu.txt').T
+# ref = np.interp(wv, wvRaw, refRaw)
+# datamatfile = 'setup/data/beckmanlawn/ang20171108t184227_data_v2p11_BeckmanLawn.mat'
 # datamatfile = ''
+
+f = FileProcessing()
+f.loadWavelength('setup/data/wavelengths.txt')
+f.loadReflectance('setup/data/beckmanlawn/insitu.txt')
+f.loadRadiance('setup/data/beckmanlawn/ang20171108t184227_data_v2p11_BeckmanLawn.mat')
+wv, ref, radiance = f.getFiles()
+
+
+
+'''
 atm = [0.1, 2.5]
-setup = Setup(wv, ref, atm, mcmcdir=mcmcfolder, datamatfile=datamatfile)
+# setup = Setup(wv, ref, atm, mcmcdir=mcmcfolder, datamatfile=datamatfile)
+setup = Setup(wv, ref, atm, radiance, mcmcdir=mcmcfolder)
 g = GenerateSamples(setup)
 r = Regression(setup)
 a = Analysis(setup, r)
@@ -53,25 +66,9 @@ MCMCmean, MCMCcov = m.calcMeanCov()
 setup.plotPosterior(MCMCmean, MCMCcov)
 
 ## MCMC Diagnostics ##
-indSet = [30,40,90,100,150,160,250,260,425,426]
+indSet = [30,40,90,100,150,160,250,260, m.nx-2, m.nx-1]
 m.diagnostics(MCMCmean, MCMCcov, indSet)
 np.savetxt(setup.mcmcDir + 'runtime.txt', np.array([time.time() - start_time]))
+
+
 '''
-
-plt.figure()
-setup.plotbands(setup.radianceSim, 'b', linewidth=1.5, label='Simulated')
-setup.plotbands(setup.radiance, 'r', linewidth=1.5, label='Measured')
-plt.title('Radiance - Beckman Lawn')
-plt.legend()
-
-isofitMuPosSim, isofitGammaPosSim = setup.invModel(setup.radianceSim)
-
-plt.figure()
-setup.plotbands(setup.truth, 'b', linewidth=1, label='Truth')
-setup.plotbands(setup.isofitMuPos, 'r', linewidth=1, label='Isofit - Measured')
-setup.plotbands(isofitMuPosSim, 'k', linewidth=1, label='Isofit - Simulated')
-plt.title('Posterior Reflectance from Isofit')
-plt.legend()
-plt.show()
-'''
-

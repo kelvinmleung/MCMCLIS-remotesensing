@@ -15,13 +15,13 @@ from isofit.core.geometry import Geometry
 from isofit.inversion.inverse import Inversion
 from isofit.configs.configs import Config  
 from isofit.surface.surface_multicomp import MultiComponentSurface
-    
+
 class Setup:
     '''
     Contains functions to generate training and test samples
     from isofit.
     '''
-    def __init__(self, wv, ref, atm, mcmcdir='MCMCRun', datamatfile=''):
+    def __init__(self, wv, ref, atm, radiance, mcmcdir='MCMCRun', ):
 
         print('Setup in progress...')
         self.wavelengths = wv
@@ -51,12 +51,17 @@ class Setup:
         # self.radNoisy = rad + eps
         self.radianceSim = rad
         
-        if datamatfile == '':
+        if radiance == 0:
             self.radiance = rad + eps
         else:
-            # directly load radiance from file
-            mat = loadmat(datamatfile)
-            self.radiance = mat['meas'][0]
+            self.radiance = radiance
+
+        # if datamatfile == '':
+            
+        # else:
+        #     # directly load radiance from file
+        #     mat = loadmat(datamatfile)
+        #     self.radiance = mat['meas'][0]
 
         
         # inversion using simulated radiance
@@ -440,7 +445,6 @@ class Setup:
             # no noise added
 
             # radiances[i,:] = self.fm.calc_rdn(truth[i,:], self.geom)
-
 
         np.save('x0isofit/truths.npy', truth)
         np.save('x0isofit/radiance.npy', self.radiance)

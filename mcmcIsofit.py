@@ -58,8 +58,8 @@ class MCMCIsofit:
 
         # define upper and lower bounds 
         if constrain == True:
-            lowbound = np.concatenate((np.zeros(425), [0, 1]))
-            upbound = np.concatenate((np.ones(425), [1, 4]))
+            lowbound = np.concatenate((np.zeros(self.nx-2), [0, 1]))
+            upbound = np.concatenate((np.ones(self.nx-2), [1, 4]))
         else:
             lowbound = np.ones(427) * np.NINF
             upbound = np.ones(427) * np.inf
@@ -175,7 +175,7 @@ class MCMCIsofit:
         xmin, xmax = min(min(x), isofitPosX), max(max(x), isofitPosX)
         ymin, ymax = min(min(y), isofitPosY), max(max(y), isofitPosY)
 
-        if indX < 425 and indY < 425:
+        if indX < self.nx-2 and indY < self.nx-2:
             xmin, xmax = min(xmin, self.truth[indX]), max(xmax, self.truth[indX])
             ymin, ymax = min(ymin, self.truth[indY]), max(ymax, self.truth[indY])
 
@@ -206,7 +206,7 @@ class MCMCIsofit:
         ax.plot(meanIsofit[0], meanIsofit[1], 'rx', label='MAP', markersize=12)
         ax.plot(meanMCMC[0], meanMCMC[1], 'kx', label='MCMC', markersize=12)
 
-        if indX < 425 and indY < 425:
+        if indX < self.nx-2 and indY < self.nx-2:
             # Label plot
             # ax.clabel(cset, inline=1, fontsize=10)
             ax.set_xlabel(r'$\lambda = $' + str(self.wavelengths[indX]) + ' nm')
@@ -215,7 +215,7 @@ class MCMCIsofit:
             # plot truth
             ax.plot(self.truth[indX], self.truth[indY], 'go', label='Truth', markersize=8)  
         else:
-            if indX == 425:
+            if indX == self.nx-2:
                 ax.set_xlabel('AOD550')
                 ax.set_ylabel('H20STR')
         ax.legend()
