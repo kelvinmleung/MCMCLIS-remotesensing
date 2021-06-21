@@ -15,7 +15,7 @@ class FileProcessing:
 
     def loadReflectance(self, refFile ='setup/data/beckmanlawn/insitu.txt'):
         wvRaw, refRaw, refnoise = np.loadtxt(refFile).T
-        self.ref = np.interp(wv, wvRaw, refRaw)
+        self.ref = np.interp(self.wv, wvRaw, refRaw)
 
     def loadRadiance(self, datamatfile='setup/data/beckmanlawn/ang20171108t184227_data_v2p11_BeckmanLawn.mat'):
         datamatfile = datamatfile
@@ -26,14 +26,16 @@ class FileProcessing:
         return self.wv, self.ref, self.radiance
 
     def splitFile(self, filename, output):
+        fs = Filesplit()
         def split_cb(f, s):
             print("file: {0}, size: {1}".format(f, s))
-        fs.split(file=filename, split_size=5000000000, output_dir=output, callback=split_cb)
+        fs.split(file=filename, split_size=9000000000, output_dir=output, callback=split_cb)
 
-    def mergeFile(self, input):
+    def mergeFile(self, inputdir):
+        fs = Filesplit()
         def merge_cb(f, s):
             print("file: {0}, size: {1}".format(f, s))
-        fs.merge(input_dir=input, callback=merge_cb)
+        fs.merge(input_dir=inputdir, callback=merge_cb)
 
 
         

@@ -4,11 +4,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from fileProcessing import FileProcessing
-from isofitSetup import Setup
-from genSamples import GenerateSamples
-from regression import Regression
-from analysis import Analysis
-from mcmcIsofit import MCMCIsofit
+# from isofitSetup import Setup
+# from genSamples import GenerateSamples
+# from regression import Regression
+# from analysis import Analysis
+# from mcmcIsofit import MCMCIsofit
 
 
 ##### CONFIG #####
@@ -36,7 +36,8 @@ f.loadReflectance('setup/data/beckmanlawn/insitu.txt')
 f.loadRadiance('setup/data/beckmanlawn/ang20171108t184227_data_v2p11_BeckmanLawn.mat')
 wv, ref, radiance = f.getFiles()
 
-
+# f.splitFile(filename='MCMC_x.npy', output='../results/')
+f.mergeFile(inputdir='../results/')
 
 '''
 atm = [0.1, 2.5]
