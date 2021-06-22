@@ -14,10 +14,10 @@ from mcmcIsofit import MCMCIsofit
 ##### CONFIG #####
 Nsamp = 6000000
 burn = 1000000
-init = 'MAP'
+init = 'truth'
 rank = 100
 LIS = True
-mcmcfolder = 'G11'
+mcmcfolder = 'G12'
 ##### CONFIG #####
 
 ## SETUP ##
