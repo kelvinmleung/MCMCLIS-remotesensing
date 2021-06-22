@@ -37,7 +37,7 @@ f.loadRadiance('setup/data/177/ang20140612t215931_data_dump.mat')
 wv, ref, radiance = f.getFiles()
 
 # f.splitFile(filename='MCMC_x.npy', output='../results/')
-f.mergeFile(inputdir='../results/')
+# f.mergeFile(inputdir='../results/')
 
 
 atm = [0.1, 2.5]
