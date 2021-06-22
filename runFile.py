@@ -4,11 +4,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from fileProcessing import FileProcessing
-# from isofitSetup import Setup
-# from genSamples import GenerateSamples
-# from regression import Regression
-# from analysis import Analysis
-# from mcmcIsofit import MCMCIsofit
+from isofitSetup import Setup
+from genSamples import GenerateSamples
+from regression import Regression
+from analysis import Analysis
+from mcmcIsofit import MCMCIsofit
 
 
 ##### CONFIG #####
