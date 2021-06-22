@@ -12,12 +12,12 @@ from fileProcessing import FileProcessing
 
 
 ##### CONFIG #####
-Nsamp = 6000000
-burn = 1000000
-init = 'midMAPtruth'
+Nsamp = 6000
+burn = 1000
+init = 'MAP'
 rank = 100
 LIS = True
-mcmcfolder = 'G4'
+mcmcfolder = 'G11'
 ##### CONFIG #####
 
 ## SETUP ##
@@ -32,14 +32,14 @@ mcmcfolder = 'G4'
 
 f = FileProcessing()
 f.loadWavelength('setup/data/wavelengths.txt')
-f.loadReflectance('setup/data/beckmanlawn/insitu.txt')
-f.loadRadiance('setup/data/beckmanlawn/ang20171108t184227_data_v2p11_BeckmanLawn.mat')
+f.loadReflectance('setup/data/177/insitu.txt')
+f.loadRadiance('setup/data/177/ang20140612t215931_data_dump.mat')
 wv, ref, radiance = f.getFiles()
 
 # f.splitFile(filename='MCMC_x.npy', output='../results/')
 f.mergeFile(inputdir='../results/')
 
-'''
+
 atm = [0.1, 2.5]
 # setup = Setup(wv, ref, atm, mcmcdir=mcmcfolder, datamatfile=datamatfile)
 setup = Setup(wv, ref, atm, radiance, mcmcdir=mcmcfolder)
@@ -72,4 +72,3 @@ m.diagnostics(MCMCmean, MCMCcov, indSet)
 np.savetxt(setup.mcmcDir + 'runtime.txt', np.array([time.time() - start_time]))
 
 
-'''
