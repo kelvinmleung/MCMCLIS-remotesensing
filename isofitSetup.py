@@ -51,7 +51,7 @@ class Setup:
         # self.radNoisy = rad + eps
         self.radianceSim = rad
         
-        if radiance == 0:
+        if radiance.all() == 0:
             self.radiance = rad + eps
         else:
             self.radiance = radiance
