@@ -14,7 +14,12 @@ class FileProcessing:
         self.wv = wv * 1000
 
     def loadReflectance(self, refFile ='setup/data/beckmanlawn/insitu.txt'):
-        wvRaw, refRaw, refnoise = np.loadtxt(refFile).T
+        data = np.loadtxt(refFile).T
+        wvRaw = data[0]
+        refRaw = data[1]
+        # wvRaw, refRaw, refnoise = np.loadtxt(refFile).T
+
+        # print(np.interp(self.wv, wvRaw, refRaw))
         self.ref = np.interp(self.wv, wvRaw, refRaw)
 
     def loadRadiance(self, datamatfile='setup/data/beckmanlawn/ang20171108t184227_data_v2p11_BeckmanLawn.mat'):

@@ -39,7 +39,7 @@ wv, ref, radiance = f.getFiles()
 # f.splitFile(filename='MCMC_x.npy', output='../results/')
 # f.mergeFile(inputdir='../results/')
 
-
+'''
 atm = [0.1, 2.5]
 # setup = Setup(wv, ref, atm, mcmcdir=mcmcfolder, datamatfile=datamatfile)
 setup = Setup(wv, ref, atm, radiance, mcmcdir=mcmcfolder)
@@ -70,5 +70,5 @@ setup.plotPosterior(MCMCmean, MCMCcov)
 indSet = [30,40,90,100,150,160,250,260, m.nx-2, m.nx-1]
 m.diagnostics(MCMCmean, MCMCcov, indSet)
 np.savetxt(setup.mcmcDir + 'runtime.txt', np.array([time.time() - start_time]))
-
+'''
 
