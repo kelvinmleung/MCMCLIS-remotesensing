@@ -259,7 +259,7 @@ class MCMCIsofit:
             # plot autocorrelation
             ac = self.autocorr(indSet[i])
             ac = ac[:int(len(ac)/2)]
-            axs2[xp,yp].plot(range(1,len(ac)+1), ac)
+            axs2[xp,yp].plot(range(1,len(ac)+1) * self.thinning, ac)
             axs2[xp,yp].set_title('Autocorrelation - Index ' + str(indSet[i]))
 
         fig1.set_size_inches(5, 7)
