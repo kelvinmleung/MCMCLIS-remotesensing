@@ -224,7 +224,7 @@ class MCMCLIS:
     def autocorr(self, ind):
         x_vals = np.load(self.mcmcDir + 'MCMC_x.npy')
         x_elem = x_vals[ind,:]
-        Nsamp = min(self.Nsamp, 20000)
+        Nsamp = int(min(self.Nsamp / self.thinning, 20000 / self.thinning))
         meanX = np.mean(x_elem)
         varX = np.var(x_elem)
         ac = np.zeros(Nsamp-1)
