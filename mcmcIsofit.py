@@ -83,6 +83,7 @@ class MCMCIsofit:
             "geom": self.geom,
             "linop": self.linop,
             "mcmcDir": self.mcmcDir
+            "thinning": 20
             }
         self.mcmc = MCMCLIS(mcmcConfig)
 

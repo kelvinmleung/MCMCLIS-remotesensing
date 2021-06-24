@@ -54,6 +54,7 @@ class MCMCLIS:
         self.linop = config["linop"]        # linear operator
         self.yobs = config["yobs"]          # radiance observation
         self.mcmcDir = config["mcmcDir"]    # directory to save data
+        self.thinning = = config["thinning"]# only save every ___ sample
 
     def LISproject(self):
         ### Compute LIS projection matrices ###
@@ -222,8 +223,9 @@ class MCMCLIS:
         else:
             x_vals_full = x_vals
         x_vals_full = x_vals_full + np.outer(self.startX, np.ones(self.Nsamp))
+        x_vals_thin = x_vals_full[::self.thinning]
 
-        np.save(self.mcmcDir + 'MCMC_x.npy', x_vals_full)
+        np.save(self.mcmcDir + 'MCMC_x.npy', x_vals_thin)
         np.save(self.mcmcDir + 'logpos.npy', logpos)
         np.save(self.mcmcDir + 'acceptance.npy', accept)
     
