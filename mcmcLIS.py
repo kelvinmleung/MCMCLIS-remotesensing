@@ -48,7 +48,6 @@ class MCMCLIS:
         self.mu_x = config["mu_x"]          # prior mean
         self.gamma_x = config["gamma_x"]    # prior covariance
         self.noisecov = config["noisecov"]  # data noise covariance
-        # self.MAP = config["MAP"]          # isofit MAP estimate (pos. mean)
         self.fm = config["fm"]              # forward model
         self.geom = config["geom"]          # geometry model
         self.linop = config["linop"]        # linear operator
@@ -88,7 +87,6 @@ class MCMCLIS:
         if plot == True:
             plt.semilogy(eigval, 'b')
             plt.title(title)
-            # plt.grid()
             plt.show()
         return eigvec[:,idx]
 
@@ -99,15 +97,12 @@ class MCMCLIS:
             # logprior = -1/2 * x.dot(x)
             tPr = x + self.theta.T @ (self.startX - self.mu_x)
             logprior = -1/2 * tPr.dot(tPr)
-            #  = self.phi @ x + self.mu_x # project back to original (physical) coordinates
             xFull = self.phi @ x + self.startX
         else:
             tPr = x + self.startX - self.mu_x
-            logprior = -1/2 * (tPr @ self.invGammaX @ tPr.T) # (x+mu_isofitpos-mu_x)
-            # xFull = x + self.mu_x
+            logprior = -1/2 * (tPr @ self.invGammaX @ tPr.T) 
             xFull = x + self.startX
 
-        # meas = self.fm.calc_rdn(x, self.geom)
         meas = self.fm.calc_rdn(xFull, self.geom) # apply forward model
         tLH = self.yobs - meas
         loglikelihood = -1/2 * (tLH @ self.invNoiseCov @ tLH.T)
@@ -117,7 +112,6 @@ class MCMCLIS:
         # meas = self.fm.calc_rdn(xFull, self.geom) # apply forward model
         # tLH = self.yobs - meas
         # loglikelihood = -1/2 * tLH.dot(np.linalg.solve(self.noisecov, tLH))
-        
         
         return logprior + loglikelihood 
 
@@ -173,14 +167,6 @@ class MCMCLIS:
                 logposX = logposZ
                 accept[i] = 1
 
-            # elif alg == 'DRAM': # if reject, try another smaller proposal
-            # ADD THE COMPONENT COMPLEMENTARY SUBSPACE
-            #     z = self.proposal(x, gamma * propChol)
-            #     alpha, logposZ, logposX = self.alpha(x, z)
-            #     if np.random.random() < alpha:
-            #         x = z 
-            #         logposX = logposZ
-
             x_vals[:,i] = x
             x_vals_comp[:,i] = xComp 
             logpos[i] = logposX
@@ -194,7 +180,6 @@ class MCMCLIS:
                 sys.stdout.flush()
                 # flush 
 
-                
             # change proposal covariance
             if i == 999:
                 self.propcov = self.sd * (np.cov(x_vals[:,:1000]) + eps * np.identity(len(x)))
@@ -205,19 +190,6 @@ class MCMCLIS:
                 meanXprev = meanX
 
         # post processing, store MCMC chain
-        # x_vals_full = np.zeros([self.nx, self.Nsamp])
-        # if self.LIS == True:
-        #     # add samples of xComp to chain, project back to full subspace
-        #     #nComp = np.shape(self.phiComp)[1] # size of complementary subspace
-        #     for i in range(self.Nsamp):
-        #         #xComp = self.proposal(np.zeros(nComp), np.identity(nComp))
-        #         # x_vals_full[:,i] = self.phi @ x_vals[:,i] + self.phiComp @ xComp + self.mu_x
-        #         # x_vals_full[:,i] = self.phi @ x_vals[:,i] + self.phiComp @ xComp + self.startX            
-        # else:
-        #     for i in range(self.Nsamp):
-        #         # x_vals_full[:,i] = x_vals[:,i] + self.mu_x
-        #         x_vals_full[:,i] = x_vals[:,i] + self.startX
-        
         if self.LIS == True:
             x_vals_full = self.phi @ x_vals + self.phiComp @ x_vals_comp
         else:
@@ -242,7 +214,8 @@ class MCMCLIS:
 
     def calcMeanCov(self):
         x_vals = np.load(self.mcmcDir + 'MCMC_x.npy')
-        x_ref = x_vals[:, self.burn:]
+        burn = int(self.burn / self.thinning)
+        x_ref = x_vals[:, burn:]
         nx = x_ref.shape[0]
         mean = np.mean(x_ref, axis=1)
         cov = np.cov(x_ref)

@@ -76,7 +76,7 @@ class Setup:
             if (wl[i] > 380 and wl[i] < 1300) or (wl[i] > 1450 and wl[i] < 1780) or (wl[i] > 1950 and wl[i] < 2450):
                 bands = bands + [i]
         self.bands = bands
-        self.bandsX = bands + [425,426]
+        self.bandsX = bands + [self.nx-2,self.nx-1]
 
     def getPrior(self, fullconfig):
         # get index of prior used in inversion
@@ -130,8 +130,8 @@ class Setup:
 
     def plotCov(self, gamma):
         plt.figure()
-        X_plot = np.arange(1,426,1)
-        Y_plot = np.arange(1,426,1)
+        X_plot = np.arange(1,self.nx-1,1)
+        Y_plot = np.arange(1,self.nx-1,1)
         X_plot, Y_plot = np.meshgrid(X_plot, Y_plot)
         plt.contourf(X_plot, Y_plot, gamma)
         plt.title('Covariance')
@@ -157,27 +157,27 @@ class Setup:
                 print(i+1)
             sampX = np.random.uniform(self.isofitMuPos - deltaTwo, self.isofitMuPos + deltaTwo)
             sampX = abs(sampX)
-            plotAOD[i] = sampX[425]
-            plotH2O[i] = sampX[426]
+            plotAOD[i] = sampX[self.nx-2]
+            plotH2O[i] = sampX[self.nx-1]
             
             jac = self.fm.K(sampX, self.geom)
             posApprox = np.linalg.inv(jac.T @ invNoise @ jac + invPrior)
             varApprox[:,i] = np.diag(posApprox)
 
-            aodError[i] = abs(varApprox[425,i]-varPrior[425]) / abs(varPrior[425])
-            h2oError[i] = abs(varApprox[426,i]-varPrior[426]) / abs(varPrior[426])
+            aodError[i] = abs(varApprox[self.nx-2,i]-varPrior[self.nx-2]) / abs(varPrior[self.nx-2])
+            h2oError[i] = abs(varApprox[self.nx-1,i]-varPrior[self.nx-1]) / abs(varPrior[self.nx-1])
             
 
-        # self.plotHeatMap(plotAOD, plotH2O, varApprox[425,:], title='AOD variance')
-        # self.plotHeatMap(plotAOD, plotH2O, varApprox[426,:], title='H2O variance')
+        # self.plotHeatMap(plotAOD, plotH2O, varApprox[self.nx-2,:], title='AOD variance')
+        # self.plotHeatMap(plotAOD, plotH2O, varApprox[self.nx-1,:], title='H2O variance')
         self.plotHeatMap(plotAOD, plotH2O, aodError, title='Relative Error in AOD variance')
         self.plotHeatMap(plotAOD, plotH2O, h2oError, title='Relative Error in H2O variance')
         
     def plotHeatMap(self, plotAOD, plotH2O, plotVal, title=''):
         plt.figure()
         plt.scatter(plotAOD, plotH2O, c=plotVal, s=20, marker='s', cmap='GnBu', norm=matplotlib.colors.LogNorm())
-        plt.plot(self.truth[425], self.truth[426], 'rx', markersize=12, label='Truth')
-        plt.plot(self.isofitMuPos[425], self.isofitMuPos[426], 'kx', markersize=12, label='MAP')
+        plt.plot(self.truth[self.nx-2], self.truth[self.nx-1], 'rx', markersize=12, label='Truth')
+        plt.plot(self.isofitMuPos[self.nx-2], self.isofitMuPos[self.nx-1], 'kx', markersize=12, label='MAP')
         plt.title(title)
         plt.xlabel('AOD - Index 425')
         plt.ylabel('H2O - Index 426')
@@ -188,10 +188,10 @@ class Setup:
 
         plt.figure()
         # self.plotbands(self.mu_x[:425], 'r', label='Prior')
-        self.plotbands(self.truth[:425], 'b.',label='True Reflectance')
-        self.plotbands(self.isofitMuPos[:425],'k.', label='Isofit Posterior')
-        # self.plotbands(mu_xgyLin[:425], 'm.',label='Linear Posterior')
-        self.plotbands(MCMCmean[:425], 'c.',label='MCMC Posterior')
+        self.plotbands(self.truth[:self.nx-2], 'b.',label='True Reflectance')
+        self.plotbands(self.isofitMuPos[:self.nx-2],'k.', label='Isofit Posterior')
+        # self.plotbands(mu_xgyLin[:self.nx-2], 'm.',label='Linear Posterior')
+        self.plotbands(MCMCmean[:self.nx-2], 'c.',label='MCMC Posterior')
         plt.xlabel('Wavelength')
         plt.ylabel('Reflectance')
         plt.title('Posterior Mean Comparison')
@@ -200,8 +200,8 @@ class Setup:
         plt.savefig(self.mcmcDir + 'reflMean.png', dpi=300)
 
         plt.figure()
-        isofitError = abs(self.isofitMuPos[:425] - self.truth[:425]) / abs(self.truth[:425])
-        mcmcError = abs(MCMCmean[:425] - self.truth[:425]) / abs(self.truth[:425])
+        isofitError = abs(self.isofitMuPos[:self.nx-2] - self.truth[:self.nx-2]) / abs(self.truth[:self.nx-2])
+        mcmcError = abs(MCMCmean[:self.nx-2] - self.truth[:self.nx-2]) / abs(self.truth[:self.nx-2])
         self.plotbands(isofitError,'k.', label='Isofit Posterior',axis='semilogy')
         self.plotbands(mcmcError, 'c.',label='MCMC Posterior',axis='semilogy')
         plt.xlabel('Wavelength')
@@ -212,10 +212,10 @@ class Setup:
         plt.savefig(self.mcmcDir + 'reflError.png', dpi=300)
 
         plt.figure()
-        # plt.plot(self.truth[425], self.truth[426], 'bo',label='True Reflectance')
-        plt.plot(self.mu_x[425], self.mu_x[426], 'r.',label='Prior')
-        plt.plot(self.isofitMuPos[425],self.isofitMuPos[426],'k.', label='Isofit Posterior')
-        plt.plot(MCMCmean[425], MCMCmean[426], 'cx',label='MCMC Posterior')
+        # plt.plot(self.truth[self.nx-2], self.truth[self.nx-1], 'bo',label='True Reflectance')
+        plt.plot(self.mu_x[self.nx-2], self.mu_x[self.nx-1], 'r.',label='Prior')
+        plt.plot(self.isofitMuPos[self.nx-2],self.isofitMuPos[self.nx-1],'k.', label='Isofit Posterior')
+        plt.plot(MCMCmean[self.nx-2], MCMCmean[self.nx-1], 'cx',label='MCMC Posterior')
         plt.xlabel('AOT550')
         plt.ylabel('H2OSTR')
         plt.grid()
@@ -223,8 +223,8 @@ class Setup:
         plt.savefig(self.mcmcDir + 'atmMean.png', dpi=300)
 
         # bar graph of atm parameter variances
-        # isofitErrorAtm = abs(self.isofitMuPos[425:] - self.truth[425:]) / abs(self.truth[425:])
-        # mcmcErrorAtm = abs(MCMCmean[425:] - self.truth[425:]) / abs(self.truth[425:])
+        # isofitErrorAtm = abs(self.isofitMuPos[self.nx-2:] - self.truth[self.nx-2:]) / abs(self.truth[self.nx-2:])
+        # mcmcErrorAtm = abs(MCMCmean[self.nx-2:] - self.truth[self.nx-2:]) / abs(self.truth[self.nx-2:])
         # labels = ['425 - AOD550', '426 - H2OSTR']
         # x = np.arange(len(labels))  # the label locations
         # width = 0.175
@@ -244,9 +244,9 @@ class Setup:
         isofitVar = np.diag(self.isofitGammaPos)
         MCMCVar = np.diag(MCMCcov)
         plt.figure()
-        self.plotbands(priorVar[:425], 'b.',label='Prior', axis='semilogy')
-        self.plotbands(isofitVar[:425],'k.', label='Isofit Posterior', axis='semilogy')
-        self.plotbands(MCMCVar[:425], 'c.',label='MCMC Posterior', axis='semilogy')
+        self.plotbands(priorVar[:self.nx-2], 'b.',label='Prior', axis='semilogy')
+        self.plotbands(isofitVar[:self.nx-2],'k.', label='Isofit Posterior', axis='semilogy')
+        self.plotbands(MCMCVar[:self.nx-2], 'c.',label='MCMC Posterior', axis='semilogy')
         plt.xlabel('Wavelength')
         plt.ylabel('Variance')
         plt.title('Marginal Variance Comparison')
@@ -259,9 +259,9 @@ class Setup:
         x = np.arange(len(labels))  # the label locations
         width = 0.175
         fig, ax = plt.subplots()
-        rects1 = ax.bar(x - width, priorVar[425:], width, label='Prior')
-        rects2 = ax.bar(x, isofitVar[425:], width, label='Isofit Posterior')
-        rects4 = ax.bar(x + width, MCMCVar[425:], width, label='MCMC Posterior')
+        rects1 = ax.bar(x - width, priorVar[self.nx-2:], width, label='Prior')
+        rects2 = ax.bar(x, isofitVar[self.nx-2:], width, label='Isofit Posterior')
+        rects4 = ax.bar(x + width, MCMCVar[self.nx-2:], width, label='MCMC Posterior')
         ax.set_yscale('log')
         ax.set_ylabel('Variance')
         ax.set_title('Marginal Variance of Atm')
@@ -293,7 +293,7 @@ class Setup:
         randAOD = np.zeros(N)
         randH2O = np.zeros(N)
 
-        refl = np.zeros([N,425])
+        refl = np.zeros([N,self.nx-2])
         posAOD = np.zeros(N)
         posH2O = np.zeros(N)
         varAOD = np.zeros(N)
@@ -315,11 +315,11 @@ class Setup:
             # inversion using simulated radiance
             isofitMuPos, isofitGammaPos = self.invModel(self.radiance)
 
-            refl[i,:] = isofitMuPos[:425]
-            posAOD[i] = isofitMuPos[425]
-            posH2O[i] = isofitMuPos[426]
-            varAOD[i] = isofitGammaPos[425,425]
-            varH2O[i] = isofitGammaPos[426,426]
+            refl[i,:] = isofitMuPos[:self.nx-2]
+            posAOD[i] = isofitMuPos[self.nx-2]
+            posH2O[i] = isofitMuPos[self.nx-1]
+            varAOD[i] = isofitGammaPos[self.nx-2,self.nx-2]
+            varH2O[i] = isofitGammaPos[self.nx-1,self.nx-1]
 
             # print(isofitGammaPos[self.bandsX,:][:,self.bandsX])
             # print(np.linalg.det(isofitGammaPos[self.bandsX,:][:,self.bandsX]))
@@ -435,12 +435,12 @@ class Setup:
         
         N = randAOD.shape[0]
         truth = np.zeros([N,427])
-        # radiances = np.zeros([N,425])
+        # radiances = np.zeros([N,self.nx-2])
 
         for i in range(N):
-            truth[i,:425] = self.reflectance
-            truth[i,425] = randAOD[i]
-            truth[i,426] = randH2O[i]
+            truth[i,:self.nx-2] = self.reflectance
+            truth[i,self.nx-2] = randAOD[i]
+            truth[i,self.nx-1] = randH2O[i]
 
             # no noise added
 
