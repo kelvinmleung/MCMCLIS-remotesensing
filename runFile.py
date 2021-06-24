@@ -31,7 +31,7 @@ mcmcfolder = 'G14'
 # datamatfile = ''
 
 f = FileProcessing()
-f.loadWavelength('setup/data/wavelengths.txt')
+f.loadWavelength('setup/data/177/ang20140612t215931_data_dump.mat')
 f.loadReflectance('setup/data/177/insitu.txt')
 f.loadRadiance('setup/data/177/ang20140612t215931_data_dump.mat')
 wv, ref, radiance = f.getFiles()
@@ -63,12 +63,18 @@ m.initMCMC(LIS=LIS, rank=rank) # specify LIS parameters
 
 start_time = time.time()
 m.runAM()
-MCMCmean, MCMCcov = m.calcMeanCov()
+m.calcMeanCov()
 setup.plotPosterior(MCMCmean, MCMCcov)
 
 ## MCMC Diagnostics ##
-indSet = [30,40,90,100,150,160,250,260, m.nx-2, m.nx-1]
-m.diagnostics(MCMCmean, MCMCcov, indSet)
-np.savetxt(setup.mcmcDir + 'runtime.txt', np.array([time.time() - start_time]))
+# m.mcmcPlots()
 
+
+
+
+'''
+# indSet = [30,40,90,100,150,160,250,260, m.nx-2, m.nx-1]
+# m.diagnostics(MCMCmean, MCMCcov, indSet)
+# np.savetxt(setup.mcmcDir + 'runtime.txt', np.array([time.time() - start_time]))
+'''
 

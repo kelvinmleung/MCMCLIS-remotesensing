@@ -10,17 +10,18 @@ class FileProcessing:
         print('\n')
 
     def loadWavelength(self, wvFile='setup/data/wavelengths.txt'):
-        wvl, wv, wvr = np.loadtxt(wvFile).T
-        self.wv = wv * 1000
+        # wvl, wv, wvr = np.loadtxt(wvFile).T
+        mat = loadmat(wvFile)
+        self.wv = mat['wl'][0]
+        # self.wv = wv * 1000
 
-    def loadReflectance(self, refFile ='setup/data/beckmanlawn/insitu.txt'):
+    def loadReflectance(self, refFile):
         data = np.loadtxt(refFile).T
         wvRaw = data[0]
         refRaw = data[1]
         self.ref = np.interp(self.wv, wvRaw, refRaw)
 
-    def loadRadiance(self, datamatfile='setup/data/beckmanlawn/ang20171108t184227_data_v2p11_BeckmanLawn.mat'):
-        datamatfile = datamatfile
+    def loadRadiance(self, datamatfile):
         mat = loadmat(datamatfile)
         self.radiance = mat['meas'][0]
     

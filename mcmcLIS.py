@@ -195,11 +195,10 @@ class MCMCLIS:
         else:
             x_vals_full = x_vals
         x_vals_full = x_vals_full + np.outer(self.startX, np.ones(self.Nsamp))
-        x_vals_thin = x_vals_full[::self.thinning]
 
-        np.save(self.mcmcDir + 'MCMC_x.npy', x_vals_thin)
-        np.save(self.mcmcDir + 'logpos.npy', logpos)
-        np.save(self.mcmcDir + 'acceptance.npy', accept)
+        np.save(self.mcmcDir + 'MCMC_x.npy', x_vals_full[::self.thinning])
+        np.save(self.mcmcDir + 'logpos.npy', logpos[::self.thinning])
+        np.save(self.mcmcDir + 'acceptance.npy', accept[::self.thinning])
     
     def plotProposal(self, z):
         if self.LIS == True:
@@ -214,8 +213,7 @@ class MCMCLIS:
 
     def calcMeanCov(self):
         x_vals = np.load(self.mcmcDir + 'MCMC_x.npy')
-        burn = int(self.burn / self.thinning)
-        x_ref = x_vals[:, burn:]
+        x_ref = x_vals[:, self.burn:]
         nx = x_ref.shape[0]
         mean = np.mean(x_ref, axis=1)
         cov = np.cov(x_ref)

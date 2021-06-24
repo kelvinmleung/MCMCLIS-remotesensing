@@ -43,9 +43,11 @@ class MCMCIsofit:
 
         # MCMC parameters to initialize
         self.Nsamp = Nsamp
-        self.burn = burn
+        
         self.x0 = x0
         self.alg = alg
+        self.thinning = 10
+        self.burn = int(burn / self.thinning)
         
         self.nx = self.gamma_x.shape[0] # parameter dimension
         self.ny = self.noisecov.shape[0] # data dimension
@@ -82,7 +84,7 @@ class MCMCIsofit:
             "geom": self.geom,
             "linop": self.linop,
             "mcmcDir": self.mcmcDir
-            "thinning": 20
+            "thinning": self.thinning
             }
         self.mcmc = MCMCLIS(mcmcConfig)
 
@@ -113,7 +115,7 @@ class MCMCIsofit:
         self.mcmc.adaptm(self.alg)   
 
     def calcMeanCov(self):
-        return self.mcmc.calcMeanCov()
+        self.MCMCmean, self.MCMCcov = self.mcmc.calcMeanCov()
 
     def autocorr(self, ind):
         return self.mcmc.autocorr(ind)
@@ -131,28 +133,23 @@ class MCMCIsofit:
         ellipse.set_transform(transf + ax.transData)
         ax.add_patch(ellipse) 
         
-    def twoDimVisual(self, MCMCmean, MCMCcov, indX, indY):
+    def twoDimVisual(self, indX, indY):
         x_vals = np.load(self.mcmcDir + 'MCMC_x.npy')
 
         fig, ax = plt.subplots()
-        # ax.plot(self.truth[indX], self.truth[indY], 'go', label='True reflectance', markersize=10)     
-        ax.scatter(x_vals[indX,:], x_vals[indY,:], c='c', s=0.5)
-
-        # plot prior mean/cov
-        # meanPrior = np.array([self.mu_x[indX], self.mu_x[indY]])
-        # covPrior = self.gamma_x[np.ix_([indX,indY],[indX,indY])]
-        # ax.plot(meanPrior[0], meanPrior[1], 'kx', label='Prior', markersize=12)
-        # self.drawEllipse(meanPrior, covPrior, ax, colour='black')
+        if indX < self.nx-2 and indY < self.nx-2:
+            ax.plot(self.truth[indX], self.truth[indY], 'ro', label='True reflectance', markersize=10)     
+        ax.scatter(x_vals[indX,:], x_vals[indY,:], c='cornflowerblue',, s=0.5)
         
         # plot Isofit mean/cov
         meanIsofit = np.array([self.mupos_isofit[indX], self.mupos_isofit[indY]])
         covIsofit = self.gammapos_isofit[np.ix_([indX,indY],[indX,indY])]
-        ax.plot(meanIsofit[0], meanIsofit[1], 'rx', label='Isofit posterior', markersize=12)
+        ax.plot(meanIsofit[0], meanIsofit[1], 'kx', label='Isofit posterior', markersize=12)
         self.drawEllipse(meanIsofit, covIsofit, ax, colour='red')
         
         # plot MCMC mean/cov
-        meanMCMC = np.array([MCMCmean[indX], MCMCmean[indY]])
-        covMCMC = MCMCcov[np.ix_([indX,indY],[indX,indY])]
+        meanMCMC = np.array([self.MCMCmean[indX], self.MCMCmean[indY]])
+        covMCMC = self.MCMCcov[np.ix_([indX,indY],[indX,indY])]
         ax.plot(meanMCMC[0], meanMCMC[1], 'bx', label='MCMC posterior', markersize=12)
         self.drawEllipse(meanMCMC, covMCMC, ax, colour='blue')
         
@@ -163,9 +160,9 @@ class MCMCIsofit:
 
         return fig
 
-    def kdcontour(self, MCMCmean, MCMCcov, indX, indY):
+    def kdcontour(self, indX, indY):
         x_vals = np.load(self.mcmcDir + 'MCMC_x.npy')
-        x_vals_plot = x_vals[:,self.burn::50]
+        x_vals_plot = x_vals[:,self.burn:]
 
         x = x_vals_plot[indX,:]
         y = x_vals_plot[indY,:]
@@ -193,7 +190,6 @@ class MCMCIsofit:
         ax.set_xlim(xmin, xmax)
         ax.set_ylim(ymin, ymax)
 
-        # levs = [0, 0.02, 0.05, 0.1, 0.25, 0.5, 1]
         levs = [0, 0.05, 0.1, 0.2, 0.5, 1]
         # Contourf plot
         cfset = ax.contourf(xx, yy, f, levels=levs, cmap='Blues') 
@@ -202,7 +198,7 @@ class MCMCIsofit:
 
         # plot truth, isofit, and mcmc mean
         meanIsofit = np.array([isofitPosX, isofitPosY])
-        meanMCMC = np.array([MCMCmean[indX], MCMCmean[indY]])
+        meanMCMC = np.array([self.MCMCmean[indX], self.MCMCmean[indY]])
         ax.plot(meanIsofit[0], meanIsofit[1], 'rx', label='MAP', markersize=12)
         ax.plot(meanMCMC[0], meanMCMC[1], 'kx', label='MCMC', markersize=12)
 
@@ -222,20 +218,61 @@ class MCMCIsofit:
         fig.colorbar(cfset)
         return fig
 
-    def diagnostics(self, MCMCmean, MCMCcov, indSet=[10,20,50,100,150,160,250,260,425,426]):
+    def plot2Dmarginal(self, indset1=[100,250,410], indset2=[30,101,260]):
+        
+        n = len(indset1)
+        m = len(indset2)
+        fig, ax = plt.subplots(n, m)
+        
+        for i in range(n):
+            for j in range(m):
+                indX = indset1[i]
+                indY = indset2[j]
+
+                ax[j] = self.twoDimVisual(indY, indX, ax[j])
+                # ax[i,j].set_title('CHANGE TITLE')
+                # ax[i,j].set_xlabel('Wavelength Channel ' + str(self.wavelengths[indY]))
+                # ax[i,j].set_ylabel('Wavelength Channel ' + str(self.wavelengths[indX]))
+        # ax.set_title('2D Marginal Plots ')
+        # fig.savefig(self.mcmcDir + '2Dmarginal.png', dpi=300)
+
+        ax[0].set_ylabel(r'$\lambda = $' + str(self.wavelengths[indset1[0]]) + ' nm')
+        # ax[1,0].set_ylabel(r'$\lambda = $' + str(self.wavelengths[indset1[1]]) + ' nm')
+        # ax[2,0].set_ylabel(r'$\lambda = $' + str(self.wavelengths[indset1[2]]) + ' nm')
+
+        ax[0].set_xlabel(r'$\lambda = $' + str(self.wavelengths[indset2[0]]) + ' nm')
+        ax[1].set_xlabel(r'$\lambda = $' + str(self.wavelengths[indset2[1]]) + ' nm')
+        ax[2].set_xlabel(r'$\lambda = $' + str(self.wavelengths[indset2[2]]) + ' nm')
+        # ax[2,0].set_xlabel(r'$\lambda = $' + str(self.wavelengths[indset2[0]]) + ' nm')
+        # ax[2,1].set_xlabel(r'$\lambda = $' + str(self.wavelengths[indset2[1]]) + ' nm')
+        # ax[2,2].set_xlabel(r'$\lambda = $' + str(self.wavelengths[indset2[2]]) + ' nm')
+        handles, labels = ax[0].get_legend_handles_labels()
+        fig.legend(handles, labels, loc='center right')
+
+    def mcmcPlots(self):
+
+        self.plot2Dmarginal(indset1=[100,250,410], indset2=[30,101,260])
+        self.diagnostics(indset=[30,40,90,100,150,160,250,260])
+        self.kdcontour(100, 150)
+        self.kdcontour(self.nx-2, self.nx-1)
+
+    def diagnostics(self, indSet=[10,20,50,100,150,160,250,260,425,426]):
         # assume there are 10 elements in indSet
         # default: indSet = [10,20,50,100,150,160,250,260,425,426]
+        if self.nx-2 not in indSet:
+            indSet = indSet.extend([self.nx-2, self.nx-1]) 
+
         x_vals = np.load(self.mcmcDir + 'MCMC_x.npy')
         logpos = np.load(self.mcmcDir + 'logpos.npy')
         acceptance = np.load(self.mcmcDir + 'acceptance.npy')
         numPairs = int(len(indSet) / 2) 
 
         # plot 2D visualization
-        for i in range(numPairs):
-            # fig = self.twoDimVisual(MCMCmean, MCMCcov, indX=indSet[2*i], indY=indSet[2*i+1])
-            # fig.savefig(self.mcmcDir + '2D_' + str(indSet[2*i]) + '-' + str(indSet[2*i+1]) + '.png', dpi=300)
-            fig = self.kdcontour(MCMCmean, MCMCcov, indX=indSet[2*i], indY=indSet[2*i+1])
-            fig.savefig(self.mcmcDir + 'contour_' + str(indSet[2*i]) + '-' + str(indSet[2*i+1]) + '.png', dpi=300)
+        # for i in range(numPairs):
+        #     fig = self.twoDimVisual(indX=indSet[2*i], indY=indSet[2*i+1])
+        #     fig.savefig(self.mcmcDir + '2D_' + str(indSet[2*i]) + '-' + str(indSet[2*i+1]) + '.png', dpi=300)
+        #     fig = self.kdcontour(indX=indSet[2*i], indY=indSet[2*i+1])
+        #     fig.savefig(self.mcmcDir + 'contour_' + str(indSet[2*i]) + '-' + str(indSet[2*i+1]) + '.png', dpi=300)
 
         # subplot setup
         fig1, axs1 = plt.subplots(numPairs, 2)
@@ -292,31 +329,5 @@ class MCMCIsofit:
         plt.title('Acceptance Rate = ' + str(acceptRate))
         plt.ylim([0, 1])
         plt.savefig(self.mcmcDir + 'acceptance.png', dpi=300)
-
-'''
-import numpy as np
-import matplotlib.pyplot as plt
-acceptance = np.load('../results/MCMC/acceptance.npy')
-print('Acceptance rate:', np.mean(acceptance[200000:]))
-binWidth = 1000
-Nsamp = 2000000
-numBin = int(Nsamp / binWidth)
-xPlotAccept = np.arange(binWidth, Nsamp+1, binWidth)
-acceptPlot = np.zeros(numBin)
-for i in range(numBin):
-    acceptPlot[i] = np.mean(acceptance[binWidth*i : binWidth*(i+1)])
-
-
-
-plt.figure()
-plt.plot(xPlotAccept, acceptPlot)
-plt.xlabel('Number of Samples')
-plt.ylabel('Acceptance Rate')
-plt.ylim([0, 1])
-plt.savefig('../results/MCMC/acceptance.png', dpi=300)
-plt.show()
-
-'''
-        
         
         
