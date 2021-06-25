@@ -14,10 +14,10 @@ from mcmcIsofit import MCMCIsofit
 ##### CONFIG #####
 Nsamp = 6000000
 burn = 2000000
-init = 'MAP'
+init = 'truth'
 rank = 100
 LIS = True
-mcmcfolder = 'F1'
+mcmcfolder = 'F2'
 thinning = 20
 ##### CONFIG #####
 
@@ -38,8 +38,6 @@ if init == 'MAP':
     x0 = setup.isofitMuPos
 elif init == 'truth':
     x0 = setup.truth
-elif init == 'linpos':
-    x0, gammapos = a.posterior(setup.radNoisy)
 elif init == 'midMAPtruth':
     x0 = 0.5 * (setup.isofitMuPos + setup.truth)
 mcmcfolder = mcmcfolder + '_init' + init + '_rank' + str(rank)
