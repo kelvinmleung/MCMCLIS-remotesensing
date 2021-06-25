@@ -53,7 +53,7 @@ class MCMCLIS:
         self.linop = config["linop"]        # linear operator
         self.yobs = config["yobs"]          # radiance observation
         self.mcmcDir = config["mcmcDir"]    # directory to save data
-        self.thinning = = config["thinning"]# only save every ___ sample
+        self.thinning = config["thinning"]# only save every ___ sample
 
     def LISproject(self):
         ### Compute LIS projection matrices ###
@@ -195,8 +195,10 @@ class MCMCLIS:
         else:
             x_vals_full = x_vals
         x_vals_full = x_vals_full + np.outer(self.startX, np.ones(self.Nsamp))
-
-        np.save(self.mcmcDir + 'MCMC_x.npy', x_vals_full[::self.thinning])
+        print(self.thinning)
+        print(self.burn)
+        print(x_vals_full[:,::self.thinning].shape)
+        np.save(self.mcmcDir + 'MCMC_x.npy', x_vals_full[:,::self.thinning])
         np.save(self.mcmcDir + 'logpos.npy', logpos[::self.thinning])
         np.save(self.mcmcDir + 'acceptance.npy', accept[::self.thinning])
     

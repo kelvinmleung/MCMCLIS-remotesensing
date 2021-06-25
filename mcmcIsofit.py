@@ -14,7 +14,7 @@ class MCMCIsofit:
     Integrating LIS capabilities
     '''
 
-    def __init__(self, setup, analysis, Nsamp, burn, x0, alg='AM'):
+    def __init__(self, setup, analysis, Nsamp, burn, x0, alg='AM', thinning=1):
 
         self.mcmcDir = setup.mcmcDir
     
@@ -46,7 +46,7 @@ class MCMCIsofit:
         
         self.x0 = x0
         self.alg = alg
-        self.thinning = 10
+        self.thinning = thinning
         self.burn = int(burn / self.thinning)
         
         self.nx = self.gamma_x.shape[0] # parameter dimension
@@ -66,7 +66,7 @@ class MCMCIsofit:
             lowbound = np.ones(427) * np.NINF
             upbound = np.ones(427) * np.inf
 
-        mcmcConfig = {
+        self.mcmcConfig = {
             "startX": self.x0,
             "Nsamp": self.Nsamp,
             "burn": self.burn,
@@ -83,13 +83,13 @@ class MCMCIsofit:
             "fm": self.fm,
             "geom": self.geom,
             "linop": self.linop,
-            "mcmcDir": self.mcmcDir
+            "mcmcDir": self.mcmcDir,
             "thinning": self.thinning
             }
-        self.mcmc = MCMCLIS(mcmcConfig)
+        self.mcmc = MCMCLIS(self.mcmcConfig)
 
     def initPriorSampling(self, rank=427):
-        mcmcConfig = {
+        self.mcmcConfig = {
             "x0": np.zeros(rank),
             "Nsamp": self.Nsamp,
             "burn": self.burn,
@@ -106,7 +106,7 @@ class MCMCIsofit:
             "linop": self.linop,
             "mcmcDir": self.mcmcDir
             }
-        self.mcmc = MCMCLIS(mcmcConfig)
+        self.mcmc = MCMCLIS(self.mcmcConfig)
 
         self.mu_x = np.zeros(rank)
         self.gamma_x = np.identity(rank)
@@ -114,8 +114,22 @@ class MCMCIsofit:
     def runAM(self):
         self.mcmc.adaptm(self.alg)   
 
+    def saveConfig(self):
+
+        np.save(self.mcmcDir + 'truth.npy', self.truth)
+        np.save(self.mcmcDir + 'isofitMuPos.npy', self.mupos_isofit)
+        np.save(self.mcmcDir + 'isofitGammaPos.npy', self.gammapos_isofit)
+        np.save(self.mcmcDir + 'mu_x.npy', self.mu_x)
+        np.save(self.mcmcDir + 'gamma_x.npy', self.gamma_x)
+        np.save(self.mcmcDir + 'Nsamp.npy', self.Nsamp)
+        np.save(self.mcmcDir + 'burn.npy', self.burn)
+        np.save(self.mcmcDir + 'thinning.npy', self.thinning)
+
     def calcMeanCov(self):
         self.MCMCmean, self.MCMCcov = self.mcmc.calcMeanCov()
+        return self.MCMCmean, self.MCMCcov 
+
+    
 
     def autocorr(self, ind):
         return self.mcmc.autocorr(ind)
@@ -139,7 +153,7 @@ class MCMCIsofit:
         fig, ax = plt.subplots()
         if indX < self.nx-2 and indY < self.nx-2:
             ax.plot(self.truth[indX], self.truth[indY], 'ro', label='True reflectance', markersize=10)     
-        ax.scatter(x_vals[indX,:], x_vals[indY,:], c='cornflowerblue',, s=0.5)
+        ax.scatter(x_vals[indX,:], x_vals[indY,:], c='cornflowerblue', s=0.5)
         
         # plot Isofit mean/cov
         meanIsofit = np.array([self.mupos_isofit[indX], self.mupos_isofit[indY]])

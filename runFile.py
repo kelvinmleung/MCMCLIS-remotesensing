@@ -18,6 +18,7 @@ init = 'midMAPtruth'
 rank = 100
 LIS = True
 mcmcfolder = 'G14'
+thinning = 1
 ##### CONFIG #####
 
 ## SETUP ##
@@ -27,13 +28,14 @@ mcmcfolder = 'G14'
 # wv = wv * 1000
 # wvRaw, refRaw, refnoise = np.loadtxt('setup/data/beckmanlawn/insitu.txt').T
 # ref = np.interp(wv, wvRaw, refRaw)
+# insitufile = 'setup/data/beckmanlawn/insitu.txt'
 # datamatfile = 'setup/data/beckmanlawn/ang20171108t184227_data_v2p11_BeckmanLawn.mat'
-# datamatfile = ''
+# datamatfile = 'setup/data/177/ang20140612t215931_data_dump.mat'
 
 f = FileProcessing()
-f.loadWavelength('setup/data/177/ang20140612t215931_data_dump.mat')
-f.loadReflectance('setup/data/177/insitu.txt')
-f.loadRadiance('setup/data/177/ang20140612t215931_data_dump.mat')
+f.loadWavelength('setup/data/beckmanlawn/ang20171108t184227_data_v2p11_BeckmanLawn.mat')
+f.loadReflectance('setup/data/beckmanlawn/insitu.txt')
+f.loadRadiance('setup/data/beckmanlawn/ang20171108t184227_data_v2p11_BeckmanLawn.mat')
 wv, ref, radiance = f.getFiles()
 
 # f.splitFile(filename='MCMC_x.npy', output='../results/')
@@ -58,13 +60,14 @@ elif init == 'midMAPtruth':
     x0 = 0.5 * (setup.isofitMuPos + setup.truth)
 mcmcfolder = mcmcfolder + '_init' + init + '_rank' + str(rank)
 
-m = MCMCIsofit(setup, a, Nsamp, burn, x0, 'AM')
+m = MCMCIsofit(setup, a, Nsamp, burn, x0, 'AM', thinning=thinning)
 m.initMCMC(LIS=LIS, rank=rank) # specify LIS parameters
 
 start_time = time.time()
 m.runAM()
-m.calcMeanCov()
-setup.plotPosterior(MCMCmean, MCMCcov)
+m.saveConfig()
+# mean, cov = m.calcMeanCov()
+# setup.plotPosterior(mean, cov)
 
 ## MCMC Diagnostics ##
 # m.mcmcPlots()
