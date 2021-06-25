@@ -12,13 +12,13 @@ from mcmcIsofit import MCMCIsofit
 
 
 ##### CONFIG #####
-Nsamp = 6000
-burn = 1000
-init = 'midMAPtruth'
+Nsamp = 6000000
+burn = 2000000
+init = 'MAP'
 rank = 100
 LIS = True
-mcmcfolder = 'G14'
-thinning = 1
+mcmcfolder = 'F1'
+thinning = 20
 ##### CONFIG #####
 
 f = FileProcessing()
