@@ -116,11 +116,14 @@ class MCMCIsofit:
 
     def saveConfig(self):
 
+        np.save(self.mcmcDir + 'wavelength.npy', self.wavelengths)
+        np.save(self.mcmcDir + 'radiance.npy', self.yobs)
         np.save(self.mcmcDir + 'truth.npy', self.truth)
-        np.save(self.mcmcDir + 'isofitMuPos.npy', self.mupos_isofit)
-        np.save(self.mcmcDir + 'isofitGammaPos.npy', self.gammapos_isofit)
+        np.save(self.mcmcDir + 'bands.npy', self.bands)
         np.save(self.mcmcDir + 'mu_x.npy', self.mu_x)
         np.save(self.mcmcDir + 'gamma_x.npy', self.gamma_x)
+        np.save(self.mcmcDir + 'isofitMuPos.npy', self.mupos_isofit)
+        np.save(self.mcmcDir + 'isofitGammaPos.npy', self.gammapos_isofit)
         np.save(self.mcmcDir + 'Nsamp.npy', self.Nsamp)
         np.save(self.mcmcDir + 'burn.npy', self.burn)
         np.save(self.mcmcDir + 'thinning.npy', self.thinning)
@@ -128,8 +131,6 @@ class MCMCIsofit:
     def calcMeanCov(self):
         self.MCMCmean, self.MCMCcov = self.mcmc.calcMeanCov()
         return self.MCMCmean, self.MCMCcov 
-
-    
 
     def autocorr(self, ind):
         return self.mcmc.autocorr(ind)

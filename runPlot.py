@@ -3,12 +3,9 @@ import numpy as np
 import scipy as s
 import matplotlib.pyplot as plt
 
-from plotFromFile import PlotFromFile
+from plots import PlotFromFile
 
-'''
-revisit plotFromFile, transfer plotting capabilities from isofitSetup and MCMCisofit 
-add function to load the info and MCMC data!
-'''
+
 
 # mean, cov = m.calcMeanCov()
 # setup.plotPosterior(mean, cov)
@@ -19,12 +16,13 @@ add function to load the info and MCMC data!
 # indSet = [30,40,90,100,150,160,250,260, m.nx-2, m.nx-1]
 # m.diagnostics(MCMCmean, MCMCcov, indSet)
 
+mcmcfolder = 'G14'
+p = PlotFromFile(mcmcfolder)
+p.plotPosterior()
 
 
-
-
-
-mcmcfolder = 'C7'
+'''
+mcmcfolder = 'G14'
 p = PlotFromFile(mcmcfolder)
 
 # p.plotRegression()
@@ -46,3 +44,6 @@ p.plotkdcontour(indX=90, indY=100)
 
 
 plt.show()
+
+
+'''
