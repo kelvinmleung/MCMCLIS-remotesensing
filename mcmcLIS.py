@@ -195,9 +195,7 @@ class MCMCLIS:
         else:
             x_vals_full = x_vals
         x_vals_full = x_vals_full + np.outer(self.startX, np.ones(self.Nsamp))
-        print(self.thinning)
-        print(self.burn)
-        print(x_vals_full[:,::self.thinning].shape)
+        
         np.save(self.mcmcDir + 'MCMC_x.npy', x_vals_full[:,::self.thinning])
         np.save(self.mcmcDir + 'logpos.npy', logpos[::self.thinning])
         np.save(self.mcmcDir + 'acceptance.npy', accept[::self.thinning])
@@ -224,7 +222,7 @@ class MCMCLIS:
     def autocorr(self, ind):
         x_vals = np.load(self.mcmcDir + 'MCMC_x.npy')
         x_elem = x_vals[ind,:]
-        Nsamp = int(min(self.Nsamp / self.thinning, 20000 / self.thinning))
+        Nsamp = int(min(self.Nsamp, 20000))
         meanX = np.mean(x_elem)
         varX = np.var(x_elem)
         ac = np.zeros(Nsamp-1)

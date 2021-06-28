@@ -14,10 +14,10 @@ from mcmcIsofit import MCMCIsofit
 ##### CONFIG #####
 Nsamp = 6000000
 burn = 2000000
-init = 'midMAPtruth'
+init = 'MAP'
 rank = 100
 LIS = True
-mcmcfolder = 'F3'
+mcmcfolder = 'F1'
 thinning = 20
 ##### CONFIG #####
 
@@ -26,6 +26,7 @@ f.loadWavelength('setup/data/beckmanlawn/ang20171108t184227_data_v2p11_BeckmanLa
 f.loadReflectance('setup/data/beckmanlawn/insitu.txt')
 f.loadRadiance('setup/data/beckmanlawn/ang20171108t184227_data_v2p11_BeckmanLawn.mat')
 wv, ref, radiance = f.getFiles()
+
 
 atm = [0.1, 2.5]
 setup = Setup(wv, ref, atm, radiance, mcmcdir=mcmcfolder)

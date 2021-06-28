@@ -2,6 +2,7 @@ import sys, os, json
 import numpy as np
 import scipy as s
 import scipy.stats as st
+from scipy.stats import multivariate_normal, gaussian_kde
 import matplotlib.pyplot as plt
 from matplotlib import ticker, cm
 from matplotlib.patches import Ellipse
@@ -18,11 +19,10 @@ class PlotFromFile:
         self.mcmcDir = '../results/MCMC/' + mcmcfolder + '/'
         self.mcmcDirNoLIS = '../results/MCMC/N1/' 
 
-        self.NsampAC = 10000
-        self.numPlotAC = 2000
-
         self.loadFromFile()
         self.loadMCMC()
+
+        self.NsampAC = 10000#int(100000 / self.thinning)
         
     def loadFromFile(self):
 
@@ -36,7 +36,6 @@ class PlotFromFile:
         self.isofitMuPos = np.load(self.mcmcDir + 'isofitMuPos.npy')
         self.isofitGammaPos = np.load(self.mcmcDir + 'isofitGammaPos.npy')
         self.nx = self.mu_x.shape[0]
-        print(self.nx)
 
         self.Nsamp = np.load(self.mcmcDir + 'Nsamp.npy')
         self.burn = np.load(self.mcmcDir + 'burn.npy')
@@ -56,11 +55,14 @@ class PlotFromFile:
 
     
     def loadMCMC(self):
-        x_vals = np.load(self.mcmcDir + 'MCMC_x.npy', mmap_mode='r')
+        self.x_vals = np.load(self.mcmcDir + 'MCMC_x.npy', mmap_mode='r')
 
-        self.x_plot = x_vals[:,self.burnthin:]
+        self.x_plot = self.x_vals[:,self.burnthin:]
         self.MCMCmean = np.mean(self.x_plot, axis=1)
         self.MCMCcov = np.cov(self.x_plot)
+
+        self.logpos = np.load(self.mcmcDir + 'logpos.npy')
+        self.acceptance = np.load(self.mcmcDir + 'acceptance.npy')
 
         # self.x_vals_ac = x_vals[:,:self.NsampAC]
 
@@ -79,32 +81,32 @@ class PlotFromFile:
         r3 = [min(range3), max(range3)]  
         return r1, r2, r3
 
-    def plotbands(self, y, linestyle, linewidth=2, label='', axis='normal'):
-        wl = self.wavelengths
-        r1, r2, r3 = self.indPlot()
-        print(r1, r2, r3)
-        print('1,185,215,281,315,414')
-        if axis == 'normal':
-            plt.plot(wl[r1[0]:r1[1]], y[r1[0]:r1[1]], linestyle, linewidth=linewidth, label=label)
-            plt.plot(wl[r2[0]:r2[1]], y[r2[0]:r2[1]], linestyle, linewidth=linewidth)
-            plt.plot(wl[r3[0]:r3[1]], y[r3[0]:r3[1]], linestyle, linewidth=linewidth)
-        elif axis == 'semilogy':
-            plt.semilogy(wl[r1[0]:r1[1]], y[r1[0]:r1[1]], linestyle, linewidth=linewidth, label=label)
-            plt.semilogy(wl[r2[0]:r2[1]], y[r2[0]:r2[1]], linestyle, linewidth=linewidth)
-            plt.semilogy(wl[r3[0]:r3[1]], y[r3[0]:r3[1]], linestyle, linewidth=linewidth)
-        
-
     # def plotbands(self, y, linestyle, linewidth=2, label='', axis='normal'):
     #     wl = self.wavelengths
+    #     r1, r2, r3 = self.indPlot()
+    #     print(r1, r2, r3)
+    #     print('1,185,215,281,315,414')
     #     if axis == 'normal':
-            
-    #         plt.plot(wl[1:185], y[1:185], linestyle, linewidth=linewidth, label=label)
-    #         plt.plot(wl[215:281], y[215:281], linestyle, linewidth=linewidth)
-    #         plt.plot(wl[315:414], y[315:414], linestyle, linewidth=linewidth)
+    #         plt.plot(wl[r1[0]:r1[1]], y[r1[0]:r1[1]], linestyle, linewidth=linewidth, label=label)
+    #         plt.plot(wl[r2[0]:r2[1]], y[r2[0]:r2[1]], linestyle, linewidth=linewidth)
+    #         plt.plot(wl[r3[0]:r3[1]], y[r3[0]:r3[1]], linestyle, linewidth=linewidth)
     #     elif axis == 'semilogy':
-    #         plt.semilogy(wl[1:185], y[1:185], linestyle, linewidth=linewidth, label=label)
-    #         plt.semilogy(wl[215:281], y[215:281], linestyle, linewidth=linewidth)
-    #         plt.semilogy(wl[315:414], y[315:414], linestyle, linewidth=linewidth)
+    #         plt.semilogy(wl[r1[0]:r1[1]], y[r1[0]:r1[1]], linestyle, linewidth=linewidth, label=label)
+    #         plt.semilogy(wl[r2[0]:r2[1]], y[r2[0]:r2[1]], linestyle, linewidth=linewidth)
+    #         plt.semilogy(wl[r3[0]:r3[1]], y[r3[0]:r3[1]], linestyle, linewidth=linewidth)
+        
+
+    def plotbands(self, y, linestyle, linewidth=2, label='', axis='normal'):
+        wl = self.wavelengths
+        if axis == 'normal':
+            
+            plt.plot(wl[1:185], y[1:185], linestyle, linewidth=linewidth, label=label)
+            plt.plot(wl[215:281], y[215:281], linestyle, linewidth=linewidth)
+            plt.plot(wl[315:414], y[315:414], linestyle, linewidth=linewidth)
+        elif axis == 'semilogy':
+            plt.semilogy(wl[1:185], y[1:185], linestyle, linewidth=linewidth, label=label)
+            plt.semilogy(wl[215:281], y[215:281], linestyle, linewidth=linewidth)
+            plt.semilogy(wl[315:414], y[315:414], linestyle, linewidth=linewidth)
 
     def plotRegression(self):
         ylinear = self.phi.dot((self.truth - self.meanX) / np.sqrt(self.varX)) * np.sqrt(self.varY) + self.meanY
@@ -125,7 +127,7 @@ class PlotFromFile:
         self.plotbands(self.MCMCmean[:self.nx-2], 'c.',label='MCMC Posterior')
         plt.xlabel('Wavelength')
         plt.ylabel('Reflectance')
-        plt.title('Posterior Mean Comparison')
+        plt.title('Posterior Mean - Surface Reflectance')
         plt.grid()
         plt.legend()
         plt.savefig(self.mcmcDir + 'reflMean.png', dpi=300)
@@ -149,6 +151,7 @@ class PlotFromFile:
         plt.plot(self.MCMCmean[self.nx-2], self.MCMCmean[self.nx-1], 'cx',label='MCMC Posterior')
         plt.xlabel('AOT550')
         plt.ylabel('H2OSTR')
+        plt.title('Posterior Mean - Atmospheric Parameters')
         plt.grid()
         plt.legend()
         plt.savefig(self.mcmcDir + 'atmMean.png', dpi=300)
@@ -180,7 +183,7 @@ class PlotFromFile:
         self.plotbands(MCMCVar[:self.nx-2], 'c.',label='MCMC Posterior', axis='semilogy')
         plt.xlabel('Wavelength')
         plt.ylabel('Variance')
-        plt.title('Marginal Variance Comparison')
+        plt.title('Posterior Variance - Surface Reflectance')
         plt.grid()
         plt.legend()
         plt.savefig(self.mcmcDir + 'reflVar.png', dpi=300)
@@ -195,13 +198,13 @@ class PlotFromFile:
         rects4 = ax.bar(x + width, MCMCVar[self.nx-2:], width, label='MCMC Posterior')
         ax.set_yscale('log')
         ax.set_ylabel('Variance')
-        ax.set_title('Marginal Variance of Atm')
+        ax.set_title('Posterior Variance - Atmospheric Parameters')
         ax.set_xticks(x)
         ax.set_xticklabels(labels)
         ax.legend()
         fig.savefig(self.mcmcDir + 'atmVar.png', dpi=300)
     
-    def plot2Dmarginal(self, indset1=[100], indset2=[30,101,260]): #,250,410
+    def plot2Dmarginal(self, indset1=[100,250,410], indset2=[30,101,260]):
         
         n = len(indset1)
         m = len(indset2)
@@ -212,177 +215,87 @@ class PlotFromFile:
                 indX = indset1[i]
                 indY = indset2[j]
 
-                ax[j] = self.twoDimVisual(indY, indX, ax[j])
+                ax[i,j] = self.twoDimVisual(indY, indX, ax[i,j])
                 # ax[i,j].set_title('CHANGE TITLE')
-                # ax[i,j].set_xlabel('Wavelength Channel ' + str(self.wavelengths[indY]))
-                # ax[i,j].set_ylabel('Wavelength Channel ' + str(self.wavelengths[indX]))
-        # ax.set_title('2D Marginal Plots ')
+        #         ax[i,j].set_xlabel('Wavelength Channel ' + str(self.wavelengths[indY]))
+        #         ax[i,j].set_ylabel('Wavelength Channel ' + str(self.wavelengths[indX]))
+        fig.suptitle('2D Marginal Plots')
         # fig.savefig(self.mcmcDir + '2Dmarginal.png', dpi=300)
 
-        ax[0].set_ylabel(r'$\lambda = $' + str(self.wavelengths[indset1[0]]) + ' nm')
-        # ax[1,0].set_ylabel(r'$\lambda = $' + str(self.wavelengths[indset1[1]]) + ' nm')
-        # ax[2,0].set_ylabel(r'$\lambda = $' + str(self.wavelengths[indset1[2]]) + ' nm')
+        # ax[0].set_ylabel(r'$\lambda = $' + str(self.wavelengths[indset1[0]]) + ' nm')
+        ax[0,0].set_ylabel(r'$\lambda = $' + str(self.wavelengths[indset1[0]]) + ' nm')
+        ax[1,0].set_ylabel(r'$\lambda = $' + str(self.wavelengths[indset1[1]]) + ' nm')
+        ax[2,0].set_ylabel(r'$\lambda = $' + str(self.wavelengths[indset1[2]]) + ' nm')
 
-        ax[0].set_xlabel(r'$\lambda = $' + str(self.wavelengths[indset2[0]]) + ' nm')
-        ax[1].set_xlabel(r'$\lambda = $' + str(self.wavelengths[indset2[1]]) + ' nm')
-        ax[2].set_xlabel(r'$\lambda = $' + str(self.wavelengths[indset2[2]]) + ' nm')
-        # ax[2,0].set_xlabel(r'$\lambda = $' + str(self.wavelengths[indset2[0]]) + ' nm')
-        # ax[2,1].set_xlabel(r'$\lambda = $' + str(self.wavelengths[indset2[1]]) + ' nm')
-        # ax[2,2].set_xlabel(r'$\lambda = $' + str(self.wavelengths[indset2[2]]) + ' nm')
-        handles, labels = ax[0].get_legend_handles_labels()
+        # ax[0].set_xlabel(r'$\lambda = $' + str(self.wavelengths[indset2[0]]) + ' nm')
+        # ax[1].set_xlabel(r'$\lambda = $' + str(self.wavelengths[indset2[1]]) + ' nm')
+        # ax[2].set_xlabel(r'$\lambda = $' + str(self.wavelengths[indset2[2]]) + ' nm')
+        ax[2,0].set_xlabel(r'$\lambda = $' + str(self.wavelengths[indset2[0]]) + ' nm')
+        ax[2,1].set_xlabel(r'$\lambda = $' + str(self.wavelengths[indset2[1]]) + ' nm')
+        ax[2,2].set_xlabel(r'$\lambda = $' + str(self.wavelengths[indset2[2]]) + ' nm')
+        handles, labels = ax[0,0].get_legend_handles_labels()
         fig.legend(handles, labels, loc='center right')
 
-    def plotkdcontour(self, indX, indY):
+    def kdcontour(self, indX, indY):
+        x_vals = np.load(self.mcmcDir + 'MCMC_x.npy')
+        x_vals_plot = x_vals[:,self.burn:]
 
-        x = self.x_vals_plot[indX,:]
-        y = self.x_vals_plot[indY,:]
-        xmin, xmax = 0.61, 0.66
-        ymin, ymax = 0.615, 0.665
+        x = x_vals_plot[indX,:]
+        y = x_vals_plot[indY,:]
+
+        isofitPosX = self.isofitMuPos[indX]
+        isofitPosY = self.isofitMuPos[indY]
+        xmin, xmax = min(min(x), isofitPosX), max(max(x), isofitPosX)
+        ymin, ymax = min(min(y), isofitPosY), max(max(y), isofitPosY)
+
+        if indX < self.nx-2 and indY < self.nx-2:
+            xmin, xmax = min(xmin, self.truth[indX]), max(xmax, self.truth[indX])
+            ymin, ymax = min(ymin, self.truth[indY]), max(ymax, self.truth[indY])
 
         # Peform the kernel density estimate
         xx, yy = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
         positions = np.vstack([xx.ravel(), yy.ravel()])
         values = np.vstack([x, y])
-        kernel = st.gaussian_kde(values)
+        kernel = gaussian_kde(values)
         f = np.reshape(kernel(positions).T, xx.shape)
         f = f / np.max(f) # normalize
 
         fig = plt.figure()
+        plt.title('Contour Plot of Posterior Samples')
         ax = fig.gca()
         ax.set_xlim(xmin, xmax)
         ax.set_ylim(ymin, ymax)
 
-        levs = [0, 0.02, 0.05, 0.1, 0.25, 0.5, 1]
-        levs = [0, 0.05, 0.2, 0.5, 1]
+        levs = [0, 0.05, 0.1, 0.2, 0.5, 1]
         # Contourf plot
         cfset = ax.contourf(xx, yy, f, levels=levs, cmap='Blues') 
         cset = ax.contour(xx, yy, f, levels=levs, colors='k') ##############################ADD INLINE
         plt.clabel(cset, levs, fontsize='smaller')
 
         # plot truth, isofit, and mcmc mean
-        meanIsofit = np.array([self.isofitMuPos[indX], self.isofitMuPos[indY]])
+        meanIsofit = np.array([isofitPosX, isofitPosY])
         meanMCMC = np.array([self.MCMCmean[indX], self.MCMCmean[indY]])
-        ax.plot(self.truth[indX], self.truth[indY], 'go', label='Truth', markersize=8)  
         ax.plot(meanIsofit[0], meanIsofit[1], 'rx', label='MAP', markersize=12)
         ax.plot(meanMCMC[0], meanMCMC[1], 'kx', label='MCMC', markersize=12)
 
-        # Label plot
-        # ax.clabel(cset, inline=1, fontsize=10)
-        ax.set_xlabel(r'$\lambda = $' + str(self.wavelengths[indX]) + ' nm')
-        ax.set_ylabel(r'$\lambda = $' + str(self.wavelengths[indY]) + ' nm')
+        if indX < self.nx-2 and indY < self.nx-2:
+            # Label plot
+            # ax.clabel(cset, inline=1, fontsize=10)
+            ax.set_xlabel(r'$\lambda = $' + str(self.wavelengths[indX]) + ' nm')
+            ax.set_ylabel(r'$\lambda = $' + str(self.wavelengths[indY]) + ' nm')
+
+            # plot truth
+            ax.plot(self.truth[indX], self.truth[indY], 'go', label='Truth', markersize=8)  
+        else:
+            if indX == self.nx-2:
+                ax.set_xlabel('AOD550')
+                ax.set_ylabel('H20STR')
         ax.legend()
         fig.colorbar(cfset)
-
-
-    def plot2ac(self, indset=[120,250,410]):
-
-        fig, axs = plt.subplots(1, len(indset))
-
-        for i in range(len(indset)):
-            # print('Autocorr:', indset[i])
-
-            ac = self.autocorr(self.x_vals_ac[indset[i],:])
-            ac2 = self.autocorr(self.x_vals_ac_noLIS[indset[i],:])
-
-            ac = ac[:self.numPlotAC]
-            ac2 = ac2[:self.numPlotAC]
-
-            print('Index:', indset[i])
-            print('ESS LIS:', self.ESS(ac))
-            print('ESS No LIS:', self.ESS(ac2))
-
-            # plot autocorrelation
-            axs[i].plot(range(1,len(ac)+1), ac, 'b', label='LIS r = 100')
-            axs[i].plot(range(1,len(ac2)+1), ac2, 'r', label='No LIS')
-            if indset[i] < 425:
-                axs[i].set_title(r'$\lambda = $' + str(self.wavelengths[indset[i]]) + ' nm')
-            elif indset[i] == 425:
-                axs[i].set_title('AOD')
-            elif indset[i] == 426:
-                axs[i].set_title('H2O')
-        
-        axs[0].set_xlabel('Lag', fontsize=14)
-        axs[0].set_ylabel('Autocorrelation', fontsize=14)
-        
-        handles, labels = axs[0].get_legend_handles_labels()
-        fig.legend(handles, labels, loc='center right', fontsize=14)
-        # fig2.savefig(self.mcmcDir + 'autocorr.png', dpi=300)
+        return fig
 
     
-    def autocorr(self, x_elem):
-        Nsamp = self.NsampAC
-        meanX = np.mean(x_elem)
-        varX = np.var(x_elem)
-        ac = np.zeros(Nsamp-1)
 
-        for k in range(Nsamp-1):
-            cov = np.cov(x_elem[:Nsamp-k], x_elem[k:Nsamp])
-            ac[k] = cov[1,0] / varX
-
-        return ac
-
-    def ESS(self, ac):
-        denom = 0
-        for i in range(len(ac)):
-            denom = denom + ac[i]
-        return self.Nsamp / (1 + 2 * denom)
-
-
-    def plotposmean(self):
-        plt.figure()
-        # self.plotbands(self.mu_x[:425], 'r', label='Prior')
-        self.plotbands(self.truth[:425], 'r',label='Truth')
-        self.plotbands(self.isofitMuPos[:425],'k', label='MAP Estimate')
-        # self.plotbands(self.linMuPos[:425], 'm.',label='Linear Posterior')
-        self.plotbands(self.MCMCmean[:425], 'b',label='MCMC Posterior')
-        plt.xlabel('Wavelength')
-        plt.ylabel('Reflectance')
-        plt.title('Posterior Mean - Surface Reflectance')
-        plt.legend()
-        # plt.savefig(self.mcmcDir + 'reflMean.png', dpi=300)
-
-        plt.figure()
-        plt.plot(self.truth[425], self.truth[426], 'rx',label='Truth')
-        # plt.plot(self.mu_x[425], self.mu_x[426], 'r.',label='Prior')
-        plt.plot(self.isofitMuPos[425],self.isofitMuPos[426],'ko', label='MAP Estimate')
-        # plt.plot(self.linMuPos[425], self.linMuPos[426],'mx',label='Linear Posterior')
-        plt.plot(self.MCMCmean[425], self.MCMCmean[426], 'bo',label='MCMC Posterior')
-        plt.xlabel('AOD550')
-        plt.ylabel('H2OSTR')
-        plt.title('Posterior Mean - Atmospheric Parameters')
-        plt.xlim([0, 0.2])
-        plt.ylim([2, 3])
-        plt.legend()
-
-    def plotposvar(self):
-        priorVar = np.diag(self.gamma_x)
-        isofitVar = np.diag(self.isofitGammaPos)
-        # linearVar = np.diag(self.linGammaPos)
-        MCMCVar = np.diag(self.MCMCcov)
-        plt.figure()
-        self.plotbands(priorVar[:425], 'r',label='Prior', axis='semilogy')
-        self.plotbands(isofitVar[:425],'k', label='Laplace Approx', axis='semilogy')
-        self.plotbands(MCMCVar[:425], 'b',label='MCMC Posterior', axis='semilogy')
-        plt.xlabel('Wavelength')
-        plt.ylabel('Marginal Variance')
-        plt.title('Posterior Variance - Surface Reflectance')
-        plt.legend()
-        # plt.savefig(self.mcmcDir + 'reflVar.png', dpi=300)
-
-        labels = ['AOD550', 'H2OSTR']
-        x = np.arange(len(labels))  # the label locations
-        width = 0.175
-        fig, ax = plt.subplots()
-        rects1 = ax.bar(x - width, priorVar[425:], width, color='red', label='Prior')
-        rects2 = ax.bar(x, isofitVar[425:], width, color='black', label='Laplace Approx')
-        rects3 = ax.bar(x + width, MCMCVar[425:], width, color='blue', label='MCMC Posterior')
-        ax.set_yscale('log')
-        ax.set_ylabel('Marginal Variance')
-        ax.set_title('Posterior Variance - Atmospheric Parameters')
-        ax.set_xticks(x)
-        ax.set_xticklabels(labels)
-        ax.legend()
-        # fig.savefig(self.mcmcDir + 'atmVar.png', dpi=300)
 
     def plotPosSparsity(self, tol):
 
@@ -405,73 +318,6 @@ class PlotFromFile:
             plt.xlabel('Wavelength')
             plt.ylabel('Value of Covariance Matrix')
 
-
-
-
-    def plotCompareRank(self):
-        
-        meanB8 = np.load(self.paramDir + 'MCMCmeanB8.npy')
-        covB8 = np.load(self.paramDir + 'MCMCcovB8.npy')
-        meanC8 = np.load(self.paramDir + 'MCMCmeanC8.npy')
-        covC8 = np.load(self.paramDir + 'MCMCcovC8.npy')
-        
-        varB8 = np.diag(covB8)
-        varC8 = np.diag(covC8)
-        varMAP = np.diag(self.isofitGammaPos)
-
-        errMeanMAP = abs(self.isofitMuPos - self.truth) / self.truth
-        errMeanB8 = abs(meanB8 - self.truth) / self.truth
-        errMeanC8 = abs(meanC8 - self.truth) / self.truth
-        '''
-        # posterior mean error
-        plt.figure()
-        self.plotbands(errMeanMAP,'k.', label='MAP Estimate', axis='semilogy')
-        self.plotbands(errMeanB8, 'r.',label='LIS r=100', axis='semilogy')
-        self.plotbands(errMeanC8, 'b.',label='LIS r=175', axis='semilogy')
-        plt.xlabel('Wavelength')
-        plt.ylabel('Relative Error')
-        plt.title('Error in Posterior Mean - Surface Reflectance')
-        plt.legend()
-
-        labels = ['425 - AOD550', '426 - H2OSTR']
-        x = np.arange(len(labels))  # the label locations
-        width = 0.175
-        fig, ax = plt.subplots()
-        rects2 = ax.bar(x - width, errMeanMAP[425:], width, color='black', label='MAP Estimate')
-        rects1 = ax.bar(x, errMeanB8[425:], width, color='red', label='LIS r=100')
-        rects3 = ax.bar(x + width, errMeanC8[425:], width, color='blue', label='LIS r=175')
-        ax.set_yscale('log')
-        ax.set_ylabel('Relative Error')
-        ax.set_title('Error in Posterior Mean - Atm.')
-        ax.set_xticks(x)
-        ax.set_xticklabels(labels)
-        ax.legend()
-        '''
-        # posterior variance
-        plt.figure()
-        self.plotbands(varMAP,'k', label='Laplace Approx', axis='semilogy')
-        self.plotbands(varB8, 'r',label='LIS r=100', axis='semilogy')
-        self.plotbands(varC8, 'b',label='LIS r=175', axis='semilogy')
-        plt.xlabel('Wavelength')
-        plt.ylabel('Marginal Variance')
-        plt.title('Posterior Variance - Surface Reflectance')
-        plt.legend()
-
-        labels = ['425 - AOD550', '426 - H2OSTR']
-        x = np.arange(len(labels))  # the label locations
-        width = 0.175
-        fig, ax = plt.subplots()
-        rects2 = ax.bar(x - width, varMAP[425:], width, color='black', label='Laplace Approx')
-        rects1 = ax.bar(x, varB8[425:], width, color='red', label='LIS r=100')
-        rects3 = ax.bar(x + width, varC8[425:], width, color='blue', label='LIS r=175')
-        ax.set_yscale('log')
-        ax.set_ylabel('Marginal Variance')
-        ax.set_title('Posterior Variance - Atmospheric Parameters')
-        ax.set_xticks(x)
-        ax.set_xticklabels(labels)
-        ax.legend()
-    
-
     def drawEllipse(self, mean, cov, ax, colour):
         ''' Helper function for twoDimVisual '''
         pearson = cov[0, 1]/np.sqrt(cov[0, 0] * cov[1, 1])
@@ -485,9 +331,10 @@ class PlotFromFile:
         ax.add_patch(ellipse) 
 
     def twoDimVisual(self, indX, indY, ax):
-        x_vals = self.x_vals_plot
+        x_vals = self.x_plot
 
-        ax.plot(self.truth[indX], self.truth[indY], 'ro', label='Truth', markersize=8)     
+        if indX < self.nx-2 and indY < self.nx-2:
+            ax.plot(self.truth[indX], self.truth[indY], 'ro', label='True reflectance', markersize=10)     
         ax.scatter(x_vals[indX,:], x_vals[indY,:], c='cornflowerblue', s=0.5)
 
         # plot Isofit mean/cov
@@ -507,6 +354,125 @@ class PlotFromFile:
         # ax.set_ylabel('Index ' + str(indY))
         # ax.legend()
         return ax
+
+    def autocorr(self, x_elem):
+        Nsamp = self.NsampAC
+        meanX = np.mean(x_elem)
+        varX = np.var(x_elem)
+        ac = np.zeros(Nsamp-1)
+
+        for k in range(Nsamp-1):
+            cov = np.cov(x_elem[:Nsamp-k], x_elem[k:Nsamp])
+            ac[k] = cov[1,0] / varX
+
+        return ac
+
+    def ESS(self, ac):
+        denom = 0
+        for i in range(len(ac)):
+            denom = denom + ac[i]
+        return self.Nsamp / (1 + 2 * denom)
+
+    def diagnostics(self, indSet=[10,20,50,100,150,160,250,260]):
+        # assume there are 10 elements in indSet
+        # default: indSet = [10,20,50,100,150,160,250,260,425,426]
+        if self.nx-2 not in indSet:
+            indSet.extend([self.nx-2, self.nx-1]) 
+
+        N = self.x_vals.shape[1]
+        numPairs = int(len(indSet) / 2) 
+
+
+        # subplot setup
+        fig1, axs1 = plt.subplots(numPairs, 2)
+        # fig2, axs2 = plt.subplots(numPairs, 2)
+        xPlot = np.zeros(numPairs * 2, dtype=int)
+        yPlot = np.zeros(numPairs * 2, dtype=int)
+        xPlot[::2] = range(numPairs)
+        xPlot[1::2] = range(numPairs)
+        yPlot[1::2] = 1
+
+        for i in range(len(indSet)):
+            # print('Diagnostics:',indSet[i])
+            x_elem = self.x_vals[indSet[i],:]
+            xp = xPlot[i]
+            yp = yPlot[i]
+
+            # plot trace
+            axs1[xp,yp].plot(range(N) * self.thinning, x_elem)
+            axs1[xp,yp].set_title('Trace - Index ' + str(indSet[i]))
+
+            # plot autocorrelation
+            # ac = self.autocorr(self.x_plot[indSet[i]])
+            # ac = ac[:int(len(ac)/2)]
+            # axs2[xp,yp].plot(range(1,len(ac)+1) * self.thinning, ac)
+            # axs2[xp,yp].set_title('Autocorrelation - Index ' + str(indSet[i]))
+
+        fig1.set_size_inches(5, 7)
+        fig1.tight_layout()
+        fig1.savefig(self.mcmcDir + 'trace.png', dpi=300)
+        # fig2.set_size_inches(5, 7)
+        # fig2.tight_layout()
+        # fig2.savefig(self.mcmcDir + 'autocorr.png', dpi=300)
+        
+        # plot logpos
+        plt.figure()
+        plt.plot(range(N) * self.thinning, self.logpos)
+        plt.xlabel('Number of Samples')
+        plt.ylabel('Log Posterior')
+        plt.savefig(self.mcmcDir + 'logpos.png', dpi=300)
+
+        # acceptance rate
+        # print('Acceptance rate:', )
+        acceptRate = np.mean(self.acceptance[self.burn:])
+        binWidth = 1000
+        numBin = int(self.Nsamp / binWidth)
+        xPlotAccept = np.arange(binWidth, self.Nsamp+1, binWidth) * self.thinning
+        acceptPlot = np.zeros(numBin)
+        for i in range(numBin):
+            acceptPlot[i] = np.mean(self.acceptance[binWidth*i : binWidth*(i+1)])
+        plt.figure()
+        plt.plot(xPlotAccept, acceptPlot)
+        plt.xlabel('Number of Samples')
+        plt.ylabel('Acceptance Rate')
+        plt.title('Acceptance Rate = ' + str(acceptRate))
+        plt.ylim([0, 1])
+        plt.savefig(self.mcmcDir + 'acceptance.png', dpi=300)
+
+
+    # def plot2ac(self, indset=[120,250,410]):
+
+    #     fig, axs = plt.subplots(1, len(indset))
+
+    #     for i in range(len(indset)):
+    #         # print('Autocorr:', indset[i])
+
+    #         ac = self.autocorr(self.x_vals_ac[indset[i],:])
+    #         ac2 = self.autocorr(self.x_vals_ac_noLIS[indset[i],:])
+
+    #         ac = ac[:self.numPlotAC]
+    #         ac2 = ac2[:self.numPlotAC]
+
+    #         print('Index:', indset[i])
+    #         print('ESS LIS:', self.ESS(ac))
+    #         print('ESS No LIS:', self.ESS(ac2))
+
+    #         # plot autocorrelation
+    #         axs[i].plot(range(1,len(ac)+1), ac, 'b', label='LIS r = 100')
+    #         axs[i].plot(range(1,len(ac2)+1), ac2, 'r', label='No LIS')
+    #         if indset[i] < 425:
+    #             axs[i].set_title(r'$\lambda = $' + str(self.wavelengths[indset[i]]) + ' nm')
+    #         elif indset[i] == 425:
+    #             axs[i].set_title('AOD')
+    #         elif indset[i] == 426:
+    #             axs[i].set_title('H2O')
+        
+    #     axs[0].set_xlabel('Lag', fontsize=14)
+    #     axs[0].set_ylabel('Autocorrelation', fontsize=14)
+        
+    #     handles, labels = axs[0].get_legend_handles_labels()
+    #     fig.legend(handles, labels, loc='center right', fontsize=14)
+    #     # fig2.savefig(self.mcmcDir + 'autocorr.png', dpi=300)
 
 
 

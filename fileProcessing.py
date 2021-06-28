@@ -40,5 +40,11 @@ class FileProcessing:
             print("file: {0}, size: {1}".format(f, s))
         fs.merge(input_dir=inputdir, callback=merge_cb)
 
+    def thinMCMCFile(self, inputdir, thinning):
+        x_vals =  np.load(inputdir + 'MCMC_x.npy', mmap_mode='r')
+        x_vals_thin = x_vals[:,::thinning]
+        np.save(inputdir + 'MCMC_x_thin.npy', x_vals_thin)
+        
+
 
         
