@@ -21,7 +21,7 @@ class Setup:
     Contains functions to generate training and test samples
     from isofit.
     '''
-    def __init__(self, wv, ref, atm, radiance, mcmcdir='MCMCRun', ):
+    def __init__(self, wv, ref, atm, radiance, mcmcdir='MCMCRun'):
 
         print('Setup in progress...')
         self.wavelengths = wv
@@ -77,6 +77,18 @@ class Setup:
                 bands = bands + [i]
         self.bands = bands
         self.bandsX = bands + [self.nx-2,self.nx-1]
+
+        self.saveConfig()
+
+    def saveConfig(self):
+        np.save(self.mcmcDir + 'wavelength.npy', self.wavelengths)
+        np.save(self.mcmcDir + 'radiance.npy', self.radiance)
+        np.save(self.mcmcDir + 'truth.npy', self.truth)
+        np.save(self.mcmcDir + 'bands.npy', self.bands)
+        np.save(self.mcmcDir + 'mu_x.npy', self.mu_x)
+        np.save(self.mcmcDir + 'gamma_x.npy', self.gamma_x)
+        np.save(self.mcmcDir + 'isofitMuPos.npy', self.isofitMuPos)
+        np.save(self.mcmcDir + 'isofitGammaPos.npy', self.isofitGammaPos)
 
     def getPrior(self, fullconfig):
         # get index of prior used in inversion

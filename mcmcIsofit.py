@@ -87,6 +87,7 @@ class MCMCIsofit:
             "thinning": self.thinning
             }
         self.mcmc = MCMCLIS(self.mcmcConfig)
+        self.saveMCMCConfig()
 
     def initPriorSampling(self, rank=427):
         self.mcmcConfig = {
@@ -111,19 +112,13 @@ class MCMCIsofit:
         self.mu_x = np.zeros(rank)
         self.gamma_x = np.identity(rank)
 
+        
+
     def runAM(self):
         self.mcmc.adaptm(self.alg)   
 
-    def saveConfig(self):
+    def saveMCMCConfig(self):
 
-        np.save(self.mcmcDir + 'wavelength.npy', self.wavelengths)
-        np.save(self.mcmcDir + 'radiance.npy', self.yobs)
-        np.save(self.mcmcDir + 'truth.npy', self.truth)
-        np.save(self.mcmcDir + 'bands.npy', self.bands)
-        np.save(self.mcmcDir + 'mu_x.npy', self.mu_x)
-        np.save(self.mcmcDir + 'gamma_x.npy', self.gamma_x)
-        np.save(self.mcmcDir + 'isofitMuPos.npy', self.mupos_isofit)
-        np.save(self.mcmcDir + 'isofitGammaPos.npy', self.gammapos_isofit)
         np.save(self.mcmcDir + 'Nsamp.npy', self.Nsamp)
         np.save(self.mcmcDir + 'burn.npy', self.burn)
         np.save(self.mcmcDir + 'thinning.npy', self.thinning)
