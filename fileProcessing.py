@@ -1,4 +1,5 @@
 import numpy as np
+import json
 from scipy.io import loadmat
 from fsplit.filesplit import Filesplit
 
@@ -9,11 +10,11 @@ class FileProcessing:
     def __init__(self):
         print('\n')
 
-    def loadWavelength(self, wvFile='setup/data/wavelengths.txt'):
-        # wvl, wv, wvr = np.loadtxt(wvFile).T
-        mat = loadmat(wvFile)
-        self.wv = mat['wl'][0]
-        # self.wv = wv * 1000
+    def loadWavelength(self, wvFile): #'setup/data/wavelengths.txt'
+        wvl, wv, wvr = np.loadtxt(wvFile).T
+        # mat = loadmat(wvFile)
+        # self.wv = mat['wl'][0]
+        self.wv = wv * 1000
 
     def loadReflectance(self, refFile):
         data = np.loadtxt(refFile).T
@@ -24,9 +25,13 @@ class FileProcessing:
     def loadRadiance(self, datamatfile):
         mat = loadmat(datamatfile)
         self.radiance = mat['meas'][0]
+
+    def loadConfig(self, configFile):
+        with open(configFile, 'r') as f:
+            self.config = json.load(f)
     
     def getFiles(self):
-        return self.wv, self.ref, self.radiance
+        return self.wv, self.ref, self.radiance, self.config
 
     def splitFile(self, filename, output):
         fs = Filesplit()

@@ -1,5 +1,13 @@
 {
   "ISOFIT_BASE": "../",
+  "input": {
+    "measured_radiance_file": "setup/input/beckmanlawn_radiance.txt"
+  },
+  "output": {
+    "estimated_radiance_file": "setup/output/estimated_radiance.txt",
+    "estimated_reflectance_file": "setup/output/estimated_reflectance.txt",
+    "estimated_state_file": "setup/output/est_state.txt"
+  },
   "forward_model": {
     "instrument": {
       "wavelength_file": "setup/data/wavelengths.txt",

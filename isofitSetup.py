@@ -1,4 +1,4 @@
-import sys, os, json
+import sys, os
 import numpy as np
 import scipy as s
 from scipy.io import loadmat
@@ -21,7 +21,7 @@ class Setup:
     Contains functions to generate training and test samples
     from isofit.
     '''
-    def __init__(self, wv, ref, atm, radiance, mcmcdir='MCMCRun'):
+    def __init__(self, wv, ref, atm, radiance, config, mcmcdir='MCMCRun'):
 
         print('Setup in progress...')
         self.wavelengths = wv
@@ -34,10 +34,11 @@ class Setup:
         self.regDir = '../results/Regression/linearModel/'
         self.analysisDir = '../results/Analysis/'
         self.mcmcDir = '../results/MCMC/' + mcmcdir + '/'
-
-        # load Isofit
-        with open('setup/config/config_inversion.json', 'r') as f:
-            config = json.load(f)
+        
+        # initialize Isofit with config 
+        self.config = config
+        self.windows = config['implementation']['inversion']['windows']
+        self.surfaceFile = config['forward_model']['surface']['surface_file']
         fullconfig = Config(config)
         self.fm = ForwardModel(fullconfig)
         self.geom = Geometry()
@@ -54,32 +55,26 @@ class Setup:
         if radiance.all() == 0:
             self.radiance = rad + eps
         else:
+            # radFile = config['input']['measured_radiance_file']
+            # self.radiance = 
             self.radiance = radiance
 
-        # if datamatfile == '':
-            
-        # else:
-        #     # directly load radiance from file
-        #     mat = loadmat(datamatfile)
-        #     self.radiance = mat['meas'][0]
-
-        
         # inversion using simulated radiance
         self.isofitMuPos, self.isofitGammaPos = self.invModel(self.radiance)
         self.nx = self.truth.shape[0]
-        self.ny = self.reflectance.shape[0]
+        self.ny = self.radiance.shape[0]
         
         # get indices that are in the window (i.e. take out deep water spectra)
         wl = self.wavelengths
+        w = self.windows
         bands = []
         for i in range(wl.size):
-            if (wl[i] > 380 and wl[i] < 1300) or (wl[i] > 1450 and wl[i] < 1780) or (wl[i] > 1950 and wl[i] < 2450):
+            # if (wl[i] > 380 and wl[i] < 1300) or (wl[i] > 1450 and wl[i] < 1780) or (wl[i] > 1950 and wl[i] < 2450):
+            if (wl[i] > w[0][0] and wl[i] < w[0][1]) or (wl[i] > w[1][0] and wl[i] < w[1][1]) or (wl[i] > w[2][0] and wl[i] < w[2][1]):
                 bands = bands + [i]
         self.bands = bands
         self.bandsX = bands + [self.nx-2,self.nx-1]
-
-        self.saveConfig()
-
+    
     def saveConfig(self):
         np.save(self.mcmcDir + 'wavelength.npy', self.wavelengths)
         np.save(self.mcmcDir + 'radiance.npy', self.radiance)
@@ -96,7 +91,7 @@ class Setup:
         indPr = mcs.component(self.truth, self.geom)
         print('Prior Index:', indPr)
         # Get prior mean and covariance
-        surfmat = loadmat('setup/data/surface.mat')
+        surfmat = loadmat(self.surfaceFile)
         wl = surfmat['wl'][0]
         refwl = np.squeeze(surfmat['refwl'])
         idx_ref = [np.argmin(abs(wl-w)) for w in np.squeeze(refwl)]
@@ -117,10 +112,11 @@ class Setup:
 
     def invModel(self, radiance):
 
-        inversion_settings = {"implementation": {
-        "mode": "inversion",
-        "inversion": {
-        "windows": [[380.0, 1300.0], [1450, 1780.0], [1950.0, 2450.0]]}}}
+        # inversion_settings = {"implementation": {
+        # "mode": "inversion",
+        # "inversion": {
+        # "windows": [[380.0, 1300.0], [1450, 1780.0], [1950.0, 2450.0]]}}}
+        inversion_settings = self.config
         inverse_config = Config(inversion_settings)
         iv = Inversion(inverse_config, self.fm)
         state_trajectory = iv.invert(radiance, self.geom)

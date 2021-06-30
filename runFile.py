@@ -12,24 +12,25 @@ from mcmcIsofit import MCMCIsofit
 
 
 ##### CONFIG #####
-Nsamp = 6000000
-burn = 2000000
-init = 'truth'
+Nsamp = 6000
+burn = 2000
+init = 'MAP'
 rank = 100
 LIS = True
-mcmcfolder = 'F2'
+mcmcfolder = 'G1'
 thinning = 20
 ##### CONFIG #####
 
 f = FileProcessing()
-f.loadWavelength('setup/data/beckmanlawn/ang20171108t184227_data_v2p11_BeckmanLawn.mat')
-f.loadReflectance('setup/data/beckmanlawn/insitu.txt')
-f.loadRadiance('setup/data/beckmanlawn/ang20171108t184227_data_v2p11_BeckmanLawn.mat')
-wv, ref, radiance = f.getFiles()
+f.loadWavelength('setup/data/wavelengths.txt')
+f.loadReflectance('setup/data/177/insitu.txt')
+f.loadRadiance('setup/data/177/ang20140612t215931_data_dump.mat')
+f.loadConfig('setup/config/config_inversion_JPL.json')
+wv, ref, radiance, config = f.getFiles()
 
 
 atm = [0.1, 2.5]
-setup = Setup(wv, ref, atm, radiance, mcmcdir=mcmcfolder)
+setup = Setup(wv, ref, atm, radiance, config, mcmcdir=mcmcfolder)
 g = GenerateSamples(setup)
 r = Regression(setup)
 a = Analysis(setup, r)
@@ -48,7 +49,6 @@ m.initMCMC(LIS=LIS, rank=rank) # specify LIS parameters
 
 start_time = time.time()
 m.runAM()
-m.saveConfig()
 np.savetxt(setup.mcmcDir + 'runtime.txt', np.array([time.time() - start_time]))
 
 

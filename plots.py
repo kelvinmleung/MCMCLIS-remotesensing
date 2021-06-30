@@ -20,9 +20,15 @@ class PlotFromFile:
         self.mcmcDirNoLIS = '../results/MCMC/N1/' 
 
         self.loadFromFile()
-        self.loadMCMC()
+
+        try:
+            self.loadMCMC()
+        except:
+            print('More MCMC files not found.')
 
         self.NsampAC = 10000#int(100000 / self.thinning)
+
+        self.plotIndices = self.indPlot()
         
     def loadFromFile(self):
 
@@ -36,13 +42,15 @@ class PlotFromFile:
         self.isofitMuPos = np.load(self.mcmcDir + 'isofitMuPos.npy')
         self.isofitGammaPos = np.load(self.mcmcDir + 'isofitGammaPos.npy')
         self.nx = self.mu_x.shape[0]
+        try:
+            self.Nsamp = np.load(self.mcmcDir + 'Nsamp.npy')
+            self.burn = np.load(self.mcmcDir + 'burn.npy')
+            self.thinning = np.load(self.mcmcDir + 'thinning.npy')
 
-        self.Nsamp = np.load(self.mcmcDir + 'Nsamp.npy')
-        self.burn = np.load(self.mcmcDir + 'burn.npy')
-        self.thinning = np.load(self.mcmcDir + 'thinning.npy')
-
-        self.Nthin = int(self.Nsamp / self.thinning)
-        self.burnthin = int(self.burn / self.thinning)
+            self.Nthin = int(self.Nsamp / self.thinning)
+            self.burnthin = int(self.burn / self.thinning)
+        except:
+            print('MCMC files not found.')
 
         # self.linMuPos = np.load(self.paramDir + 'linMuPos.npy')
         # self.linGammaPos = np.load(self.paramDir + 'linGammaPos.npy')
@@ -68,45 +76,56 @@ class PlotFromFile:
 
     def indPlot(self):
         wl = self.wavelengths
+
+        if len(self.truth) == 434:
+            configFile = 'setup/config/config_inversion_JPL.json'
+        elif len(self.truth) == 427:
+            configFile = 'setup/config/config_inversion.json'
+        else:
+            print('ERROR READING')
+        with open(configFile, 'r') as f:
+            config = json.load(f)
+        w = config['implementation']['inversion']['windows']
+
         range1, range2, range3 = [], [], []
         for i in range(wl.size):
-            if wl[i] > 380 and wl[i] < 1300:
+            if wl[i] > w[0][0] and wl[i] < w[0][1]:
                 range1 = range1 + [i]
-            elif wl[i] > 1450 and wl[i] < 1780:
+            elif wl[i] > w[1][0] and wl[i] < w[1][1]:
                 range2 = range2 + [i]
-            elif wl[i] > 1950 and wl[i] < 2450:
+            elif wl[i] > w[2][0] and wl[i] < w[2][1]:
                 range3 = range3 + [i]
         r1 = [min(range1), max(range1)]
         r2 = [min(range2), max(range2)]
         r3 = [min(range3), max(range3)]  
-        return r1, r2, r3
 
-    # def plotbands(self, y, linestyle, linewidth=2, label='', axis='normal'):
-    #     wl = self.wavelengths
-    #     r1, r2, r3 = self.indPlot()
-    #     print(r1, r2, r3)
-    #     print('1,185,215,281,315,414')
-    #     if axis == 'normal':
-    #         plt.plot(wl[r1[0]:r1[1]], y[r1[0]:r1[1]], linestyle, linewidth=linewidth, label=label)
-    #         plt.plot(wl[r2[0]:r2[1]], y[r2[0]:r2[1]], linestyle, linewidth=linewidth)
-    #         plt.plot(wl[r3[0]:r3[1]], y[r3[0]:r3[1]], linestyle, linewidth=linewidth)
-    #     elif axis == 'semilogy':
-    #         plt.semilogy(wl[r1[0]:r1[1]], y[r1[0]:r1[1]], linestyle, linewidth=linewidth, label=label)
-    #         plt.semilogy(wl[r2[0]:r2[1]], y[r2[0]:r2[1]], linestyle, linewidth=linewidth)
-    #         plt.semilogy(wl[r3[0]:r3[1]], y[r3[0]:r3[1]], linestyle, linewidth=linewidth)
-        
+        return [r1, r2, r3]
+        # return r1, r2, r3
 
     def plotbands(self, y, linestyle, linewidth=2, label='', axis='normal'):
         wl = self.wavelengths
+        r1, r2, r3 = self.plotIndices
         if axis == 'normal':
-            
-            plt.plot(wl[1:185], y[1:185], linestyle, linewidth=linewidth, label=label)
-            plt.plot(wl[215:281], y[215:281], linestyle, linewidth=linewidth)
-            plt.plot(wl[315:414], y[315:414], linestyle, linewidth=linewidth)
+            plt.plot(wl[r1[0]:r1[1]], y[r1[0]:r1[1]], linestyle, linewidth=linewidth, label=label)
+            plt.plot(wl[r2[0]:r2[1]], y[r2[0]:r2[1]], linestyle, linewidth=linewidth)
+            plt.plot(wl[r3[0]:r3[1]], y[r3[0]:r3[1]], linestyle, linewidth=linewidth)
         elif axis == 'semilogy':
-            plt.semilogy(wl[1:185], y[1:185], linestyle, linewidth=linewidth, label=label)
-            plt.semilogy(wl[215:281], y[215:281], linestyle, linewidth=linewidth)
-            plt.semilogy(wl[315:414], y[315:414], linestyle, linewidth=linewidth)
+            plt.semilogy(wl[r1[0]:r1[1]], y[r1[0]:r1[1]], linestyle, linewidth=linewidth, label=label)
+            plt.semilogy(wl[r2[0]:r2[1]], y[r2[0]:r2[1]], linestyle, linewidth=linewidth)
+            plt.semilogy(wl[r3[0]:r3[1]], y[r3[0]:r3[1]], linestyle, linewidth=linewidth)
+        
+
+    # def plotbands(self, y, linestyle, linewidth=2, label='', axis='normal'):
+    #     wl = self.wavelengths
+    #     if axis == 'normal':
+            
+    #         plt.plot(wl[1:185], y[1:185], linestyle, linewidth=linewidth, label=label)
+    #         plt.plot(wl[215:281], y[215:281], linestyle, linewidth=linewidth)
+    #         plt.plot(wl[315:414], y[315:414], linestyle, linewidth=linewidth)
+    #     elif axis == 'semilogy':
+    #         plt.semilogy(wl[1:185], y[1:185], linestyle, linewidth=linewidth, label=label)
+    #         plt.semilogy(wl[215:281], y[215:281], linestyle, linewidth=linewidth)
+    #         plt.semilogy(wl[315:414], y[315:414], linestyle, linewidth=linewidth)
 
     def plotRegression(self):
         ylinear = self.phi.dot((self.truth - self.meanX) / np.sqrt(self.varX)) * np.sqrt(self.varY) + self.meanY
@@ -238,7 +257,7 @@ class PlotFromFile:
 
     def kdcontour(self, indX, indY):
         x_vals = np.load(self.mcmcDir + 'MCMC_x.npy')
-        x_vals_plot = x_vals[:,self.burn:]
+        x_vals_plot = x_vals[:,self.burnthin:]
 
         x = x_vals_plot[indX,:]
         y = x_vals_plot[indY,:]
@@ -285,7 +304,7 @@ class PlotFromFile:
             ax.set_ylabel(r'$\lambda = $' + str(self.wavelengths[indY]) + ' nm')
 
             # plot truth
-            ax.plot(self.truth[indX], self.truth[indY], 'go', label='Truth', markersize=8)  
+            ax.plot(self.truth[indX], self.truth[indY], 'ro', label='Truth', markersize=8)  
         else:
             if indX == self.nx-2:
                 ax.set_xlabel('AOD550')
@@ -424,7 +443,7 @@ class PlotFromFile:
 
         # acceptance rate
         # print('Acceptance rate:', )
-        acceptRate = np.mean(self.acceptance[self.burn:])
+        acceptRate = np.mean(self.acceptance[self.burnthin:])
         binWidth = 1000
         numBin = int(self.Nsamp / binWidth)
         xPlotAccept = np.arange(binWidth, self.Nsamp+1, binWidth) * self.thinning

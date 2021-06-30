@@ -48,8 +48,10 @@ class Regression:
 
         # scale truth as well
         N = self.X_train.shape[0]
-        ny = self.reflectance.size
-        self.reflectance_scaled = (self.reflectance - self.meanX[:ny]) / np.sqrt(self.varX[:ny])
+        # ny = self.radiance.size
+        self.nx = setup.nx
+        self.ny = setup.ny
+        self.reflectance_scaled = (self.reflectance - self.meanX[:self.nx-2]) / np.sqrt(self.varX[:self.nx-2])
         self.truth_scaled = (self.truth - self.meanX) / np.sqrt(self.varX)
         
     def reglasso(self, param, yElem):
