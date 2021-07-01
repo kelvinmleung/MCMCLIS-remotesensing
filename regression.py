@@ -17,7 +17,7 @@ class Regression:
         self.regDir = setup.regDir
 
         # setup parameters
-        self.plotbands = setup.plotbands
+        # self.plotbands = setup.plotbands
         self.wavelengths = setup.wavelengths
         self.reflectance = setup.reflectance
         self.truth = setup.truth

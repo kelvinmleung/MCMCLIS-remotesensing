@@ -112,13 +112,11 @@ class MCMCIsofit:
         self.mu_x = np.zeros(rank)
         self.gamma_x = np.identity(rank)
 
-        
-
     def runAM(self):
         self.mcmc.adaptm(self.alg)   
 
     def saveMCMCConfig(self):
-        np.save(self.mcmcDir + 'wavelength.npy', self.wavelengths)
+        # np.save(self.mcmcDir + 'wavelength.npy', self.wavelengths)
         np.save(self.mcmcDir + 'radiance.npy', self.yobs)
         np.save(self.mcmcDir + 'truth.npy', self.truth)
         np.save(self.mcmcDir + 'bands.npy', self.bands)
@@ -136,9 +134,9 @@ class MCMCIsofit:
 
     def autocorr(self, ind):
         return self.mcmc.autocorr(ind)
-
+    '''
     def drawEllipse(self, mean, cov, ax, colour):
-        ''' Helper function for twoDimVisual '''
+        # Helper function for twoDimVisual 
 
         pearson = cov[0, 1]/np.sqrt(cov[0, 0] * cov[1, 1])
         ell_radius_x = np.sqrt(1 + pearson)
@@ -347,4 +345,4 @@ class MCMCIsofit:
         plt.ylim([0, 1])
         plt.savefig(self.mcmcDir + 'acceptance.png', dpi=300)
         
-        
+    '''

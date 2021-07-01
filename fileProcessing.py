@@ -11,10 +11,11 @@ class FileProcessing:
         print('\n')
 
     def loadWavelength(self, wvFile): #'setup/data/wavelengths.txt'
-        wvl, wv, wvr = np.loadtxt(wvFile).T
+        # these wavelengths must correspond to the reflectances (and not radiances)
+        wv, fwhm = np.loadtxt(wvFile).T
         # mat = loadmat(wvFile)
         # self.wv = mat['wl'][0]
-        self.wv = wv * 1000
+        self.wv = wv# * 1000
 
     def loadReflectance(self, refFile):
         data = np.loadtxt(refFile).T

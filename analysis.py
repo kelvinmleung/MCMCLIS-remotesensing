@@ -18,7 +18,7 @@ class Analysis:
         self.analysisDir = setup.analysisDir
 
         # setup parameters
-        self.plotbands = setup.plotbands
+        # self.plotbands = setup.plotbands
         self.wl = setup.wavelengths
         self.reflectance = setup.reflectance
         self.truth = setup.truth

@@ -28,11 +28,12 @@ class PlotFromFile:
 
         self.NsampAC = 10000#int(100000 / self.thinning)
 
-        self.plotIndices = self.indPlot()
+        self.checkConfig()
+        self.plotIndices = self.windowInd()
         
     def loadFromFile(self):
 
-        self.wavelengths = np.load(self.mcmcDir + 'wavelength.npy')
+        # self.wavelengths = np.load(self.mcmcDir + 'wavelength.npy')
         self.yobs = np.load(self.mcmcDir + 'radiance.npy')
         self.truth = np.load(self.mcmcDir + 'truth.npy')
         self.bands = np.load(self.mcmcDir + 'bands.npy')
@@ -74,19 +75,34 @@ class PlotFromFile:
 
         # self.x_vals_ac = x_vals[:,:self.NsampAC]
 
-    def indPlot(self):
-        wl = self.wavelengths
+    def checkConfig(self):
 
         if len(self.truth) == 434:
             configFile = 'setup/config/config_inversion_JPL.json'
+            wvFile = 'setup/data/wavelengths_JPL.txt'
         elif len(self.truth) == 427:
             configFile = 'setup/config/config_inversion.json'
+            wvFile = 'setup/data/wavelengths.txt'
         else:
             print('ERROR READING')
-        with open(configFile, 'r') as f:
-            config = json.load(f)
-        w = config['implementation']['inversion']['windows']
+        
+        wv, fwhm = np.loadtxt(wvFile).T
+        self.wavelengths = wv
 
+        with open(configFile, 'r') as f:
+            self.config = json.load(f)
+
+    def windowInd(self):
+        wl = self.wavelengths
+        # if len(self.truth) == 434:
+        #     configFile = 'setup/config/config_inversion_JPL.json'
+        # elif len(self.truth) == 427:
+        #     configFile = 'setup/config/config_inversion.json'
+        # else:
+        #     print('ERROR READING')
+        # with open(configFile, 'r') as f:
+        #     config = json.load(f)
+        w = self.config['implementation']['inversion']['windows']
         range1, range2, range3 = [], [], []
         for i in range(wl.size):
             if wl[i] > w[0][0] and wl[i] < w[0][1]:

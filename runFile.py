@@ -18,7 +18,7 @@ init = 'MAP'
 rank = 100
 LIS = True
 mcmcfolder = 'G1'
-thinning = 20
+thinning = 10
 ##### CONFIG #####
 
 f = FileProcessing()

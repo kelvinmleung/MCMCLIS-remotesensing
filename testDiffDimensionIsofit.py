@@ -8,7 +8,7 @@ from isofitSetup import Setup
 from plots import PlotFromFile
 
 f = FileProcessing()
-f.loadWavelength('setup/data/177/ang20140612t215931_data_dump.mat')
+f.loadWavelength('setup/data/wavelengths_JPL.txt')
 f.loadReflectance('setup/data/177/insitu.txt')
 f.loadRadiance('setup/data/177/ang20140612t215931_data_dump.mat')
 f.loadConfig('setup/config/config_inversion_JPL.json')

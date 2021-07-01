@@ -124,7 +124,7 @@ class Setup:
         rfl_est, rdn_est, path_est, S_hat, K, G = iv.forward_uncertainty(state_est, radiance, self.geom)
 
         return state_est, S_hat
-
+    '''
     def plotbands(self, y, linestyle, linewidth=1, label='', axis='normal'):
         wl = self.wavelengths
         if axis == 'normal':
@@ -399,42 +399,42 @@ class Setup:
         plt.savefig('x0isofit/x0atm.png', dpi=300)
 
 
-        '''
-        [xmin, xmax] = [0, 1]
-        [ymin, ymax] = [1, 4]
         
-        # Perform the kernel density estimate
-        xx, yy = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
-        positions = np.vstack([xx.ravel(), yy.ravel()])
-        values = np.vstack([x, y])
-        kernel = st.gaussian_kde(values)
-        f = np.reshape(kernel(positions).T, xx.shape)
-        f = f / np.max(f) # normalize
-
-        fig = plt.figure()
-        ax = fig.gca()
-        ax.set_xlim(xmin, xmax)
-        ax.set_ylim(ymin, ymax)
+        # [xmin, xmax] = [0, 1]
+        # [ymin, ymax] = [1, 4]
         
-        # Contourf plot
-        cfset = ax.contourf(xx, yy, f, cmap='Blues' ) # levels=levs
-        plt.clabel(cfset, fontsize='smaller')
+        # # Perform the kernel density estimate
+        # xx, yy = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
+        # positions = np.vstack([xx.ravel(), yy.ravel()])
+        # values = np.vstack([x, y])
+        # kernel = st.gaussian_kde(values)
+        # f = np.reshape(kernel(positions).T, xx.shape)
+        # f = f / np.max(f) # normalize
 
-        # # plot truth, isofit, and mcmc mean
-        # meanIsofit = np.array([self.isofitMuPos[indX], self.isofitMuPos[indY]])
-        # meanMCMC = np.array([self.MCMCmean[indX], self.MCMCmean[indY]])
-        # ax.plot(self.truth[indX], self.truth[indY], 'go', label='Truth', markersize=8)  
-        # ax.plot(meanIsofit[0], meanIsofit[1], 'rx', label='MAP', markersize=12)
-        # ax.plot(meanMCMC[0], meanMCMC[1], 'kx', label='MCMC', markersize=12)
-        # ax.scatter(x, y, 'b.')
+        # fig = plt.figure()
+        # ax = fig.gca()
+        # ax.set_xlim(xmin, xmax)
+        # ax.set_ylim(ymin, ymax)
+        
+        # # Contourf plot
+        # cfset = ax.contourf(xx, yy, f, cmap='Blues' ) # levels=levs
+        # plt.clabel(cfset, fontsize='smaller')
 
-        # Label plot
-        # ax.clabel(cset, inline=1, fontsize=10)
-        ax.set_xlabel('AOD')
-        ax.set_ylabel('H2O')
-        ax.legend()
-        fig.colorbar(cfset)
-        '''
+        # # # plot truth, isofit, and mcmc mean
+        # # meanIsofit = np.array([self.isofitMuPos[indX], self.isofitMuPos[indY]])
+        # # meanMCMC = np.array([self.MCMCmean[indX], self.MCMCmean[indY]])
+        # # ax.plot(self.truth[indX], self.truth[indY], 'go', label='Truth', markersize=8)  
+        # # ax.plot(meanIsofit[0], meanIsofit[1], 'rx', label='MAP', markersize=12)
+        # # ax.plot(meanMCMC[0], meanMCMC[1], 'kx', label='MCMC', markersize=12)
+        # # ax.scatter(x, y, 'b.')
+
+        # # Label plot
+        # # ax.clabel(cset, inline=1, fontsize=10)
+        # ax.set_xlabel('AOD')
+        # ax.set_ylabel('H2O')
+        # ax.legend()
+        # fig.colorbar(cfset)
+        
 
     def genStartPoints(self):
         # refl = np.load('x0isofit/refl.npy')
@@ -457,7 +457,7 @@ class Setup:
         np.save('x0isofit/truths.npy', truth)
         np.save('x0isofit/radiance.npy', self.radiance)
         np.save('x0isofit/noisecov.npy', self.noisecov)
-
+    '''
 
 
 
