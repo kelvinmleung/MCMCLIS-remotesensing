@@ -17,14 +17,14 @@ burn = 2000000
 init = 'MAP'
 rank = 100
 LIS = True
-mcmcfolder = 'G31'
+mcmcfolder = 'G41'
 thinning = 20
 ##### CONFIG #####
 
 f = FileProcessing()
 f.loadWavelength('setup/data/wavelengths.txt')
-f.loadReflectance('setup/data/mars/insitu.txt')
-f.loadRadiance('setup/data/mars/ang20140612t215931_data_dump.mat')
+f.loadReflectance('setup/data/dark/insitu.txt')
+f.loadRadiance('setup/data/dark/ang20140612t215931_data_dump.mat')
 f.loadConfig('setup/config/config_inversion_JPL.json')
 wv, ref, radiance, config = f.getFiles()
 
