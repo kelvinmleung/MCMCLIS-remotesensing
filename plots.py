@@ -17,7 +17,6 @@ class PlotFromFile:
         self.paramDir = '../results/Parameters/'
         self.regDir = '../results/Regression/linearmodel/'
         self.mcmcDir = '../results/MCMC/' + mcmcfolder + '/'
-        self.mcmcDirNoLIS = '../results/MCMC/N1/' 
 
         self.loadFromFile()
 
@@ -157,9 +156,9 @@ class PlotFromFile:
     def plotPosterior(self):
 
         plt.figure()
-        self.plotbands(self.truth[:self.nx-2], 'b.',label='True Reflectance')
-        self.plotbands(self.isofitMuPos[:self.nx-2],'k.', label='Isofit Posterior')
-        self.plotbands(self.MCMCmean[:self.nx-2], 'c.',label='MCMC Posterior')
+        self.plotbands(self.truth[:self.nx-2], 'k.',label='True Reflectance')
+        self.plotbands(self.isofitMuPos[:self.nx-2],'r.', label='Isofit Posterior')
+        self.plotbands(self.MCMCmean[:self.nx-2], 'b.',label='MCMC Posterior')
         plt.xlabel('Wavelength')
         plt.ylabel('Reflectance')
         plt.title('Posterior Mean - Surface Reflectance')
@@ -170,8 +169,8 @@ class PlotFromFile:
         plt.figure()
         isofitError = abs(self.isofitMuPos[:self.nx-2] - self.truth[:self.nx-2]) / abs(self.truth[:self.nx-2])
         mcmcError = abs(self.MCMCmean[:self.nx-2] - self.truth[:self.nx-2]) / abs(self.truth[:self.nx-2])
-        self.plotbands(isofitError,'k.', label='Isofit Posterior',axis='semilogy')
-        self.plotbands(mcmcError, 'c.',label='MCMC Posterior',axis='semilogy')
+        self.plotbands(isofitError,'r.', label='Isofit Posterior',axis='semilogy')
+        self.plotbands(mcmcError, 'b.',label='MCMC Posterior',axis='semilogy')
         plt.xlabel('Wavelength')
         plt.ylabel('Relative Error')
         plt.title('Error in Posterior Mean')
@@ -181,9 +180,9 @@ class PlotFromFile:
 
         plt.figure()
         # plt.plot(self.truth[self.nx-2], self.truth[self.nx-1], 'bo',label='True Reflectance')
-        plt.plot(self.mu_x[self.nx-2], self.mu_x[self.nx-1], 'r.',label='Prior')
-        plt.plot(self.isofitMuPos[self.nx-2],self.isofitMuPos[self.nx-1],'k.', label='Isofit Posterior')
-        plt.plot(self.MCMCmean[self.nx-2], self.MCMCmean[self.nx-1], 'cx',label='MCMC Posterior')
+        plt.plot(self.mu_x[self.nx-2], self.mu_x[self.nx-1], 'k.', markersize=12, label='Prior')
+        plt.plot(self.isofitMuPos[self.nx-2],self.isofitMuPos[self.nx-1],'r.', markersize=12, label='Isofit Posterior')
+        plt.plot(self.MCMCmean[self.nx-2], self.MCMCmean[self.nx-1], 'bx',markersize=12, label='MCMC Posterior')
         plt.xlabel('AOT550')
         plt.ylabel('H2OSTR')
         plt.title('Posterior Mean - Atmospheric Parameters')
@@ -213,9 +212,9 @@ class PlotFromFile:
         isofitVar = np.diag(self.isofitGammaPos)
         MCMCVar = np.diag(self.MCMCcov)
         plt.figure()
-        self.plotbands(priorVar[:self.nx-2], 'b.',label='Prior', axis='semilogy')
-        self.plotbands(isofitVar[:self.nx-2],'k.', label='Isofit Posterior', axis='semilogy')
-        self.plotbands(MCMCVar[:self.nx-2], 'c.',label='MCMC Posterior', axis='semilogy')
+        self.plotbands(priorVar[:self.nx-2], 'k.',label='Prior', axis='semilogy')
+        self.plotbands(isofitVar[:self.nx-2],'r.', label='Isofit Posterior', axis='semilogy')
+        self.plotbands(MCMCVar[:self.nx-2], 'b.',label='MCMC Posterior', axis='semilogy')
         plt.xlabel('Wavelength')
         plt.ylabel('Variance')
         plt.title('Posterior Variance - Surface Reflectance')
@@ -228,9 +227,9 @@ class PlotFromFile:
         x = np.arange(len(labels))  # the label locations
         width = 0.175
         fig, ax = plt.subplots()
-        rects1 = ax.bar(x - width, priorVar[self.nx-2:], width, label='Prior')
-        rects2 = ax.bar(x, isofitVar[self.nx-2:], width, label='Isofit Posterior')
-        rects4 = ax.bar(x + width, MCMCVar[self.nx-2:], width, label='MCMC Posterior')
+        rects1 = ax.bar(x - width, priorVar[self.nx-2:], width, color='k', label='Prior')
+        rects2 = ax.bar(x, isofitVar[self.nx-2:], width, color='r', label='Isofit Posterior')
+        rects4 = ax.bar(x + width, MCMCVar[self.nx-2:], width, color='b', label='MCMC Posterior')
         ax.set_yscale('log')
         ax.set_ylabel('Variance')
         ax.set_title('Posterior Variance - Atmospheric Parameters')
@@ -270,6 +269,7 @@ class PlotFromFile:
         ax[2,2].set_xlabel(r'$\lambda = $' + str(self.wavelengths[indset2[2]]) + ' nm')
         handles, labels = ax[0,0].get_legend_handles_labels()
         fig.legend(handles, labels, loc='center right')
+        fig.savefig(self.mcmcDir + '2Dmarginal.png', dpi=300)
 
     def kdcontour(self, indX, indY):
         x_vals = np.load(self.mcmcDir + 'MCMC_x.npy')
@@ -307,7 +307,7 @@ class PlotFromFile:
         cset = ax.contour(xx, yy, f, levels=levs, colors='k') ##############################ADD INLINE
         plt.clabel(cset, levs, fontsize='smaller')
 
-        # plot truth, isofit, and mcmc mean
+        # plot truth, isofit, and mcmc 
         meanIsofit = np.array([isofitPosX, isofitPosY])
         meanMCMC = np.array([self.MCMCmean[indX], self.MCMCmean[indY]])
         ax.plot(meanIsofit[0], meanIsofit[1], 'rx', label='MAP', markersize=12)
@@ -327,6 +327,8 @@ class PlotFromFile:
                 ax.set_ylabel('H20STR')
         ax.legend()
         fig.colorbar(cfset)
+
+        fig.savefig(self.mcmcDir + 'kdcontour_' + str(indX) + '_' + str(indY) + '.png', dpi=300)
         return fig
 
     
@@ -470,7 +472,7 @@ class PlotFromFile:
         plt.plot(xPlotAccept, acceptPlot)
         plt.xlabel('Number of Samples')
         plt.ylabel('Acceptance Rate')
-        plt.title('Acceptance Rate = ' + str(acceptRate))
+        plt.title('Acceptance Rate = ' + str(round(acceptRate,2)))
         plt.ylim([0, 1])
         plt.savefig(self.mcmcDir + 'acceptance.png', dpi=300)
 

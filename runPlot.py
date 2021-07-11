@@ -15,12 +15,12 @@ from plots import PlotFromFile
 # indSet = [30,40,90,100,150,160,250,260, m.nx-2, m.nx-1]
 # m.diagnostics(MCMCmean, MCMCcov, indSet)
 
-mcmcfolder = 'G1'
+mcmcfolder = 'G11'
 p = PlotFromFile(mcmcfolder)
 p.plotPosterior()
 p.plot2Dmarginal()
 
-p.kdcontour(indX=90, indY=100)
+p.kdcontour(indX=432, indY=433)
 p.diagnostics(indSet=[10,20,50,100,150,160,250,260])
 
 plt.show()
