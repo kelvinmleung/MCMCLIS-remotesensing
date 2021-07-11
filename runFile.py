@@ -14,7 +14,7 @@ from mcmcIsofit import MCMCIsofit
 ##### CONFIG #####
 Nsamp = 6000
 burn = 2000
-init = 'MAP'
+init = 'linpos'
 rank = 100
 LIS = True
 mcmcfolder = 'G14'
