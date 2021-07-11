@@ -17,7 +17,7 @@ burn = 2000
 init = 'MAP'
 rank = 100
 LIS = True
-mcmcfolder = 'G12'
+mcmcfolder = 'G14'
 thinning = 5
 ##### CONFIG #####
 
