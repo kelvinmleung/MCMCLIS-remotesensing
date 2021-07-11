@@ -12,13 +12,13 @@ from mcmcIsofit import MCMCIsofit
 
 
 ##### CONFIG #####
-Nsamp = 6000
-burn = 2000
+Nsamp = 6000000
+burn = 2000000
 init = 'linpos'
 rank = 100
 LIS = True
 mcmcfolder = 'G14'
-thinning = 5
+thinning = 20
 ##### CONFIG #####
 
 f = FileProcessing()

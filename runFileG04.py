@@ -14,18 +14,18 @@ from mcmcIsofit import MCMCIsofit
 ##### CONFIG #####
 Nsamp = 6000000
 burn = 2000000
-init = 'MAP'
+init = 'linpos'
 rank = 100
 LIS = True
-mcmcfolder = 'G31'
+mcmcfolder = 'G04'
 thinning = 20
 ##### CONFIG #####
 
 f = FileProcessing()
 f.loadWavelength('setup/data/wavelengths.txt')
-f.loadReflectance('setup/data/mars/insitu.txt')
-f.loadRadiance('setup/data/mars/ang20140612t215931_data_dump.mat')
-f.loadConfig('setup/config/config_inversion_JPL.json')
+f.loadReflectance('setup/data/beckmanlawn/insitu.txt')
+f.loadRadiance('setup/data/beckmanlawn/ang20171108t184227_data_v2p11_BeckmanLawn.mat')
+f.loadConfig('setup/config/config_inversion.json')
 wv, ref, radiance, config = f.getFiles()
 
 
@@ -42,6 +42,10 @@ elif init == 'truth':
     x0 = setup.truth
 elif init == 'midMAPtruth':
     x0 = 0.5 * (setup.isofitMuPos + setup.truth)
+elif init == 'linpos':
+    linMuPos, linGammaPos = a.posterior(setup.radiance)
+    x0 = linMuPos
+
 mcmcfolder = mcmcfolder + '_init' + init + '_rank' + str(rank)
 
 m = MCMCIsofit(setup, a, Nsamp, burn, x0, 'AM', thinning=thinning)
