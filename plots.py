@@ -29,6 +29,7 @@ class PlotFromFile:
 
         self.checkConfig()
         self.plotIndices = self.windowInd()
+        self.bands = self.getBands()
         
     def loadFromFile(self):
 
@@ -42,6 +43,7 @@ class PlotFromFile:
         self.isofitMuPos = np.load(self.mcmcDir + 'isofitMuPos.npy')
         self.isofitGammaPos = np.load(self.mcmcDir + 'isofitGammaPos.npy')
         self.nx = self.mu_x.shape[0]
+        
         try:
             self.Nsamp = np.load(self.mcmcDir + 'Nsamp.npy')
             self.burn = np.load(self.mcmcDir + 'burn.npy')
@@ -116,6 +118,57 @@ class PlotFromFile:
 
         return [r1, r2, r3]
         # return r1, r2, r3
+    def getBands(self):
+        # get indices that are in the window (i.e. take out deep water spectra)
+        wl = self.wavelengths
+        w = self.config['implementation']['inversion']['windows']
+        bands = []
+        for i in range(wl.size):
+            # if (wl[i] > 380 and wl[i] < 1300) or (wl[i] > 1450 and wl[i] < 1780) or (wl[i] > 1950 and wl[i] < 2450):
+            if (wl[i] > w[0][0] and wl[i] < w[0][1]) or (wl[i] > w[1][0] and wl[i] < w[1][1]) or (wl[i] > w[2][0] and wl[i] < w[2][1]):
+                bands = bands + [i]
+        return bands
+        
+
+    def quantDiagnostic(self):
+        ## Error for reflectance parameters
+
+        # Error in reflectance
+        isofitErrorVec = self.isofitMuPos[:self.nx-2] - self.truth[:self.nx-2]
+        mcmcErrorVec = self.MCMCmean[:self.nx-2] - self.truth[:self.nx-2]
+
+        isofitError = np.linalg.norm(self.isofitMuPos[self.bands] - self.truth[self.bands]) / np.linalg.norm(self.truth[self.bands])
+        mcmcError = np.linalg.norm(self.MCMCmean[self.bands] - self.truth[self.bands]) / np.linalg.norm(self.truth[self.bands])
+
+        # Inverse variance weighted error
+        # ivweIsofit, isofitVarDenom = 0, 0
+        # ivweMCMC, mcmcVarDenom = 0, 0
+        # isofitVar = np.diag(self.isofitGammaPos)
+        # mcmcVar = np.diag(self.MCMCcov)
+
+        isofitWeightCov = np.linalg.inv(self.isofitGammaPos[:,:self.nx-2][:self.nx-2,:])
+        mcmcWeightCov = np.linalg.inv(self.MCMCcov[:,:self.nx-2][:self.nx-2,:])
+
+        weightErrIsofit = isofitErrorVec.T @ isofitWeightCov @ isofitErrorVec
+        weightErrMCMC = mcmcErrorVec.T @ mcmcWeightCov @ mcmcErrorVec
+
+        # for i in self.bands:
+        #     isofitVarDenom = isofitVarDenom + isofitVar[i]
+        #     mcmcVarDenom = mcmcVarDenom + mcmcVar[i]
+        #     ivweIsofit = ivweIsofit + isofitErrorVec[i] / isofitVar[i]
+        #     ivweMCMC = ivweMCMC + mcmcErrorVec[i] / mcmcVar[i]
+
+        print('Relative Error in Retrieved Reflectance')
+        print('\tIsofit:', isofitError)
+        print('\tMCMC:', mcmcError)
+        print('\nInverse Posterior Covariance Weighted Error')
+        print('\tIsofit:', weightErrIsofit)
+        print('\tMCMC:', weightErrMCMC)
+
+
+
+
+
 
     def plotbands(self, y, linestyle, linewidth=2, label='', axis='normal'):
         wl = self.wavelengths
