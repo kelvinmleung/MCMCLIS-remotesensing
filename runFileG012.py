@@ -14,18 +14,18 @@ from mcmcIsofit import MCMCIsofit
 ##### CONFIG #####
 Nsamp = 6000000
 burn = 2000000
-init = 'linpos'
-rank = 100
+init = 'MAP'
+rank = 200
 LIS = True
-mcmcfolder = 'G14'
+mcmcfolder = 'G012'
 thinning = 20
 ##### CONFIG #####
 
 f = FileProcessing()
 f.loadWavelength('setup/data/wavelengths.txt')
-f.loadReflectance('setup/data/177/insitu.txt')
-f.loadRadiance('setup/data/177/ang20140612t215931_data_dump.mat')
-f.loadConfig('setup/config/config_inversion_JPL.json')
+f.loadReflectance('setup/data/beckmanlawn/insitu.txt')
+f.loadRadiance('setup/data/beckmanlawn/ang20171108t184227_data_v2p11_BeckmanLawn.mat')
+f.loadConfig('setup/config/config_inversion.json')
 wv, ref, radiance, config = f.getFiles()
 
 

@@ -23,9 +23,9 @@ thinning = 20
 
 f = FileProcessing()
 f.loadWavelength('setup/data/wavelengths.txt')
-f.loadReflectance('setup/data/177/insitu.txt')
-f.loadRadiance('setup/data/177/ang20140612t215931_data_dump.mat')
-f.loadConfig('setup/config/config_inversion_JPL.json')
+f.loadReflectance('setup/data/beckmanlawn/insitu.txt')
+f.loadRadiance('setup/data/beckmanlawn/ang20171108t184227_data_v2p11_BeckmanLawn.mat')
+f.loadConfig('setup/config/config_inversion.json')
 wv, ref, radiance, config = f.getFiles()
 
 
@@ -34,6 +34,14 @@ setup = Setup(wv, ref, atm, radiance, config, mcmcdir=mcmcfolder)
 g = GenerateSamples(setup)
 r = Regression(setup)
 a = Analysis(setup, r)
+
+# linPosMu, linPosGamma = a.posterior(setup.radiance)
+# plt.figure()
+# plt.plot(setup.wavelengths[setup.bands], setup.truth[setup.bands], 'k.', label='Truth')
+# plt.plot(setup.wavelengths[setup.bands], setup.isofitMuPos[setup.bands], 'r.', label='Isofit')
+# plt.plot(setup.wavelengths[setup.bands], linPosMu[setup.bands], 'b.', label='Linear Posterior')
+# plt.show()
+
 
 ## MCMC #
 if init == 'MAP':
