@@ -220,18 +220,6 @@ class PlotFromFile:
         plt.savefig(self.mcmcDir + 'reflMean.png', dpi=300)
 
         plt.figure()
-        isofitError = abs(self.isofitMuPos[:self.nx-2] - self.truth[:self.nx-2]) / abs(self.truth[:self.nx-2])
-        mcmcError = abs(self.MCMCmean[:self.nx-2] - self.truth[:self.nx-2]) / abs(self.truth[:self.nx-2])
-        self.plotbands(isofitError,'r.', label='Isofit Posterior',axis='semilogy')
-        self.plotbands(mcmcError, 'b.',label='MCMC Posterior',axis='semilogy')
-        plt.xlabel('Wavelength')
-        plt.ylabel('Relative Error')
-        plt.title('Error in Posterior Mean')
-        plt.grid()
-        plt.legend()
-        plt.savefig(self.mcmcDir + 'reflError.png', dpi=300)
-
-        plt.figure()
         # plt.plot(self.truth[self.nx-2], self.truth[self.nx-1], 'bo',label='True Reflectance')
         plt.plot(self.mu_x[self.nx-2], self.mu_x[self.nx-1], 'k.', markersize=12, label='Prior')
         plt.plot(self.isofitMuPos[self.nx-2],self.isofitMuPos[self.nx-1],'r.', markersize=12, label='Isofit Posterior')
@@ -290,6 +278,36 @@ class PlotFromFile:
         ax.set_xticklabels(labels)
         ax.legend()
         fig.savefig(self.mcmcDir + 'atmVar.png', dpi=300)
+    
+    def plotError(self):
+
+        plt.figure()
+        isofitError = abs(self.isofitMuPos[:self.nx-2] - self.truth[:self.nx-2]) / abs(self.truth[:self.nx-2])
+        mcmcError = abs(self.MCMCmean[:self.nx-2] - self.truth[:self.nx-2]) / abs(self.truth[:self.nx-2])
+        self.plotbands(isofitError,'r.', label='Isofit Posterior',axis='semilogy')
+        self.plotbands(mcmcError, 'b.',label='MCMC Posterior',axis='semilogy')
+        plt.xlabel('Wavelength')
+        plt.ylabel('Relative Error')
+        plt.title('Error in Posterior Mean')
+        plt.grid()
+        plt.legend()
+        plt.savefig(self.mcmcDir + 'reflError.png', dpi=300)
+
+        plt.figure()
+        isofitMatOper = s.linalg.sqrtm(np.linalg.inv(self.isofitGammaPos[:,:self.nx-2][:self.nx-2,:]))
+        mcmcMatOper = s.linalg.sqrtm(np.linalg.inv(self.MCMCcov[:,:self.nx-2][:self.nx-2,:]))
+        isofitWeightError = isofitMatOper @ (self.isofitMuPos[:self.nx-2] - self.truth[:self.nx-2])
+        mcmcWeightError = mcmcMatOper @ (self.MCMCmean[:self.nx-2] - self.truth[:self.nx-2])
+        self.plotbands(abs(isofitWeightError),'r.', label='Isofit Posterior',axis='semilogy')
+        self.plotbands(abs(mcmcWeightError), 'b.',label='MCMC Posterior',axis='semilogy')
+        plt.xlabel('Wavelength')
+        plt.ylabel('Error Weighted by Covariance')
+        plt.title('Weighted Error in Posterior Mean')
+        plt.grid()
+        plt.legend()
+        plt.savefig(self.mcmcDir + 'reflWeightError.png', dpi=300)
+
+
     
     def plot2Dmarginal(self, indset1=[100,250,410], indset2=[30,101,260]):
         
