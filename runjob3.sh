@@ -5,4 +5,4 @@
 #SBATCH --error=runjob3.err
 #SBATCH --exclusive
  
-python runFileG215.py
+python runFileG216.py

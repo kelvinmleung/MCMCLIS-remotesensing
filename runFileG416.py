@@ -15,16 +15,16 @@ from mcmcIsofit import MCMCIsofit
 Nsamp = 6000000
 burn = 2000000
 init = 'MAP'
-rank = 50
+rank = 120
 LIS = True
-mcmcfolder = 'G215'
+mcmcfolder = 'G416'
 thinning = 20
 ##### CONFIG #####
 
 f = FileProcessing()
 f.loadWavelength('setup/data/wavelengths.txt')
-f.loadReflectance('setup/data/306/insitu.txt')
-f.loadRadiance('setup/data/306/ang20140612t215931_data_dump.mat')
+f.loadReflectance('setup/data/dark/insitu.txt')
+f.loadRadiance('setup/data/dark/ang20140612t215931_data_dump.mat')
 f.loadConfig('setup/config/config_inversion_JPL.json')
 wv, ref, radiance, config = f.getFiles()
 
