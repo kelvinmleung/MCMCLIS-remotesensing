@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 from plots import PlotFromFile
 
-mcmcfolder = 'G415'
+mcmcfolder = 'G416'
 p = PlotFromFile(mcmcfolder)
 p.plotPosterior()
 p.plotError()

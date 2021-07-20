@@ -15,9 +15,9 @@ from mcmcIsofit import MCMCIsofit
 Nsamp = 6000000
 burn = 2000000
 init = 'MAP'
-rank = 120
+rank = 90
 LIS = True
-mcmcfolder = 'G416'
+mcmcfolder = 'G419'
 thinning = 20
 ##### CONFIG #####
 
