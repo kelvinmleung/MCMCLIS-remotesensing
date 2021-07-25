@@ -370,7 +370,7 @@ class PlotFromFile:
         levs = [0, 0.05, 0.1, 0.2, 0.5, 1]
         # Contourf plot
         cfset = ax.contourf(xx, yy, f, levels=levs, cmap='Blues') 
-        cset = ax.contour(xx, yy, f, levels=levs, colors='k') ##############################ADD INLINE
+        cset = ax.contour(xx, yy, f, levels=levs, colors='k') 
         plt.clabel(cset, levs, fontsize='smaller')
 
         # plot truth, isofit, and mcmc 

@@ -1,20 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from isofitSetup import Setup
-# from genSamples import GenerateSamples
-# from regression import Regression
-# from analysis import Analysis
-# from mcmcIsofit import MCMCIsofit
 from fileProcessing import FileProcessing
 
 
-## SETUP ##
-# wv, ref = np.loadtxt('setup/data/petunia/petunia_reflectance.txt').T
-
 f = FileProcessing(setupDir='setup/ang20140612')
 f.loadWavelength('data/wavelengths.txt')
-f.loadReflectance('data/dark/insitu.txt')
-f.loadRadiance('data/dark/ang20140612t215931_data_dump.mat')
+f.loadReflectance('data/mars/insitu.txt')
+f.loadRadiance('data/mars/ang20140612t215931_data_dump.mat')
 f.loadConfig('config/config_inversion.json')
 wv, ref, radiance, config = f.getFiles()
 setup = Setup(wv, ref, radiance, config)
@@ -42,7 +35,7 @@ radiance = np.load('x0isofit/radiance.npy')
 # np.save('x0isofit/atmSample.npy', [atm[0], atm[1]]) # set for Isofit initialization
 
 '''
-setup.testIsofitStartPt(1000)
+# setup.testIsofitStartPt(1000)
 
 # x = np.load('posAOD_x0isofit.npy')
 # y = np.load('posH2O_x0isofit.npy')

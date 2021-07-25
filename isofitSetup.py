@@ -423,38 +423,41 @@ class Setup:
         
         # [xmin, xmax] = [0, 1]
         # [ymin, ymax] = [1, 4]
-        
-        # # Perform the kernel density estimate
-        # xx, yy = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
-        # positions = np.vstack([xx.ravel(), yy.ravel()])
-        # values = np.vstack([x, y])
-        # kernel = st.gaussian_kde(values)
-        # f = np.reshape(kernel(positions).T, xx.shape)
-        # f = f / np.max(f) # normalize
 
-        # fig = plt.figure()
-        # ax = fig.gca()
-        # ax.set_xlim(xmin, xmax)
-        # ax.set_ylim(ymin, ymax)
+        [xmin, xmax] = [0.001, 0.5]
+        [ymin, ymax] = [1.31, 1.586]
+        
+        # Perform the kernel density estimate
+        xx, yy = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
+        positions = np.vstack([xx.ravel(), yy.ravel()])
+        values = np.vstack([x, y])
+        kernel = st.gaussian_kde(values)
+        f = np.reshape(kernel(positions).T, xx.shape)
+        f = f / np.max(f) # normalize
+        fig = plt.figure()
+        ax = fig.gca()
+        ax.set_xlim(xmin, xmax)
+        ax.set_ylim(ymin, ymax)
+
+        levs = [0, 0.05, 0.1, 0.2, 0.5, 1]
+        # Contourf plot
+        cfset = ax.contourf(xx, yy, f, levels=levs, cmap='Blues') 
+        cset = ax.contour(xx, yy, f, levels=levs, colors='k') 
+        plt.clabel(cset, fontsize='smaller')
+
         
         # # Contourf plot
         # cfset = ax.contourf(xx, yy, f, cmap='Blues' ) # levels=levs
         # plt.clabel(cfset, fontsize='smaller')
 
-        # # # plot truth, isofit, and mcmc mean
-        # # meanIsofit = np.array([self.isofitMuPos[indX], self.isofitMuPos[indY]])
-        # # meanMCMC = np.array([self.MCMCmean[indX], self.MCMCmean[indY]])
-        # # ax.plot(self.truth[indX], self.truth[indY], 'go', label='Truth', markersize=8)  
-        # # ax.plot(meanIsofit[0], meanIsofit[1], 'rx', label='MAP', markersize=12)
-        # # ax.plot(meanMCMC[0], meanMCMC[1], 'kx', label='MCMC', markersize=12)
-        # # ax.scatter(x, y, 'b.')
+        # Label plot
+        # ax.clabel(cset, inline=1, fontsize=10)
+        ax.set_xlabel('AOD')
+        ax.set_ylabel('H2O')
+        ax.legend()
+        fig.colorbar(cfset)
 
-        # # Label plot
-        # # ax.clabel(cset, inline=1, fontsize=10)
-        # ax.set_xlabel('AOD')
-        # ax.set_ylabel('H2O')
-        # ax.legend()
-        # fig.colorbar(cfset)
+        plt.savefig('x0isofit/kdplot.png', dpi=300)
         
 
     def genStartPoints(self):
