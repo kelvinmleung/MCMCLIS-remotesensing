@@ -12,28 +12,32 @@ from mcmcIsofit import MCMCIsofit
 
 
 ##### CONFIG #####
-Nsamp = 6000000
-burn = 2000000
+Nsamp = 6000
+burn = 2000
 init = 'linpos'
 rank = 100
 LIS = True
-mcmcfolder = 'G14'
+mcmcfolder = 'G11_2'
 thinning = 20
 ##### CONFIG #####
 
-f = FileProcessing()
-f.loadWavelength('setup/data/wavelengths.txt')
-f.loadReflectance('setup/data/beckmanlawn/insitu.txt')
-f.loadRadiance('setup/data/beckmanlawn/ang20171108t184227_data_v2p11_BeckmanLawn.mat')
-f.loadConfig('setup/config/config_inversion.json')
+# f = FileProcessing(setupDir='setup/ang20170228')
+# f.loadWavelength('data/wavelengths.txt')
+# f.loadReflectance('data/beckmanlawn/insitu.txt')
+# f.loadRadiance('data/beckmanlawn/ang20171108t184227_data_v2p11_BeckmanLawn.mat')
+# f.loadConfig('config/config_inversion.json')
+f = FileProcessing(setupDir='setup/ang20140612')
+f.loadWavelength('data/wavelengths.txt')
+f.loadReflectance('data/306/insitu.txt')
+f.loadRadiance('data/306/ang20140612t215931_data_dump.mat')
+f.loadConfig('config/config_inversion.json')
 wv, ref, radiance, config = f.getFiles()
 
 
-atm = [0.1, 2.5]
-setup = Setup(wv, ref, atm, radiance, config, mcmcdir=mcmcfolder)
+setup = Setup(wv, ref, radiance, config, mcmcdir=mcmcfolder)
 g = GenerateSamples(setup)
-r = Regression(setup)
-a = Analysis(setup, r)
+# r = Regression(setup)
+# a = Analysis(setup, r)
 
 # linPosMu, linPosGamma = a.posterior(setup.radiance)
 # plt.figure()
@@ -42,7 +46,13 @@ a = Analysis(setup, r)
 # plt.plot(setup.wavelengths[setup.bands], linPosMu[setup.bands], 'b.', label='Linear Posterior')
 # plt.show()
 
+# plt.figure()
+# plt.plot(setup.wavelengths[setup.bands], setup.truth[setup.bands], 'k.', label='Truth')
+# plt.plot(setup.wavelengths[setup.bands], setup.isofitMuPos[setup.bands], 'r.', label='Isofit')
+# plt.show()
 
+
+'''
 ## MCMC #
 if init == 'MAP':
     x0 = setup.isofitMuPos
@@ -62,5 +72,11 @@ m.initMCMC(LIS=LIS, rank=rank) # specify LIS parameters
 start_time = time.time()
 m.runAM()
 np.savetxt(setup.mcmcDir + 'runtime.txt', np.array([time.time() - start_time]))
+
+'''
+
+
+
+
 
 

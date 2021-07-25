@@ -50,7 +50,8 @@ class PlotFromFile:
             self.thinning = np.load(self.mcmcDir + 'thinning.npy')
 
             self.Nthin = int(self.Nsamp / self.thinning)
-            self.burnthin = int(self.burn / self.thinning)
+            # print(self.burn)
+            self.burnthin = self.burn # int(self.burn / self.thinning)
         except:
             print('MCMC files not found.')
 
@@ -95,14 +96,6 @@ class PlotFromFile:
 
     def windowInd(self):
         wl = self.wavelengths
-        # if len(self.truth) == 434:
-        #     configFile = 'setup/config/config_inversion_JPL.json'
-        # elif len(self.truth) == 427:
-        #     configFile = 'setup/config/config_inversion.json'
-        # else:
-        #     print('ERROR READING')
-        # with open(configFile, 'r') as f:
-        #     config = json.load(f)
         w = self.config['implementation']['inversion']['windows']
         range1, range2, range3 = [], [], []
         for i in range(wl.size):

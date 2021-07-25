@@ -7,28 +7,34 @@ from fsplit.filesplit import Filesplit
 class FileProcessing:
 
 
-    def __init__(self):
+    def __init__(self, setupDir):
+        self.setupDir = setupDir + '/'
         print('\n')
 
     def loadWavelength(self, wvFile): #'setup/data/wavelengths.txt'
         # these wavelengths must correspond to the reflectances (and not radiances)
-        wv, fwhm = np.loadtxt(wvFile).T
+        fileLoad = np.loadtxt(self.setupDir + wvFile).T
+        if fileLoad.shape[0] == 2:
+            wv, fwhm = fileLoad
+        elif fileLoad.shape[0] == 3:
+            ind, wv, fwhm = fileLoad
+            wv = wv * 1000
         # mat = loadmat(wvFile)
         # self.wv = mat['wl'][0]
         self.wv = wv# * 1000
 
     def loadReflectance(self, refFile):
-        data = np.loadtxt(refFile).T
+        data = np.loadtxt(self.setupDir + refFile).T
         wvRaw = data[0]
         refRaw = data[1]
         self.ref = np.interp(self.wv, wvRaw, refRaw)
 
     def loadRadiance(self, datamatfile):
-        mat = loadmat(datamatfile)
+        mat = loadmat(self.setupDir + datamatfile)
         self.radiance = mat['meas'][0]
 
     def loadConfig(self, configFile):
-        with open(configFile, 'r') as f:
+        with open(self.setupDir + configFile, 'r') as f:
             self.config = json.load(f)
     
     def getFiles(self):

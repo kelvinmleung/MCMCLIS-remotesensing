@@ -3,13 +3,11 @@ import numpy as np
 import scipy as s
 from scipy.io import loadmat
 import matplotlib.pyplot as plt
-import matplotlib
 
 import scipy.stats as st
 
 sys.path.insert(0, '../isofit/')
 
-import isofit
 from isofit.core.forward import ForwardModel
 from isofit.core.geometry import Geometry
 from isofit.inversion.inverse import Inversion
@@ -21,12 +19,11 @@ class Setup:
     Contains functions to generate training and test samples
     from isofit.
     '''
-    def __init__(self, wv, ref, atm, radiance, config, mcmcdir='MCMCRun'):
+    def __init__(self, wv, ref, radiance, config, mcmcdir='MCMCRun'):
 
         print('Setup in progress...')
         self.wavelengths = wv
         self.reflectance = ref
-        self.truth = np.concatenate((ref, atm))
         # np.save('x0isofit/atmSample.npy', [atm[0], atm[1]]) # set for Isofit initialization
 
         # specify storage directories 
@@ -45,24 +42,34 @@ class Setup:
         self.mu_x, self.gamma_x = self.getPrior(fullconfig)
 
         # get Isofit noise model and simulate radiance
+        atmSim = [0.05, 1.5] #[1.11556278e-03, 1.47704875e+00]#[0.1, 2.5]
+        self.truth = np.concatenate((ref, atmSim))
         rad = self.fm.calc_rdn(self.truth, self.geom)
         self.noisecov = self.fm.Seps(self.truth, rad, self.geom)
         eps = np.random.multivariate_normal(np.zeros(len(rad)), self.noisecov)
-        # self.radiance = rad
-        # self.radNoisy = rad + eps
         self.radianceSim = rad
+
+        np.save('x0isofit/atmSample.npy', atmSim)
         
-        if radiance.all() == 0:
+
+        if np.all((radiance == 0)): #radiance == np.zeros(radiance.shape):#.all() == 0:
             self.radiance = rad + eps
         else:
-            # radFile = config['input']['measured_radiance_file']
-            # self.radiance = 
             self.radiance = radiance
 
+        # plt.figure()
+        # plt.plot(self.wavelengths, self.radianceSim, label='Simulated')
+        # plt.plot(self.wavelengths, self.radiance, label='Real')
+        # plt.title('Radiance Comparison')
+        # plt.legend()
+    
         # inversion using simulated radiance
         self.isofitMuPos, self.isofitGammaPos = self.invModel(self.radiance)
         self.nx = self.truth.shape[0]
         self.ny = self.radiance.shape[0]
+
+
+        
         
         # get indices that are in the window (i.e. take out deep water spectra)
         wl = self.wavelengths
@@ -74,6 +81,16 @@ class Setup:
                 bands = bands + [i]
         self.bands = bands
         self.bandsX = bands + [self.nx-2,self.nx-1]
+
+        # print('ATM Parameters:', self.isofitMuPos[432:])
+        # plt.figure()
+        # muposSIM, t = self.invModel(self.radianceSim)
+        # # plt.plot(self.wavelengths[bands], muposSIM[bands], label='Simulated')
+        # plt.plot(self.wavelengths[bands], self.isofitMuPos[bands], label='Real')
+        # plt.plot(self.wavelengths[bands], self.truth[bands], label='Truth')
+        # plt.legend()
+        # plt.title('Retrieved Reflectances')
+        # plt.show()
     
     def saveConfig(self):
         np.save(self.mcmcDir + 'wavelength.npy', self.wavelengths)
@@ -88,7 +105,8 @@ class Setup:
     def getPrior(self, fullconfig):
         # get index of prior used in inversion
         mcs = MultiComponentSurface(fullconfig)
-        indPr = mcs.component(self.truth, self.geom)
+        # indPr = mcs.component(self.truth, self.geom)
+        indPr = mcs.component(self.reflectance, self.geom)
         print('Prior Index:', indPr)
         # Get prior mean and covariance
         surfmat = loadmat(self.surfaceFile)
@@ -107,7 +125,7 @@ class Setup:
         gamma_priorRT = self.fm.RT.Sa()[:, :]
         gamma_priorinst = self.fm.instrument.Sa()[:, :]
         gamma_x = s.linalg.block_diag(gamma_priorsurf, gamma_priorRT, gamma_priorinst)
-
+        
         return mu_x, gamma_x
 
     def invModel(self, radiance):
@@ -295,7 +313,7 @@ class Setup:
         # plt.ylabel(r'$| diag(\Gamma_{pos}^{-1/2}) \mu_{pos} - \mu_{true} |_2^2$')
         # plt.legend()
         # plt.savefig(self.mcmcDir + 'errorRelCov.png', dpi=300)
-    
+    '''
 
     def testIsofitStartPt(self, N):
         randAOD = np.zeros(N)
@@ -309,14 +327,16 @@ class Setup:
 
         pdfVal = np.zeros(N)
 
-        nfev = np.zeros(N)
-        status = np.zeros(N)
+        # nfev = np.zeros(N)
+        # status = np.zeros(N)
         
         for i in range(N):
             if (i+1) % 1 == 0:
                 print('Iteration ' + str(i+1))
-            randAOD[i] = (1 - 0) * np.random.random() + 0
-            randH2O[i] = (4 - 1) * np.random.random() + 1
+            # randAOD[i] = (1 - 0) * np.random.random() + 0
+            # randH2O[i] = (4 - 1) * np.random.random() + 1
+            randAOD[i] = (0.5 - 0.001) * np.random.random() + 0.001
+            randH2O[i] = (1.586 - 1.31) * np.random.random() + 1.31
 
             np.save('x0isofit/atmSample.npy', [randAOD[i], randH2O[i]])
 
@@ -333,8 +353,8 @@ class Setup:
             # print(np.linalg.det(isofitGammaPos[self.bandsX,:][:,self.bandsX]))
 
             pdfVal[i] = st.multivariate_normal.pdf(x=isofitMuPos, mean=isofitMuPos, cov=isofitGammaPos)
-            nfev[i] = np.load('x0isofit/nfevTmp.npy')
-            status[i] = np.load('x0isofit/statusTmp.npy')
+            # nfev[i] = np.load('x0isofit/nfevTmp.npy')
+            # status[i] = np.load('x0isofit/statusTmp.npy')
 
         np.save('x0isofit/randAOD.npy', randAOD)
         np.save('x0isofit/randH2O.npy', randH2O)
@@ -344,8 +364,8 @@ class Setup:
         np.save('x0isofit/varAOD.npy', varAOD)
         np.save('x0isofit/varH2O.npy', varH2O)
         np.save('x0isofit/pdfVal.npy', pdfVal)
-        np.save('x0isofit/nfev.npy', nfev)
-        np.save('x0isofit/status.npy', status)
+        # np.save('x0isofit/nfev.npy', nfev)
+        # np.save('x0isofit/status.npy', status)
 
     def plotScatterIsofitTest(self, x, y, c, title):
         plt.figure()
@@ -367,24 +387,25 @@ class Setup:
         varH2O = np.load('x0isofit/varH2O.npy')
         pdfVal = np.load('x0isofit/pdfVal.npy')
 
-        nfev = np.load('x0isofit/nfev.npy')
-        status = np.load('x0isofit/status.npy')
+        # nfev = np.load('x0isofit/nfev.npy')
+        # status = np.load('x0isofit/status.npy')
     
-        self.plotScatterIsofitTest(x, y, pdfVal, title='PDF Value of MAP')
-        plt.savefig('x0isofit/pdfVal.png', dpi=300)
+        # self.plotScatterIsofitTest(x, y, pdfVal, title='PDF Value of MAP')
+        # plt.savefig('x0isofit/pdfVal.png', dpi=300)
         self.plotScatterIsofitTest(x, y, varAOD, title='Variance of AOD')
         plt.savefig('x0isofit/varAOD.png', dpi=300)
         self.plotScatterIsofitTest(x, y, varH2O, title='Variance of H2O')
         plt.savefig('x0isofit/varH2O.png', dpi=300)
-        self.plotScatterIsofitTest(x, y, nfev, title='Number of Function Evaluations')
-        plt.savefig('x0isofit/nfev.png', dpi=300)
-        self.plotScatterIsofitTest(x, y, status, title='Status of Convergence')
-        plt.savefig('x0isofit/status.png', dpi=300)
+        # self.plotScatterIsofitTest(x, y, nfev, title='Number of Function Evaluations')
+        # plt.savefig('x0isofit/nfev.png', dpi=300)
+        # self.plotScatterIsofitTest(x, y, status, title='Status of Convergence')
+        # plt.savefig('x0isofit/status.png', dpi=300)
 
         # plot some sample reflectances
         plt.figure()
         for i in range(10):
-            self.plotbands(refl[i,:], '-')
+            # p.plotbands(refl[i,:], '-')
+            plt.plot(self.wavelengths[self.bands], refl[i,self.bands],'-')
         plt.title('Reflectances from retrievals with random initial atm')
         plt.xlabel('Wavelength')
         plt.ylabel('Reflectance')
@@ -457,7 +478,7 @@ class Setup:
         np.save('x0isofit/truths.npy', truth)
         np.save('x0isofit/radiance.npy', self.radiance)
         np.save('x0isofit/noisecov.npy', self.noisecov)
-    '''
+    
 
 
 
