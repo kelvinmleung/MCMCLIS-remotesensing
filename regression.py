@@ -120,8 +120,10 @@ class Regression:
         plt.legend()
 
         plt.figure(34)
-        self.plotbands(GE, 'navy', linewidth=1, label='Generalization Error', axis='semilogy')
-        self.plotbands(TE, 'orange', linewidth=1, label='Training Error', axis='semilogy')
+        # self.plotbands(GE, 'navy', linewidth=1, label='Generalization Error', axis='semilogy')
+        # self.plotbands(TE, 'orange', linewidth=1, label='Training Error', axis='semilogy')
+        plt.semilogy(GE[self.bands], 'navy', linewidth=1, label='Generalization Error')
+        plt.semilogy(TE[self.bands], 'orange', linewidth=1, label='Training Error')
         plt.xlabel('Wavelength')
         plt.ylabel('Error')
         plt.title('Lasso Regression - Error')
@@ -130,7 +132,8 @@ class Regression:
 
         relerror = abs(self.radiance - y_lasso) / abs(self.radiance)
         plt.figure(35)
-        self.plotbands(relerror, 'navy',linewidth=1, label='Lasso,p=1e-3',axis='semilogy')
+        # self.plotbands(relerror, 'navy',linewidth=1, label='Lasso,p=1e-3',axis='semilogy')
+        plt.semilogy(relerror[self.bands], 'navy',linewidth=1, label='Lasso,p=1e-3')
         plt.xlabel('Wavelength')
         plt.ylabel('Error')
         plt.title('Lasso Regression - Relative Error')

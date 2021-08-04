@@ -19,7 +19,7 @@ class Setup:
     Contains functions to generate training and test samples
     from isofit.
     '''
-    def __init__(self, wv, ref, radiance, config, mcmcdir='MCMCRun'):
+    def __init__(self, wv, ref, radiance, config, mcmcdir, setupDir):
 
         print('Setup in progress...')
         self.wavelengths = wv
@@ -27,9 +27,10 @@ class Setup:
         # np.save('x0isofit/atmSample.npy', [atm[0], atm[1]]) # set for Isofit initialization
 
         # specify storage directories 
-        self.sampleDir = '../results/Regression/samples/'
-        self.regDir = '../results/Regression/linearModel/'
-        self.analysisDir = '../results/Analysis/'
+        self.setupDir = setupDir
+        self.sampleDir = '../results/Regression/samples/' + setupDir + '/'
+        self.regDir = '../results/Regression/linearModel/' + setupDir + '/'
+        self.analysisDir = '../results/Analysis/' + setupDir + '/'
         self.mcmcDir = '../results/MCMC/' + mcmcdir + '/'
         
         # initialize Isofit with config 

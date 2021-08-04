@@ -7,8 +7,9 @@ from plots import PlotFromFile
 
 ###### MAKE THE 2D MARGINAL BUT IN KD CONTOUR FORM ######
 
-mcmcfolder = 'G01'
-p = PlotFromFile(mcmcfolder)
+mcmcfolder = 'H01'
+setupDir = 'setup/ang20170228/' #'setup/ang20140612/'
+p = PlotFromFile(mcmcfolder, setupDir)
 p.plotPosterior()
 p.plotError()
 p.plot2Dmarginal()

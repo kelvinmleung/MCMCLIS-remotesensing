@@ -63,8 +63,8 @@ class MCMCIsofit:
             lowbound = np.concatenate((np.zeros(self.nx-2), [0, 1]))
             upbound = np.concatenate((np.ones(self.nx-2), [1, 4]))
         else:
-            lowbound = np.ones(427) * np.NINF
-            upbound = np.ones(427) * np.inf
+            lowbound = np.ones(self.nx) * np.NINF
+            upbound = np.ones(self.nx) * np.inf
 
         self.mcmcConfig = {
             "startX": self.x0,

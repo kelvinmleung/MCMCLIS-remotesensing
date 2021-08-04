@@ -10,13 +10,14 @@ import matplotlib.transforms as transforms
 
 class PlotFromFile:
 
-    def __init__(self, mcmcfolder):
+    def __init__(self, mcmcfolder, setupDir):
 
         self.mcmcfolder = mcmcfolder
 
-        self.paramDir = '../results/Parameters/'
-        self.regDir = '../results/Regression/linearmodel/'
+        # self.paramDir = '../results/Parameters/'
+        self.regDir = '../results/Regression/linearModel/ang20140612/'
         self.mcmcDir = '../results/MCMC/' + mcmcfolder + '/'
+        self.setupDir = setupDir
 
         self.loadFromFile()
 
@@ -79,16 +80,15 @@ class PlotFromFile:
 
     def checkConfig(self):
 
-        if len(self.truth) == 434:
-            configFile = 'setup/config/config_inversion_JPL.json'
-            wvFile = 'setup/data/wavelengths_JPL.txt'
-        elif len(self.truth) == 427:
-            configFile = 'setup/config/config_inversion.json'
-            wvFile = 'setup/data/wavelengths.txt'
-        else:
-            print('ERROR READING')
+        configFile = self.setupDir + 'config/config_inversion.json'
+        wvFile = self.setupDir + 'data/wavelengths.txt'
         
-        wv, fwhm = np.loadtxt(wvFile).T
+        fileLoad = np.loadtxt(wvFile).T
+        if fileLoad.shape[0] == 2:
+            wv, fwhm = fileLoad
+        elif fileLoad.shape[0] == 3:
+            ind, wv, fwhm = fileLoad
+            wv = wv * 1000
         self.wavelengths = wv
 
         with open(configFile, 'r') as f:
