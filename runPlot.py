@@ -5,17 +5,17 @@ import matplotlib.pyplot as plt
 
 from plots import PlotFromFile
 
-###### MAKE THE 2D MARGINAL BUT IN KD CONTOUR FORM ######
 
 mcmcfolder = 'H01'
-setupDir = 'setup/ang20170228/' #'setup/ang20140612/'
+setupDir = 'setup/ang20170228/' #'setup/ang20140612/' #
 p = PlotFromFile(mcmcfolder, setupDir)
-p.plotPosterior()
-p.plotError()
-p.plot2Dmarginal()
-p.kdcontour(indX=425, indY=426)
-p.diagnostics(indSet=[10,20,50,100,150,160,250,260])
-p.quantDiagnostic()
+# p.plotPosterior()
+# p.plotError()
+# p.plot2Dmarginal()
+p.plot2Dcontour()
+# p.kdcontouratm(indX=425, indY=426)
+# p.diagnostics(indSet=[20,50,150,160,250,260,400,410])
+# p.quantDiagnostic()
 plt.show()
 
 

@@ -257,7 +257,7 @@ class PlotFromFile:
         plt.savefig(self.mcmcDir + 'reflVar.png', dpi=300)
 
         # bar graph of atm parameter variances
-        labels = ['425 - AOD550', '426 - H2OSTR']
+        labels = ['Aerosol', 'H2OSTR']
         x = np.arange(len(labels))  # the label locations
         width = 0.175
         fig, ax = plt.subplots()
@@ -337,7 +337,79 @@ class PlotFromFile:
         fig.legend(handles, labels, loc='center right')
         fig.savefig(self.mcmcDir + '2Dmarginal.png', dpi=300)
 
-    def kdcontour(self, indX, indY):
+    def plot2Dcontour(self, indset1=[100,250,410], indset2=[30,101,260]):
+        
+        n = len(indset1)
+        m = len(indset2)
+        fig, ax = plt.subplots(n, m)
+        levs = [0, 0.05, 0.1, 0.2, 0.5, 1]
+        # cfset = ax.contourf(xx, yy, f, levels=levs, cmap='Blues') 
+        # cset = ax.contour(xx, yy, f, levels=levs, colors='k') 
+        
+        for i in range(n):
+            for j in range(m):
+                indX = indset1[i]
+                indY = indset2[j]
+                print(i,j)
+                ax[i,j], cfset = self.twoDimContour(indY, indX, ax[i,j], levs)
+        fig.suptitle('2D Contour Plots')
+
+        ax[0,0].set_ylabel(r'$\lambda = $' + str(self.wavelengths[indset1[0]]) + ' nm')
+        ax[1,0].set_ylabel(r'$\lambda = $' + str(self.wavelengths[indset1[1]]) + ' nm')
+        ax[2,0].set_ylabel(r'$\lambda = $' + str(self.wavelengths[indset1[2]]) + ' nm')
+        ax[2,0].set_xlabel(r'$\lambda = $' + str(self.wavelengths[indset2[0]]) + ' nm')
+        ax[2,1].set_xlabel(r'$\lambda = $' + str(self.wavelengths[indset2[1]]) + ' nm')
+        ax[2,2].set_xlabel(r'$\lambda = $' + str(self.wavelengths[indset2[2]]) + ' nm')
+        handles, labels = ax[0,0].get_legend_handles_labels()
+        fig.legend(handles, labels, loc='center right')
+        fig.subplots_adjust(right=0.83)
+        cbar_ax = fig.add_axes([0.85, 0.15, 0.02, 0.7])
+        fig.colorbar(cfset, cax = cbar_ax)
+        fig.set_size_inches(12, 8)
+        fig.savefig(self.mcmcDir + '2Dcontour.png', dpi=300)
+
+    def twoDimContour(self, indX, indY, ax, levs):
+
+        x = self.x_plot[indX,:]
+        y = self.x_plot[indY,:]
+
+        isofitPosX = self.isofitMuPos[indX]
+        isofitPosY = self.isofitMuPos[indY]
+        xmin, xmax = min(min(x), isofitPosX), max(max(x), isofitPosX)
+        ymin, ymax = min(min(y), isofitPosY), max(max(y), isofitPosY)
+
+        if indX < self.nx-2 and indY < self.nx-2:
+            xmin, xmax = min(xmin, self.truth[indX]), max(xmax, self.truth[indX])
+            ymin, ymax = min(ymin, self.truth[indY]), max(ymax, self.truth[indY])
+
+        # Peform the kernel density estimate
+        xx, yy = np.mgrid[xmin:xmax:50j, ymin:ymax:50j]
+        positions = np.vstack([xx.ravel(), yy.ravel()])
+        values = np.vstack([x, y])
+        kernel = gaussian_kde(values)
+        f = np.reshape(kernel(positions).T, xx.shape)
+        f = f / np.max(f) # normalize
+
+        ax.set_xlim(xmin, xmax)
+        ax.set_ylim(ymin, ymax)
+
+        levs = [0, 0.05, 0.1, 0.2, 0.5, 1]
+
+        # Contourf plot
+        cfset = ax.contourf(xx, yy, f, levels=levs, cmap='Blues') 
+        cset = ax.contour(xx, yy, f, levels=levs, colors='k') 
+        ax.clabel(cset, levs, fontsize='smaller')
+
+        # plot truth, isofit, and mcmc 
+        meanIsofit = np.array([isofitPosX, isofitPosY])
+        meanMCMC = np.array([self.MCMCmean[indX], self.MCMCmean[indY]])
+        ax.plot(self.truth[indX], self.truth[indY], 'go', label='True reflectance', markersize=10)  
+        ax.plot(meanIsofit[0], meanIsofit[1], 'rx', label='MAP', markersize=12)
+        ax.plot(meanMCMC[0], meanMCMC[1], 'kx', label='MCMC', markersize=12)
+            
+        return ax, cfset
+
+    def kdcontouratm(self, indX, indY):
         x_vals = np.load(self.mcmcDir + 'MCMC_x.npy')
         x_vals_plot = x_vals[:,self.burnthin:]
 
@@ -396,8 +468,6 @@ class PlotFromFile:
 
         fig.savefig(self.mcmcDir + 'kdcontour_' + str(indX) + '_' + str(indY) + '.png', dpi=300)
         return fig
-
-    
 
 
     def plotPosSparsity(self, tol):
