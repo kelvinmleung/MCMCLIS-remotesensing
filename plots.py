@@ -335,6 +335,7 @@ class PlotFromFile:
         ax[2,2].set_xlabel(r'$\lambda = $' + str(self.wavelengths[indset2[2]]) + ' nm')
         handles, labels = ax[0,0].get_legend_handles_labels()
         fig.legend(handles, labels, loc='center right')
+        fig.set_size_inches(12, 8)
         fig.savefig(self.mcmcDir + '2Dmarginal.png', dpi=300)
 
     def plot2Dcontour(self, indset1=[100,250,410], indset2=[30,101,260]):
