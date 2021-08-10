@@ -63,6 +63,7 @@ class Setup:
         # plt.plot(self.wavelengths, self.radiance, label='Real')
         # plt.title('Radiance Comparison')
         # plt.legend()
+        # plt.show()
     
         # inversion using simulated radiance
         self.isofitMuPos, self.isofitGammaPos = self.invModel(self.radiance)

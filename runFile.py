@@ -17,7 +17,7 @@ burn = 2000
 init = 'MAP'
 rank = 100
 LIS = True
-mcmcfolder = 'H01'
+mcmcfolder = 'H01S'
 thinning = 20
 setupDir = 'ang20170228'
 ##### CONFIG #####
@@ -34,7 +34,7 @@ f.loadConfig('config/config_inversion.json')
 # f.loadConfig('config/config_inversion.json')
 wv, ref, radiance, config = f.getFiles()
 
-
+radiance = 0
 setup = Setup(wv, ref, radiance, config, mcmcdir=mcmcfolder, setupDir=setupDir)
 g = GenerateSamples(setup)
 
