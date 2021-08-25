@@ -16,7 +16,7 @@ burn = 2000000
 init = 'MAP'
 rank = 100
 LIS = True
-mcmcfolder = 'H21S'
+mcmcfolder = 'H21'
 thinning = 20
 setupDir = 'ang20140612'
 ##### CONFIG #####
@@ -28,7 +28,6 @@ f.loadRadiance('data/306/ang20140612t215931_data_dump.mat')
 f.loadConfig('config/config_inversion.json')
 wv, ref, radiance, config = f.getFiles()
 
-radiance = 0
 setup = Setup(wv, ref, radiance, config, mcmcdir=mcmcfolder, setupDir=setupDir)
 g = GenerateSamples(setup)
 r = Regression(setup)

@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from sklearn.linear_model import Lasso, ElasticNet
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.preprocessing import scale, StandardScaler
+from sklearn.neighbors import KernelDensity
 
 class Regression:
     '''
@@ -31,6 +32,17 @@ class Regression:
         Y_train = np.load(self.sampleDir + 'Y_train.npy')
         X_test = np.load(self.sampleDir + 'X_test.npy')
         Y_test = np.load(self.sampleDir + 'Y_test.npy')
+        
+        # plt.figure(1) 
+        # for i in range(100):   
+        #     plt.plot(Y_train[np.random.randint(0,24000),:432])
+        # # plt.figure(2)
+        # # for i in range(1000):
+        # #     ii = np.random.randint(0,24000)
+        # #     jj = np.random.randint(0,24000)
+        # #     plt.plot(X_train[ii,432], X_train[jj,433],'b.')
+        # # plt.title('Atmospheric Parameters')
+        # plt.show()
 
         # scale the data
         self.scalerX = StandardScaler().fit(X_train)
@@ -47,7 +59,7 @@ class Regression:
         self.varY = self.scalerY.var_
 
         # scale truth as well
-        N = self.X_train.shape[0]
+        self.N = self.X_train.shape[0]
         # ny = self.radiance.size
         self.nx = setup.nx
         self.ny = setup.ny
@@ -193,3 +205,29 @@ class Regression:
         plt.legend()
         plt.xlim([1,2])
         plt.ylim([1,2])
+    
+    def distFromTruth(self):
+        # plots a distribution of distance of samples from truth
+
+        X_train = np.diag(np.sqrt(self.varX)) @ self.X_train.T + np.outer(self.meanX, np.ones(self.N))
+        X_train = X_train.T
+        dist = np.zeros(self.N)[:, np.newaxis]
+        for i in range(self.N):
+            dist[i] = np.linalg.norm(self.truth - X_train[i,:])
+
+        X_plot = np.linspace(0,10,1000)[:, np.newaxis]
+        kde = KernelDensity(kernel='gaussian', bandwidth=0.75).fit(dist)
+        log_dens = kde.score_samples(X_plot)
+        plt.figure()
+        plt.fill(X_plot[:, 0], np.exp(log_dens), fc='#AAAAFF')
+        plt.title('Distance of Training data from truth - Gaussian Kernel')
+        plt.xlabel('Euclidean Distance')
+
+        kde = KernelDensity(kernel='tophat', bandwidth=0.75).fit(dist)
+        log_dens = kde.score_samples(X_plot)
+        plt.figure()
+        plt.fill(X_plot[:, 0], np.exp(log_dens), fc='#AAAAFF')
+        plt.title('Distance of Training data from truth - Tophat Kernel')
+        plt.xlabel('Euclidean Distance')
+        
+        

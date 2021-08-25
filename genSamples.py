@@ -131,21 +131,23 @@ class GenerateSamples:
 
         return mu_scaled, gamma_scaled
 
-    def genTrainTest(self, surf_mu, surf_gamma, atm_mu, atm_gamma, atm_bounds, f, traintest, NperPrior=4000):
+    def genTrainTest(self, surf_mu, surf_gamma, atm_mu, atm_gamma, atm_bounds, f, traintest, NperPrior=5000):
         # given a surface model, generate train and test samples using all 8 priors
         # fm = self.fm
         # geom = self.geom
         # mu_x, gamma_x = self.setup.getPrior()
 
-        numPriors = surf_mu.shape[0]
+        # numPriors = surf_mu.shape[0]
+        numPriors = 4
         Nsamp = NperPrior * numPriors
         ny = surf_mu.shape[1]
         nx = ny + len(atm_mu)
 
-
         mu_ygx = np.zeros(ny)
         x_samp = np.zeros([Nsamp, nx])
         y_samp = np.zeros([Nsamp, ny])
+
+        indPr = np.array([2,3,7,2])
 
         import matplotlib.pyplot as plt
 
@@ -153,18 +155,19 @@ class GenerateSamples:
             for j in range(NperPrior):
                 k = i * NperPrior + j
 
-                refl = self.getReflectance(f, np.random.randint(0,4))
+                refl = self.getReflectance(f, i)
+                # refl = self.getReflectance(f, np.random.randint(0,4))
                 surf_mu_scaled, surf_gamma_scaled = self.convertSurfScale(surf_mu, surf_gamma, refl)
 
-                mu_x = np.concatenate((surf_mu_scaled[i], atm_mu))
+                mu_x = np.concatenate((surf_mu_scaled[indPr[i]], atm_mu))
                 gamma_x = np.zeros([nx, nx])
-                gamma_x[:ny, :ny] = surf_gamma_scaled[i,:,:]
+                gamma_x[:ny, :ny] = surf_gamma_scaled[[indPr[i]],:,:]
                 gamma_x[ny:, ny:] = np.diag(atm_gamma)
                 cholGammaX = np.linalg.cholesky(gamma_x)
-
                 while x_samp[k,nx-2] < atm_bounds[0,0] or x_samp[k,nx-2] > atm_bounds[0,1] or x_samp[k,nx-1] < atm_bounds[1,0] or x_samp[k,nx-1] > atm_bounds[1,1]:
+                    
                     z = np.random.normal(0,1,size=nx)
-                    x_samp[k,:] = mu_x + cholGammaX @ z
+                    x_samp[k,:] = abs(mu_x + cholGammaX @ z)
                 # print(np.sqrt(np.diag(gamma_x)))
                 
                 meas = self.fm.calc_meas(x_samp[k,:], self.geom)
@@ -184,11 +187,42 @@ class GenerateSamples:
                     print('Sampling: Iteration ', k+1)
 
         if traintest == 'train':
-            np.save(self.sampleDir + 'X_train.npy', x_samp.T)
-            np.save(self.sampleDir + 'Y_train.npy', y_samp.T)
+            np.save(self.sampleDir + 'X_train.npy', x_samp)
+            np.save(self.sampleDir + 'Y_train.npy', y_samp)
         elif traintest == 'test':
-            np.save(self.sampleDir + 'X_test.npy', x_samp.T)
-            np.save(self.sampleDir + 'Y_test.npy', y_samp.T)
+            np.save(self.sampleDir + 'X_test.npy', x_samp)
+            np.save(self.sampleDir + 'Y_test.npy', y_samp)
+
+    def genY(self, X_train, X_test):
+        # generates Y_train and Y_test given X_train and X_test
+        ny = X_train.shape[1] - 2
+        numTrain = X_train.shape[0]
+        numTest = X_test.shape[0]
+        Y_train = np.zeros([numTrain, ny])
+        Y_test = np.zeros([numTest, ny])
+        mu_ygx = np.zeros(ny)
+
+        for k in range(numTrain):
+            meas = self.fm.calc_meas(X_train[k,:], self.geom)
+            gamma_ygx = self.fm.Seps(X_train[k,:], meas, self.geom)
+            
+            eps_samp = np.random.multivariate_normal(mu_ygx, gamma_ygx)
+            Y_train[k,:] = meas + eps_samp
+
+            if (k+1) % 100 == 0:
+                print('Sampling: Iteration ', k+1)
+        np.save(self.sampleDir + 'Y_train.npy', Y_train)
+
+        for k in range(numTest):
+            meas = self.fm.calc_meas(X_test[k,:], self.geom)
+            gamma_ygx = self.fm.Seps(X_test[k,:], meas, self.geom)
+            
+            eps_samp = np.random.multivariate_normal(mu_ygx, gamma_ygx)
+            Y_test[k,:] = meas + eps_samp
+
+            if (k+1) % 100 == 0:
+                print('Sampling: Iteration ', k+1)
+        np.save(self.sampleDir + 'Y_test.npy', Y_test)
 
 
 

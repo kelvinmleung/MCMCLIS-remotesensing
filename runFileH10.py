@@ -16,7 +16,7 @@ burn = 2000000
 init = 'MAP'
 rank = 100
 LIS = True
-mcmcfolder = 'H01S'
+mcmcfolder = 'H01'
 thinning = 20
 setupDir = 'ang20170228'
 ##### CONFIG #####
@@ -28,7 +28,6 @@ f.loadRadiance('data/beckmanlawn/ang20171108t184227_data_v2p11_BeckmanLawn.mat')
 f.loadConfig('config/config_inversion.json')
 wv, ref, radiance, config = f.getFiles()
 
-radiance = 0
 setup = Setup(wv, ref, radiance, config, mcmcdir=mcmcfolder, setupDir=setupDir)
 g = GenerateSamples(setup)
 r = Regression(setup)

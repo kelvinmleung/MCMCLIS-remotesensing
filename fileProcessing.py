@@ -2,6 +2,9 @@ import numpy as np
 import json
 from scipy.io import loadmat
 from fsplit.filesplit import Filesplit
+from spectral import *
+import matplotlib.pyplot as plt
+
 
 
 class FileProcessing:
@@ -64,6 +67,19 @@ class FileProcessing:
         x_vals =  np.load(inputdir + 'MCMC_x.npy', mmap_mode='r')
         x_vals_thin = x_vals[:,::thinning]
         np.save(inputdir + 'MCMC_x_thin.npy', x_vals_thin)
+
+    # def readENVI(self):
+    #     img = open_image('../results/david_insitu/filtered_ocean.hdr')
+    #     arr = img.load()
+    #     print(arr.shape)
+    #     plt.figure()
+    #     for i in range(10):
+    #         ref = np.squeeze(arr[:,0,i])
+    #         plt.plot(ref)
+    #     plt.show()
+
+
+
         
 
 

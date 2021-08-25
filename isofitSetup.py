@@ -48,9 +48,9 @@ class Setup:
         rad = self.fm.calc_rdn(self.truth, self.geom)
         self.noisecov = self.fm.Seps(self.truth, rad, self.geom)
         eps = np.random.multivariate_normal(np.zeros(len(rad)), self.noisecov)
-        self.radianceSim = rad
+        self.radianceSim = rad + eps
 
-        np.save('x0isofit/atmSample.npy', atmSim)
+        # np.save('x0isofit/atmSample.npy', atmSim)
         
 
         if np.all((radiance == 0)): #radiance == np.zeros(radiance.shape):#.all() == 0:

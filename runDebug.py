@@ -38,10 +38,13 @@ f.loadRadiance('data/177/ang20140612t215931_data_dump.mat')
 f.loadConfig('config/config_inversion.json')
 wv, ref, radiance, config = f.getFiles()
 
+
 setup = Setup(wv, ref, radiance, config, mcmcdir=mcmcfolder, setupDir=setupDir)
 g = GenerateSamples(setup)
 r = Regression(setup)
 a = Analysis(setup, r)
+
+
 
 '''
 x_scaled = (setup.truth - r.meanX) / np.sqrt(r.varX)
@@ -53,21 +56,52 @@ plt.plot(setup.wavelengths, radiance, 'g', label='Real Data')
 plt.legend()
 plt.title('Simulated Radiance')
 plt.show()
+'''
+
+# X_train = np.diag(np.sqrt(r.varX)) @ r.X_train.T + np.outer(r.meanX, np.ones(25000))
+# X_train = X_train.T
 
 
-# linPosMu, linPosGamma = a.posterior(setup.radiance)
-linPosMu, linPosGamma = a.posterior(setup.radianceSim)
+
+# for j in range(10):
+#     ind = np.random.randint(0,25000)
+#     X_sample = X_train[ind,:]
+
+#     X_train_new = np.outer(X_sample, np.ones(1000)).T # np.zeros([1000,len(X_sample)])
+#     Y_train_new = np.zeros([X_train_new.shape[0], X_train_new.shape[1]-2])
+#     for i in range(1000):
+#         atm_aerosol = np.random.uniform(0.001, 0.5, 1)
+#         atm_h2o = np.random.uniform(1.3100563704967498, 1.586606174707413, 1)
+#         X_train_new[i,432:] = [atm_aerosol, atm_h2o]
+#         Y_train_new[i,:] = setup.fm.calc_rdn(X_train_new[i,:], setup.geom)
+
+#     plt.figure()
+#     for i in range(1000):
+#         plt.plot(Y_train_new[i,:])
+#     plt.show()
+
+# plt.figure()
+
+# plt.semilogy(setup.isofitGammaPos[250,:], color='b')
+# plt.title('Row of Cov Matrix - Index 250')
+# plt.show()
+
+# print(setup.isofitMuPos[425:])
+linPosMu, linPosGamma = a.posterior(setup.radiance)
+# linPosMu, linPosGamma = a.posterior(setup.radianceSim)
 plt.figure()
 plt.plot(setup.wavelengths[setup.bands], setup.truth[setup.bands], 'k.', label='Truth')
+# plt.plot(setup.wavelengths[setup.bands], setup.mu_x[setup.bands], 'g.', label='Prior')
 plt.plot(setup.wavelengths[setup.bands], setup.isofitMuPos[setup.bands], 'r.', label='Isofit')
 plt.plot(setup.wavelengths[setup.bands], linPosMu[setup.bands], 'b.', label='Linear Posterior')
 plt.legend()
-plt.title('Retrieval - Simulated Radiance')
+plt.ylabel('Reflectance')
+plt.title('Retrieval - Real Radiance')
 plt.show()
-'''
-eigval, eigvec = a.eigLIS()
-a.eigPlots(eigval, eigvec, rank=434, title='LIS')
-plt.show()
+
+# eigval, eigvec = a.eigLIS()
+# a.eigPlots(eigval, eigvec, rank=434, title='LIS')
+# plt.show()
 
 # print('ATM Parameters')
 # print('Isofit:', setup.isofitMuPos[-2:])
@@ -79,6 +113,9 @@ plt.show()
 # plt.plot(setup.wavelengths[setup.bands], setup.isofitMuPos[setup.bands], 'r.', label='Isofit')
 # plt.show()
 
+
+# r.distFromTruth()
+# plt.show()
 
 
 

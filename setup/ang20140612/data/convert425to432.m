@@ -37,8 +37,13 @@ wl = wl_432;
 means = means_432;
 covs = covs_432;
 
+figure; hold on;
+for i = 1:8
+    e = eig(squeeze(covs(i,:,:)));
+    semilogy(sort(e));
+end
 
-save surface.mat covs means normalize refwl wl attribute_covs attribute_means attributes
+% save surface.mat covs means normalize refwl wl attribute_covs attribute_means attributes
 
 
 
