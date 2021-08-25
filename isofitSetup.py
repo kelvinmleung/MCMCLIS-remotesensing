@@ -52,12 +52,12 @@ class Setup:
 
         # np.save('x0isofit/atmSample.npy', atmSim)
         
-
+        
         if np.all((radiance == 0)): #radiance == np.zeros(radiance.shape):#.all() == 0:
             self.radiance = rad + eps
         else:
             self.radiance = radiance
-
+        self.radiance = self.radianceSim
         # plt.figure()
         # plt.plot(self.wavelengths, self.radianceSim, label='Simulated')
         # plt.plot(self.wavelengths, self.radiance, label='Real')

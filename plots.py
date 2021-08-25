@@ -24,7 +24,7 @@ class PlotFromFile:
         try:
             self.loadMCMC()
         except:
-            print('More MCMC files not found.')
+            print('MCMC files not found.')
 
         self.NsampAC = 10000#int(100000 / self.thinning)
 

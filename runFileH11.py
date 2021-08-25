@@ -16,7 +16,7 @@ burn = 2000000
 init = 'MAP'
 rank = 100
 LIS = True
-mcmcfolder = 'H11'
+mcmcfolder = 'H11S'
 thinning = 20
 setupDir = 'ang20140612'
 ##### CONFIG #####

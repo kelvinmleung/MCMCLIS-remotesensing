@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from plots import PlotFromFile
 
 
-mcmcfolder = 'H11'
+mcmcfolder = 'H41'
 setupDir = 'setup/ang20140612/' #'setup/ang20170228/' #
 p = PlotFromFile(mcmcfolder, setupDir)
 p.plotPosterior()
