@@ -3,10 +3,10 @@
     "forward_model": {
       "instrument": {
         "wavelength_file": "setup/ang20140612/data/wavelengths.txt",
-        "SNR": 500,
-        "integrations": 1,
+        "parametric_noise_file": "../isofit/data/avirisng_noise.txt",
+        "integrations": 400, 
         "unknowns": {
-          "uncorrelated_radiometric_uncertainty": 0.01
+          "uncorrelated_radiometric_uncertainty": 0.02
         }
       },
       "surface": {
@@ -64,7 +64,7 @@
           ]
         },
         "unknowns": {
-          "H2O_ABSCO": 0.01
+          "H2O_ABSCO": 0.0
         }
       }
     },

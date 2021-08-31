@@ -60,8 +60,8 @@ class MCMCIsofit:
 
         # define upper and lower bounds 
         if constrain == True:
-            lowbound = np.concatenate((np.zeros(self.nx-2), [0, 1]))
-            upbound = np.concatenate((np.ones(self.nx-2), [1, 4]))
+            lowbound = np.concatenate((np.zeros(self.nx-2), [0, 1.3]))
+            upbound = np.concatenate((np.ones(self.nx-2), [0.5, 1.6]))
         else:
             lowbound = np.ones(self.nx) * np.NINF
             upbound = np.ones(self.nx) * np.inf
@@ -71,7 +71,7 @@ class MCMCIsofit:
             "Nsamp": self.Nsamp,
             "burn": self.burn,
             "sd": 2.38 ** 2 / rank,
-            "propcov": self.linGammaPos * (2.38 ** 2) / rank,
+            "propcov": self.gammapos_isofit * (2.38 ** 2) / rank,# self.linGammaPos * (2.38 ** 2) / rank,
             "lowbound": lowbound,
             "upbound": upbound,
             "LIS": LIS,

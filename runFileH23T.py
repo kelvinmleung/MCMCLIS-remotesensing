@@ -13,21 +13,22 @@ from mcmcIsofit import MCMCIsofit
 ##### CONFIG #####
 Nsamp = 6000000
 burn = 2000000
-init = 'MAP'
+init = 'truth'
 rank = 100
 LIS = True
-mcmcfolder = 'H31S'
+mcmcfolder = 'H23T'
 thinning = 20
 setupDir = 'ang20140612'
 ##### CONFIG #####
 
 f = FileProcessing(setupDir='setup/' + setupDir)
 f.loadWavelength('data/wavelengths.txt')
-f.loadReflectance('data/mars/insitu.txt')
-f.loadRadiance('data/mars/ang20140612t215931_data_dump.mat')
+f.loadReflectance('data/dark/insitu.txt')
+f.loadRadiance('data/dark/ang20140612t215931_data_dump.mat')
 f.loadConfig('config/config_inversion.json')
 wv, ref, radiance, config = f.getFiles()
 
+radiance = 0
 setup = Setup(wv, ref, radiance, config, mcmcdir=mcmcfolder, setupDir=setupDir)
 g = GenerateSamples(setup)
 r = Regression(setup)

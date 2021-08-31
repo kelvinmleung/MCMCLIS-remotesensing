@@ -152,14 +152,22 @@ class MCMCLIS:
         gamma = 0.01
 
         for i in range(self.Nsamp):
-            z = self.proposal(x, propChol)
-            alpha, logposZ, logposX = self.alpha(x, z)
+            kl = 0
+            constraintSatisfy = False
+            while(constraintSatisfy == False):
+                z = self.proposal(x, propChol)
+                alpha, logposZ, logposX = self.alpha(x, z)
 
-            # add component and check constraint
-            zComp = self.proposal(np.zeros(self.nComp), np.identity(self.nComp))
-            xFull = self.phi @ x + self.phiComp @ zComp + self.startX
-            if self.checkConstraint(xFull) == False:
-                alpha = 0
+                # add component and check constraint
+                zComp = self.proposal(np.zeros(self.nComp), np.identity(self.nComp))
+                xFull = self.phi @ x + self.phiComp @ zComp + self.startX
+                kl = kl + 1
+                
+                constraintSatisfy = self.checkConstraint(xFull)
+            print(kl)
+            # if self.checkConstraint(xFull) == False:
+            #     alpha = 0
+            #     i = i - 1
 
             if np.random.random() < alpha:
                 x = z 

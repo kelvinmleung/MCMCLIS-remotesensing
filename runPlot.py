@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from plots import PlotFromFile
 
 
-mcmcfolder = 'H41'
+mcmcfolder = 'H11S_test'
 setupDir = 'setup/ang20140612/' #'setup/ang20170228/' #
 p = PlotFromFile(mcmcfolder, setupDir)
 p.plotPosterior()
@@ -16,6 +16,11 @@ p.plot2Dmarginal()
 p.kdcontouratm(indX=432, indY=433)
 p.diagnostics(indSet=[20,50,150,160,250,260,400,410])
 p.quantDiagnostic()
+
+fig, ax = plt.subplots()
+p.twoDimVisual(432,433,ax)
+plt.title('2D Marginal - Atmospheric Parameters')
+
 plt.show()
 
 

@@ -54,10 +54,9 @@ class Setup:
         
         
         if np.all((radiance == 0)): #radiance == np.zeros(radiance.shape):#.all() == 0:
-            self.radiance = rad + eps
+            self.radiance =  self.radianceSim
         else:
             self.radiance = radiance
-        self.radiance = self.radianceSim
         # plt.figure()
         # plt.plot(self.wavelengths, self.radianceSim, label='Simulated')
         # plt.plot(self.wavelengths, self.radiance, label='Real')
@@ -69,9 +68,6 @@ class Setup:
         self.isofitMuPos, self.isofitGammaPos = self.invModel(self.radiance)
         self.nx = self.truth.shape[0]
         self.ny = self.radiance.shape[0]
-
-
-        
         
         # get indices that are in the window (i.e. take out deep water spectra)
         wl = self.wavelengths
