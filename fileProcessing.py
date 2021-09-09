@@ -40,7 +40,7 @@ class FileProcessing:
     def loadConfig(self, configFile):
         with open(self.setupDir + configFile, 'r') as f:
             self.config = json.load(f)
-    
+            
     def loadSurfModel(self, surfModel):
         mat = loadmat(self.setupDir + surfModel)
         means = mat['means']

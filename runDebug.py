@@ -17,14 +17,14 @@ from mcmcIsofit import MCMCIsofit
 
 
 ##### CONFIG #####
-Nsamp = 6000
-burn = 2000
-init = 'MAP'
-rank = 100
-LIS = True
-mcmcfolder = 'H11'
-thinning = 20
-setupDir = 'ang20140612'#'ang20170228'#
+# Nsamp = 6000
+# burn = 2000
+# init = 'MAP'
+# rank = 100
+# LIS = True
+mcmcfolder = 'H11S_test'
+# thinning = 20
+setupDir = 'ang20170228'#'ang20140612'#
 ##### CONFIG #####
 
 f = FileProcessing(setupDir='setup/' + setupDir)
@@ -38,7 +38,7 @@ f.loadRadiance('data/177/ang20140612t215931_data_dump.mat')
 f.loadConfig('config/config_inversion.json')
 wv, ref, radiance, config = f.getFiles()
 
-
+radiance = 0 # USE SIMULATED DATA
 setup = Setup(wv, ref, radiance, config, mcmcdir=mcmcfolder, setupDir=setupDir)
 g = GenerateSamples(setup)
 r = Regression(setup)
@@ -86,6 +86,16 @@ plt.show()
 # plt.title('Row of Cov Matrix - Index 250')
 # plt.show()
 
+
+X_plot = np.arange(1,setup.ny+1,1)
+Y_plot = np.arange(1,setup.ny+1,1)
+X_plot, Y_plot = np.meshgrid(X_plot, Y_plot)
+plt.figure()
+plt.contourf(X_plot,Y_plot,setup.gamma_x[:setup.nx-2,:setup.nx-2])
+plt.title('Prior Covariance')
+plt.axis('equal')
+plt.colorbar()
+
 # print(setup.isofitMuPos[425:])
 linPosMu, linPosGamma = a.posterior(setup.radiance)
 # linPosMu, linPosGamma = a.posterior(setup.radianceSim)
@@ -96,7 +106,7 @@ plt.plot(setup.wavelengths[setup.bands], setup.isofitMuPos[setup.bands], 'r.', l
 plt.plot(setup.wavelengths[setup.bands], linPosMu[setup.bands], 'b.', label='Linear Posterior')
 plt.legend()
 plt.ylabel('Reflectance')
-plt.title('Retrieval - Real Radiance')
+plt.title('Retrieval')
 plt.show()
 
 # eigval, eigvec = a.eigLIS()
