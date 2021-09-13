@@ -16,7 +16,7 @@ burn = 2000000
 init = 'MAP'
 rank = 100
 LIS = True
-mcmcfolder = 'H23'
+mcmcfolder = 'H33'
 thinning = 20
 setupDir = 'ang20140612'
 ##### CONFIG #####
@@ -28,7 +28,6 @@ f.loadRadiance('data/mars/ang20140612t215931_data_dump.mat')
 f.loadConfig('config/config_inversion.json')
 wv, ref, radiance, config = f.getFiles()
 
-radiance = 0
 setup = Setup(wv, ref, radiance, config, mcmcdir=mcmcfolder, setupDir=setupDir)
 g = GenerateSamples(setup)
 r = Regression(setup)
@@ -48,7 +47,7 @@ elif init == 'linpos':
 mcmcfolder = mcmcfolder + '_init' + init + '_rank' + str(rank)
 
 m = MCMCIsofit(setup, a, Nsamp, burn, x0, 'AM', thinning=thinning)
-m.initMCMC(LIS=LIS, rank=rank) # specify LIS parameters
+m.initMCMC(LIS=LIS, rank=rank, fixatm=True) # specify LIS parameters
 
 start_time = time.time()
 m.runAM()

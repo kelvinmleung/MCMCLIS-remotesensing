@@ -24,7 +24,7 @@ from mcmcIsofit import MCMCIsofit
 # LIS = True
 mcmcfolder = 'H11S_test'
 # thinning = 20
-setupDir = 'ang20170228'#'ang20140612'#
+setupDir = 'ang20140612'#'ang20170228'#
 ##### CONFIG #####
 
 f = FileProcessing(setupDir='setup/' + setupDir)
@@ -40,9 +40,30 @@ wv, ref, radiance, config = f.getFiles()
 
 radiance = 0 # USE SIMULATED DATA
 setup = Setup(wv, ref, radiance, config, mcmcdir=mcmcfolder, setupDir=setupDir)
-g = GenerateSamples(setup)
-r = Regression(setup)
-a = Analysis(setup, r)
+# g = GenerateSamples(setup)
+# r = Regression(setup)
+# a = Analysis(setup, r)
+
+
+noisevar = np.diag(setup.noisecov)
+Dinv = np.linalg.inv(np.diag(np.sqrt(noisevar)))
+print(np.median(setup.radianceSim / np.sqrt(noisevar)))
+
+plt.figure()
+plt.semilogy(noisevar)
+plt.title('Config SNR 500')
+
+# plt.figure()
+# plt.semilogy(setup.radianceSim / np.sqrt(noisevar))
+
+corrMatrix = Dinv @ setup.noisecov @ Dinv
+
+plt.figure()
+plt.contourf(np.log10(corrMatrix + np.ones(corrMatrix.shape) * 1e-72),levels=[-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,0])#-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,0]) #
+plt.colorbar()
+plt.title('Config SNR 500 - Corr Mat')
+
+plt.show()
 
 
 
@@ -86,7 +107,7 @@ plt.show()
 # plt.title('Row of Cov Matrix - Index 250')
 # plt.show()
 
-
+'''
 X_plot = np.arange(1,setup.ny+1,1)
 Y_plot = np.arange(1,setup.ny+1,1)
 X_plot, Y_plot = np.meshgrid(X_plot, Y_plot)
@@ -108,6 +129,7 @@ plt.legend()
 plt.ylabel('Reflectance')
 plt.title('Retrieval')
 plt.show()
+'''
 
 # eigval, eigvec = a.eigLIS()
 # a.eigPlots(eigval, eigvec, rank=434, title='LIS')

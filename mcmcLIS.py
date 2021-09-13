@@ -53,7 +53,8 @@ class MCMCLIS:
         self.linop = config["linop"]        # linear operator
         self.yobs = config["yobs"]          # radiance observation
         self.mcmcDir = config["mcmcDir"]    # directory to save data
-        self.thinning = config["thinning"]# only save every ___ sample
+        self.thinning = config["thinning"]  # only save every ___ sample
+        self.fixatm = config["fixatm"]      # fix atmospheric parameters to isofit if True
 
     def LISproject(self):
         ### Compute LIS projection matrices ###
@@ -137,6 +138,12 @@ class MCMCLIS:
             return False
         return True
 
+    def enforceFixAtm(self, z):
+        # fixes the atmospheric parameters to isofit atm (0, 0)
+        zNew = z
+        zNew[-2:] = [0,0]
+        return zNew
+
     def adaptm(self, alg):
         ''' Run Adaptive-Metropolis MCMC algorithm '''
         x_vals = np.zeros([self.rank, self.Nsamp]) # store all samples
@@ -156,6 +163,8 @@ class MCMCLIS:
             constraintSatisfy = False
             while(constraintSatisfy == False):
                 z = self.proposal(x, propChol)
+                if self.fixatm == True:
+                    z = self.enforceFixAtm(z)
                 alpha, logposZ, logposX = self.alpha(x, z)
 
                 # add component and check constraint
@@ -164,7 +173,7 @@ class MCMCLIS:
                 kl = kl + 1
                 
                 constraintSatisfy = self.checkConstraint(xFull)
-            print(kl)
+            # print(kl)
             # if self.checkConstraint(xFull) == False:
             #     alpha = 0
             #     i = i - 1

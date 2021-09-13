@@ -52,7 +52,7 @@ class MCMCIsofit:
         self.nx = self.gamma_x.shape[0] # parameter dimension
         self.ny = self.noisecov.shape[0] # data dimension
 
-    def initMCMC(self, LIS=False, rank=427, constrain=False):
+    def initMCMC(self, LIS=False, rank=427, constrain=False, fixatm=False):
         
         # create folder
         if not os.path.exists(self.mcmcDir):
@@ -84,7 +84,8 @@ class MCMCIsofit:
             "geom": self.geom,
             "linop": self.linop,
             "mcmcDir": self.mcmcDir,
-            "thinning": self.thinning
+            "thinning": self.thinning,
+            "fixatm": fixatm
             }
         self.mcmc = MCMCLIS(self.mcmcConfig)
         self.saveMCMCConfig()

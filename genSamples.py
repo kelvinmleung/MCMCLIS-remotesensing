@@ -15,6 +15,7 @@ class GenerateSamples:
         self.noisecov = setup.noisecov
         
     def genTrainingSamples(self, Nsamp):
+        # given one prior
         fm = self.fm
         geom = self.geom
         mu_x, gamma_x = self.setup.getPrior()
@@ -224,5 +225,49 @@ class GenerateSamples:
                 print('Sampling: Iteration ', k+1)
         np.save(self.sampleDir + 'Y_test.npy', Y_test)
 
+    def genReflSampAllPrior(self, surf_mu, surf_gamma, NperPrior=5000):
+        
+        numPriors = 8
+        Nsamp = NperPrior * numPriors
+        ny = surf_mu.shape[1]
+        nx = ny + len(atm_mu)
+
+        mu_ygx = np.zeros(ny)
+        refl_samp = np.zeros([Nsamp, ny])
+
+        indPr = np.array(0,1,2,3,4,5,6,7,8])
+
+        import matplotlib.pyplot as plt
+
+        for i in range(numPriors):
+            for j in range(NperPrior):
+                k = i * NperPrior + j
+
+                refl = self.getReflectance(f, i)
+                # refl = self.getReflectance(f, np.random.randint(0,4))
+                
+
+                mu_x = np.concatenate((surf_mu_scaled[indPr[i]], atm_mu))
+                gamma_x = np.zeros([nx, nx])
+                gamma_x[:ny, :ny] = surf_gamma_scaled[[indPr[i]],:,:]
+                gamma_x[ny:, ny:] = np.diag(atm_gamma)
+                cholGammaX = np.linalg.cholesky(gamma_x)
+                while x_samp[k,nx-2] < atm_bounds[0,0] or x_samp[k,nx-2] > atm_bounds[0,1] or x_samp[k,nx-1] < atm_bounds[1,0] or x_samp[k,nx-1] > atm_bounds[1,1]:
+                    
+                    z = np.random.normal(0,1,size=nx)
+                    x_samp[k,:] = abs(mu_x + cholGammaX @ z)
+
+                if (k+1) % 100 == 0:
+                    print('Sampling: Iteration ', k+1)
+
+       
+        np.save(self.sampleDir + 'reflsamp_allprior.npy', x_samp)
+            
+    def genGMM(self):
+        from sklearn import mixture
+        gmm = mixture.GaussianMixture(n_components=2)
+        gmm.fit(data)
+        gmm.sample(n_samples)
+surf_mu_scaled, surf_gamma_scaled = self.convertSurfScale(surf_mu, surf_gamma, refl)
 
 

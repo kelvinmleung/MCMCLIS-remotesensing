@@ -106,7 +106,7 @@ elif init == 'linpos':
 mcmcfolder = mcmcfolder + '_init' + init + '_rank' + str(rank)
 
 m = MCMCIsofit(setup, a, Nsamp, burn, x0, 'AM', thinning=thinning)
-m.initMCMC(LIS=LIS, rank=rank, constrain=True) # specify LIS parameters
+m.initMCMC(LIS=LIS, rank=rank, constrain=False) # specify LIS parameters
 
 start_time = time.time()
 m.runAM()
