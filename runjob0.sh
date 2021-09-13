@@ -5,4 +5,4 @@
 #SBATCH --error=runjob0.err
 #SBATCH --exclusive
  
-python runFileH10.py
+python runFileH3S_test.py
