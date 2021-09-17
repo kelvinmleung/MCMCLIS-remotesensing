@@ -12,7 +12,7 @@ class Regression:
     create a linear approximation of the Isofit forward model.
     '''
 
-    def __init__(self, setup):
+    def __init__(self, setup, fixatm=False):
         
         # directory to store regression results
         self.regDir = setup.regDir
@@ -32,7 +32,14 @@ class Regression:
         Y_train = np.load(self.sampleDir + 'Y_train.npy')
         X_test = np.load(self.sampleDir + 'X_test.npy')
         Y_test = np.load(self.sampleDir + 'Y_test.npy')
-        
+
+        self.N = X_train.shape[0]
+        self.Ntest = X_test.shape[0]
+
+        if fixatm == True:
+            X_train[:,-2:] = np.outer(setup.mu_x[-2:], np.ones(self.N)).T
+            X_test[:,-2:] = np.outer(setup.mu_x[-2:], np.ones(self.Ntest)).T
+
         # plt.figure(1) 
         # for i in range(100):   
         #     plt.plot(Y_train[np.random.randint(0,24000),:432])
@@ -59,7 +66,7 @@ class Regression:
         self.varY = self.scalerY.var_
 
         # scale truth as well
-        self.N = self.X_train.shape[0]
+        
         # ny = self.radiance.size
         self.nx = setup.nx
         self.ny = setup.ny
@@ -93,7 +100,6 @@ class Regression:
 
     def fullLasso(self, params):
         # perform lasso for all wavelengths
-
         nx = self.X_train.shape[1]
         ny = self.Y_train.shape[1]
 

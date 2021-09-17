@@ -226,7 +226,7 @@ class GenerateSamples:
         np.save(self.sampleDir + 'Y_test.npy', Y_test)
 
     def genReflSampAllPrior(self, surf_mu, surf_gamma, NperPrior=5000):
-        
+        # not finished
         numPriors = 8
         Nsamp = NperPrior * numPriors
         ny = surf_mu.shape[1]
@@ -235,7 +235,7 @@ class GenerateSamples:
         mu_ygx = np.zeros(ny)
         refl_samp = np.zeros([Nsamp, ny])
 
-        indPr = np.array(0,1,2,3,4,5,6,7,8])
+        indPr = np.array([0,1,2,3,4,5,6,7,8])
 
         import matplotlib.pyplot as plt
 
@@ -263,11 +263,93 @@ class GenerateSamples:
        
         np.save(self.sampleDir + 'reflsamp_allprior.npy', x_samp)
             
-    def genGMM(self):
+    def genGMM(self, Nsamp):
         from sklearn import mixture
+        from sklearn.model_selection import train_test_split
+
+        # define folder containing data
+        folder = '../results/Regression/samples/samplesForGMM/'
+        # load wavelengths considered (425 here after sub-selecting wavelengths)
+        channel, wl, fwhm = np.loadtxt(folder + 'kelvin_wavelengths.txt').T
+        wl = wl * 1000 # convert microns to nanometers
+
+        wlNew = self.setup.wavelengths
+
+        nbands = len(wl)
+        print('Nbands:', nbands)
+        # define files
+        MatTypes  = ['surface_model_ucsb','surface_ArtificialMaterials','surface_Liquids','surface_SoilsAndMixtures','surface_Vegetation']
+        nMatType  = len(MatTypes)
+        # define array to store data
+        dataRaw      = np.zeros((0,nbands))
+        for iMatType in range(nMatType):
+            # load HDR file for cell type
+            hdr_file    = folder + MatTypes[iMatType] + '.hdr'
+            file        = open(hdr_file, 'r')
+            target_line = [line for line in file if 'lines' in line]
+            target_line = target_line[0].split()
+            nspec       = int(target_line[2])
+            spectra     = np.fromfile(folder + MatTypes[iMatType],
+                                dtype=np.float32, count=nspec*nbands)
+            spectra     = spectra.reshape((nspec,nbands))
+            dataRaw        = np.vstack((dataRaw,spectra))
+
+        print('Total number of spectra/samples: %d' % (dataRaw.shape[0]))
+        data = np.zeros((dataRaw.shape[0], len(wlNew)))
+        print(data.shape)
+        for i in range(dataRaw.shape[0]):
+            data[i,:] = np.interp(wlNew, wl, dataRaw[i,:])
+        ncomps = 2
+        #create mixture model with ncomps components
         gmm = mixture.GaussianMixture(n_components=2)
         gmm.fit(data)
-        gmm.sample(n_samples)
-surf_mu_scaled, surf_gamma_scaled = self.convertSurfScale(surf_mu, surf_gamma, refl)
+        # print log-likelihood on training data
+        print('Log-likelihood on training data:')
+        print(gmm.score(data))
+        # print weights of components
+        print('Weights of components:')
+        print(gmm.weights_)
+        # generate samples
+        samps = gmm.sample(Nsamp)[0]
 
+        # X_train = gmm.sample(24000)[0]
+        # X_test = gmm.sample(6000)[0]
+        # print(X_train.shape)
+        print('Size of samples:')
+        # print(samps[0].shape)
+        X_train, X_test = train_test_split(samps, test_size=0.25, random_state=42)
+        # X_train = X_train[0]
+        # X_test = X_test[0]
+        print(X_train.shape)
+        print(X_test.shape)
+        np.save(self.sampleDir + 'X_train_surf.npy', X_train)
+        np.save(self.sampleDir + 'X_test_surf.npy', X_test)
+        # import matplotlib.pyplot as plt
+        # for i in range(10):
+        #     print(X_train[i,:])
+        #     plt.plot(X_train[i,:])
+        # plt.show()
+
+    def addAtm(self):
+        X_train_surf = np.load(self.sampleDir + 'X_train_surf.npy')
+        X_test_surf = np.load(self.sampleDir + 'X_test_surf.npy')
+        Ntrain = X_train_surf.shape[0]
+        Ntest = X_test_surf.shape[0]
+
+        atm1_train = np.random.normal(self.setup.mu_x[-2], np.sqrt(self.setup.gamma_x[-2,-2]), (Ntrain,1))
+        atm1_test = np.random.normal(self.setup.mu_x[-2], np.sqrt(self.setup.gamma_x[-2,-2]), (Ntest,1))
+        atm2_train = np.random.normal(self.setup.mu_x[-1], np.sqrt(self.setup.gamma_x[-1,-1]), (Ntrain,1))
+        atm2_test = np.random.normal(self.setup.mu_x[-1], np.sqrt(self.setup.gamma_x[-1,-1]), (Ntest,1))
+
+        print(X_train_surf.shape)
+        print(atm1_train.shape)
+
+        X_train = np.concatenate((X_train_surf, atm1_train, atm2_train), axis=1)
+        X_test = np.concatenate((X_test_surf, atm1_test, atm2_test), axis=1)
+
+        print(X_train.shape)
+
+        np.save(self.sampleDir + 'X_train.npy', X_train)
+        np.save(self.sampleDir + 'X_test.npy', X_test)
+        
 

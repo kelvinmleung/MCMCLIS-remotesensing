@@ -18,7 +18,7 @@ init = 'MAP'
 rank = 100
 LIS = True
 mcmcfolder = 'H11S_test'
-thinning = 1#20
+thinning = 20
 setupDir = 'ang20140612'#'ang20170228'
 ##### CONFIG #####
 
@@ -35,7 +35,7 @@ f.loadRadiance('data/177/ang20140612t215931_data_dump.mat')
 f.loadConfig('config/config_inversion.json')
 wv, ref, radiance, config = f.getFiles()
 
-radiance=0
+# radiance=0
 setup = Setup(wv, ref, radiance, config, mcmcdir=mcmcfolder, setupDir=setupDir)
 g = GenerateSamples(setup)
 
@@ -54,14 +54,14 @@ g = GenerateSamples(setup)
 
 
 
-r = Regression(setup)
+r = Regression(setup, fixatm=True)
 
 # for i in [10,20,100,120,250,260,400]:
 #     print('yElem = ', i)
 #     r.tuneLasso(params=[1e-4,1e-3,1e-2,1e-1], yElem=i, plot=False)
-# r.fullLasso(params=np.ones(432)*1e-3)
-# r.plotFullLasso()
-# plt.show()
+r.fullLasso(params=np.ones(432)*1e-3)
+r.plotFullLasso()
+plt.show()
 
 # Y_train = np.diag(np.sqrt(r.varY)) @ r.Y_train.T + np.outer(r.meanY, np.ones(25000))
 # Y_train = Y_train.T
@@ -73,7 +73,7 @@ r = Regression(setup)
 # plt.ylabel('Radiance')
 # plt.legend()
 # plt.show()
-
+'''
 a = Analysis(setup, r)
 
 # linPosMu, linPosGamma = a.posterior(setup.radiance)
@@ -111,7 +111,7 @@ m.initMCMC(LIS=LIS, rank=rank, constrain=False) # specify LIS parameters
 start_time = time.time()
 m.runAM()
 np.savetxt(setup.mcmcDir + 'runtime.txt', np.array([time.time() - start_time]))
-
+'''
 
 
 
