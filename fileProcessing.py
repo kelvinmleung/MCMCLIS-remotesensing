@@ -30,6 +30,9 @@ class FileProcessing:
         data = np.loadtxt(self.setupDir + refFile).T
         wvRaw = data[0]
         refRaw = data[1]
+        for i in range(len(refRaw)):
+            if refRaw[i] > 1 or refRaw[i] < 0:
+                refRaw[i] = 0
         self.ref = np.interp(self.wv, wvRaw, refRaw)
         return self.ref
 

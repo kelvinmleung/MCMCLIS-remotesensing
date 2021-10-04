@@ -30,8 +30,13 @@ class MCMCLIS:
             # compute projection matrices
             self.phi, self.theta, self.proj, self.phiComp, self.thetaComp, self.projComp = self.LISproject() 
 
+            # self.phi = []
             # project x0 and proposal covariance to LIS subspace
             # self.x0 = self.theta.T @ self.x0
+
+            if self.fixatm == True:
+                self.propcov = self.propcov[:-2,:-2]
+
             self.propcov = self.theta.T @ self.propcov @ self.theta
 
     def unpackConfig(self, config):
@@ -62,6 +67,8 @@ class MCMCLIS:
         # compute Hessian, solve eigenvalue problem
         cholPr = np.linalg.cholesky(self.gamma_x) # cholesky decomp of prior covariance
         H = self.linop.T @ self.invNoiseCov @ self.linop # Hessian
+        if self.fixatm ==True:
+            cholPr = cholPr[:-2,:-2]
         Hn = cholPr.T @ H @ cholPr 
         V = self.solveEig(Hn, plot=False, title='LIS Eigenvalue Decay')
         
@@ -171,8 +178,8 @@ class MCMCLIS:
                 zComp = self.proposal(np.zeros(self.nComp), np.identity(self.nComp))
                 xFull = self.phi @ x + self.phiComp @ zComp + self.startX
                 kl = kl + 1
-                
                 constraintSatisfy = self.checkConstraint(xFull)
+
             # print(kl)
             # if self.checkConstraint(xFull) == False:
             #     alpha = 0

@@ -33,12 +33,21 @@ class Regression:
         X_test = np.load(self.sampleDir + 'X_test.npy')
         Y_test = np.load(self.sampleDir + 'Y_test.npy')
 
+        
+        
+        if fixatm == True:
+            # X_train[:,-2:] = np.outer(setup.mu_x[-2:], np.ones(self.N)).T
+            # X_test[:,-2:] = np.outer(setup.mu_x[-2:], np.ones(self.Ntest)).T
+            self.fixatm = fixatm
+            X_train = X_train[:,:-2]
+            X_test = X_test[:,:-2]
+            
+        
+        # read dimensions
         self.N = X_train.shape[0]
         self.Ntest = X_test.shape[0]
-
-        if fixatm == True:
-            X_train[:,-2:] = np.outer(setup.mu_x[-2:], np.ones(self.N)).T
-            X_test[:,-2:] = np.outer(setup.mu_x[-2:], np.ones(self.Ntest)).T
+        self.nx = X_train.shape[1]
+        self.ny = setup.ny
 
         # plt.figure(1) 
         # for i in range(100):   
@@ -64,19 +73,17 @@ class Regression:
         self.varX = self.scalerX.var_
         self.meanY = self.scalerY.mean_
         self.varY = self.scalerY.var_
-
         # scale truth as well
         
         # ny = self.radiance.size
-        self.nx = setup.nx
-        self.ny = setup.ny
-        self.reflectance_scaled = (self.reflectance - self.meanX[:self.nx-2]) / np.sqrt(self.varX[:self.nx-2])
-        self.truth_scaled = (self.truth - self.meanX) / np.sqrt(self.varX)
+        
+        self.reflectance_scaled = (self.reflectance - self.meanX[:self.ny]) / np.sqrt(self.varX[:self.ny])
+        self.truth_scaled = (self.truth[:self.nx] - self.meanX) / np.sqrt(self.varX)
         
     def reglasso(self, param, yElem):
 
         # train with the reduced X_train
-        linreg = Lasso(alpha=param, max_iter=5000) 
+        linreg = Lasso(alpha=param, max_iter=5000)
         linreg.fit(self.X_train, self.Y_train[:,yElem])
         phiReduce = linreg.coef_
         pred = linreg.predict(self.X_train)

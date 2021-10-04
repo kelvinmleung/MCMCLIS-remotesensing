@@ -63,9 +63,16 @@ class MCMCIsofit:
             lowbound = np.concatenate((np.zeros(self.nx-2), [0, 1.3]))
             upbound = np.concatenate((np.ones(self.nx-2), [0.5, 1.6]))
         else:
-            lowbound = np.ones(self.nx) * np.NINF
+            lowbound = np.ones(self.nx) * -np.inf
             upbound = np.ones(self.nx) * np.inf
-
+        # if fixatm == True:
+        #     linopSmall = self.linop
+        #     self.linop = np.zeros([self.yobs.shape[0], self.mu_x.shape[0]])
+        #     self.linop[:,:-2] = linopSmall
+            # self.x0 = self.x0[:-2]
+            # self.mu_x = self.mu_x[:-2]
+            # self.gamma_x = self.gamma_x[:,:-2][:-2,:]
+            # self.gammapos_isofit = self.gammapos_isofit[:,:-2][:-2,:]
         self.mcmcConfig = {
             "startX": self.x0,
             "Nsamp": self.Nsamp,
