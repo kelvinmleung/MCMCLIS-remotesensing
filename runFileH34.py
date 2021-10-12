@@ -23,8 +23,8 @@ setupDir = 'ang20140612'
 
 f = FileProcessing(setupDir='setup/' + setupDir)
 f.loadWavelength('data/wavelengths.txt')
-f.loadReflectance('data/mars/insitu.txt')
-f.loadRadiance('data/mars/ang20140612t215931_data_dump.mat')
+f.loadReflectance('data/dark/insitu.txt')
+f.loadRadiance('data/dark/ang20140612t215931_data_dump.mat')
 f.loadConfig('config/config_inversion.json')
 wv, ref, radiance, config = f.getFiles()
 

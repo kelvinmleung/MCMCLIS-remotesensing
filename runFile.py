@@ -77,10 +77,3 @@ start_time = time.time()
 m.runAM()
 np.savetxt(setup.mcmcDir + 'runtime.txt', np.array([time.time() - start_time]))
 
-
-
-
-
-
-
-

@@ -68,7 +68,6 @@ class PlotFromFile:
     
     def loadMCMC(self):
         self.x_vals = np.load(self.mcmcDir + 'MCMC_x.npy', mmap_mode='r')
-
         self.x_plot = self.x_vals[:,self.burnthin:]
         self.MCMCmean = np.mean(self.x_plot, axis=1)
         self.MCMCcov = np.cov(self.x_plot)
