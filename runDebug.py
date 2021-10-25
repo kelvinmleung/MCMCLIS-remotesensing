@@ -22,7 +22,7 @@ burn = 2000
 # init = 'MAP'
 # rank = 100
 # LIS = True
-mcmcfolder = 'H34'
+mcmcfolder = 'H33'
 thinning = 20
 setupDir = 'ang20140612'#'ang20170228'#
 ##### CONFIG #####
@@ -33,8 +33,8 @@ f = FileProcessing(setupDir='setup/' + setupDir)
 # f.loadRadiance('data/beckmanlawn/ang20171108t184227_data_v2p11_BeckmanLawn.mat')
 # f.loadConfig('config/config_inversion.json')
 f.loadWavelength('data/wavelengths.txt')
-f.loadReflectance('data/dark/insitu.txt')
-f.loadRadiance('data/dark/ang20140612t215931_data_dump.mat')
+f.loadReflectance('data/mars/insitu.txt')
+f.loadRadiance('data/mars/ang20140612t215931_data_dump.mat')
 f.loadConfig('config/config_inversion.json')
 wv, ref, radiance, config = f.getFiles()
 
@@ -130,6 +130,10 @@ plt.plot(setup.wavelengths[setup.bands], setup.isofitMuPos[setup.bands], 'r.', l
 plt.plot(setup.wavelengths[setup.bands], linPosMu[setup.bands], 'g.', label='Linear Posterior')
 plt.plot(setup.wavelengths[setup.bands], MCMCmean[setup.bands], 'b.', label='MCMC')
 
+print('Atmospheric Parameters')
+print('Isofit:', setup.isofitMuPos[-2:])
+print('Linear:', linPosMu[-2:])
+print('MCMC:', MCMCmean[-2:])
 plt.legend()
 plt.ylabel('Reflectance')
 plt.title('Retrieval')
